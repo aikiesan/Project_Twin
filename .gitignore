@@ -1,0 +1,23 @@
+# data (tracked by DVC, never git)
+/data/
+/runs/
+/exports/*/
+!/exports/.gitkeep
+
+# secrets
+.env
+*.env
+credentials*.json
+.dvc/config.local
+
+# python
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
+
+# os/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

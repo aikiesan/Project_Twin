@@ -1,0 +1,595 @@
+# Data source registry — SP biomethane TEA & siting engine
+# One entry per dataset. Fill `accessed`, `sha256`, `local_path` when downloaded.
+# status: have | get | lai | paid | build
+# confidence: V (read) | S (snippet, verify) | K (prior knowledge, verify)
+schema_version: 0.1
+updated: 2026-10-03
+
+sources:
+  # ---------------- SUPPLY: SUGARCANE ----------------
+  - id: renovabio_cert_reports
+    name: RenovaBio certification & public-consultation reports (RenovaCalc data per unit)
+    publisher: Inspection firms (Benri, Accenture, SGS, KPMG, Verifit, Instituto Totum) / ANP
+    url: https://www.benriratings.com/consulta/publica/
+    also: [https://www.accenture.com/br-pt/services/sustainability/consulta-publica-renovabio]
+    example: https://s3.amazonaws.com/benri.site/media/arquivos/f2040d9a-9980-4519-bf16-5d8dc9b2a5f5/Relatorio%20de%20Certificacao%20RenovaBio_E1GC_rev06_PB.pdf
+    module: supply
+    provides: [cane_crushed_t, anhydrous_ethanol_L, hydrated_ethanol_L, vinasse_applied_L, bagasse, electricity, straw, neea, eligible_fraction]
+    spatial: per mill
+    temporal: annual (3-year windows), ~2018-2025
+    format: PDF / XLSX
+    access: open
+    status: get
+    confidence: V   # one report read in full (Usina Santa Adélia–Pereira Barreto)
+    use: mill-level calibration labels for supply downscaling
+  - id: anp_renovabio_cert_panel
+    name: ANP RenovaBio certification panel + list of approved certificates
+    publisher: ANP
+    url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/paineis-dinamicos-da-anp/paineis-dinamicos-do-renovabio/painel-dinamico-de-certificacoes-de-biocombustiveis-renovabio
+    also: [https://www.gov.br/anp/pt-br/assuntos/renovabio/certificados-producao-importacao-eficiente-biocombustiveis]
+    module: supply
+    provides: [unit, cnpj, route, neea, eligible_fraction, validity]
+    spatial: per unit
+    temporal: weekly
+    access: open
+    status: get
+    confidence: S
+  - id: anp_cbio_panel
+    name: ANP Plataforma CBIO dynamic panel
+    publisher: ANP
+    url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/paineis-dinamicos-da-anp/paineis-dinamicos-do-renovabio/painel-dinamico-da-cbio
+    module: supply
+    provides: [lastro, cbio_issued, cbio_retired]
+    spatial: per issuer (verify)
+    temporal: biweekly
+    access: open
+    status: get
+    confidence: S
+  - id: anp_ethanol_producers
+    name: ANP Painel Dinâmico de Produtores de Etanol + open data (capacity, tankage, production)
+    publisher: ANP (SIMP)
+    url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/producao-de-biocombustiveis
+    also: [https://dados.gov.br/dataset/painel-de-produtores-de-derivados-producao-de-biocombustiveis]
+    module: supply
+    provides: [location, authorized_capacity_m3d, tankage, monthly_production_m3]
+    spatial: capacity per plant; production by UF/feedstock (per-plant via LAI)
+    temporal: monthly 2012-2026
+    format: CSV / Power BI
+    access: open
+    status: get
+    confidence: S
+  - id: mapa_sapcana
+    name: MAPA SAPCANA registry and production reports
+    publisher: MAPA
+    url: https://sistemasweb4.agricultura.gov.br/sapcana/downloadBaseCompletaInstituicao.action
+    module: supply
+    provides: [unit_registry, type, municipality, biweekly_production_state]
+    spatial: registry per unit; production state
+    temporal: biweekly
+    access: open (per-unit production via LAI)
+    status: get
+    confidence: S
+  - id: unica_data
+    name: UNICA / UNICAdata biweekly harvest reports
+    publisher: UNICA
+    url: https://unicadata.com.br/
+    module: supply
+    provides: [crush, atr, sugar, ethanol, mix]
+    spatial: Centro-Sul + SP
+    temporal: biweekly
+    access: open
+    status: have   # SP totals 2008-2018; extend
+    confidence: S
+  - id: conab_cana
+    name: CONAB Acompanhamento da Safra — cana-de-açúcar
+    publisher: CONAB
+    url: https://www.conab.gov.br/info-agro/safras
+    module: supply
+    spatial: UF
+    temporal: 4 surveys per season
+    access: open
+    status: get
+    confidence: S
+  - id: iea_sp_db
+    name: IEA-SP Banco de Dados (area, production, herds)
+    publisher: IEA-SP / SAA
+    url: https://iea.agricultura.sp.gov.br/out/Bancodedados.php
+    module: supply
+    spatial: municipality / EDR
+    temporal: annual since 1983
+    access: open
+    status: get
+    confidence: S
+  - id: ibge_pam_seade
+    name: IBGE PAM + SEADE crop statistics
+    publisher: IBGE / SEADE
+    module: supply
+    spatial: municipality
+    temporal: annual 2008-2025
+    status: have
+  - id: mapbiomas_cana
+    name: MapBiomas sugarcane class 30 m
+    publisher: MapBiomas
+    module: supply
+    spatial: 30 m
+    temporal: annual 2008-2025
+    status: have
+  - id: cetesb_pav
+    name: CETESB P4.231 Vinasse Application Plans (PAV)
+    publisher: CETESB
+    url: https://cetesb.sp.gov.br/wp-content/uploads/2024/09/Norma-Tecnica-Cetesb-P4.231-Vinhaca-Criterios-e-procedimentos-para-aplicacao-no-solo-agricola.pdf
+    module: supply
+    provides: [vinasse_volume, composition, application_polygons]
+    spatial: per mill / field
+    temporal: annual
+    access: restricted
+    status: lai
+    confidence: S
+  - id: essd_zheng_2022
+    name: Sugarcane harvest-area maps Brazil 2016-2019 (30 m)
+    citation: Zheng et al. 2022, ESSD 14:2065, doi:10.5194/essd-14-2065-2022
+    module: supply
+    spatial: 30 m
+    status: get
+    confidence: S
+  - id: essd_ditommaso_2024
+    name: 10 m sugarcane maps 2019-2022
+    citation: Di Tommaso et al. 2024, ESSD 16:4931, doi:10.5194/essd-16-4931-2024
+    url: https://zenodo.org/records/10871164
+    module: supply
+    status: get
+    confidence: S
+  - id: s2_harvest_detection
+    name: Sentinel-2/1 harvest date detection (build)
+    reference: https://github.com/jfontenelli/cane_cycle ; Remote Sensing 12(24):4080 (2020)
+    module: supply
+    spatial: 10 m / field
+    temporal: 5-12 days
+    status: build
+    confidence: S
+    notes: cane_cycle has no license stated — reimplement logic, do not copy
+
+  # ---------------- SUPPLY: LIVESTOCK & OTHER ----------------
+  - id: livestock_points_sp
+    name: Georeferenced livestock farms (state body)
+    module: supply
+    spatial: point
+    status: have
+  - id: ibge_ppm
+    name: IBGE PPM herds (SIDRA 3939, 74)
+    url: https://sidra.ibge.gov.br/pesquisa/ppm/tabelas
+    module: supply
+    spatial: municipality
+    temporal: annual 1974-2024
+    status: get
+    confidence: S
+  - id: lupa_2016_17
+    name: LUPA farm-unit census 2016/17 (CATI/IEA)
+    url: https://www.cati.sp.gov.br/projetolupa/estudos_lupa.php
+    module: supply
+    spatial: municipality/EDR public; UPA microdata restricted
+    status: get   # microdata: agreement
+    confidence: S
+  - id: cda_gedave_gta
+    name: CDA-SP GEDAVE property registry and e-GTA animal transit
+    url: http://gedave.defesaagropecuaria.sp.gov.br/
+    module: supply
+    spatial: property
+    status: lai
+    confidence: S
+  - id: mapa_sif
+    name: MAPA SIF establishments + SIGSIF monthly slaughter
+    url: https://dados.agricultura.gov.br/dataset/servico-de-inspecao-federal-sif
+    module: supply
+    spatial: point; UF
+    temporal: monthly
+    status: get
+    confidence: S
+  - id: ana_ete_2019
+    name: ANA Atlas Esgotos — ETE 2019 shapefile
+    url: https://dados.ana.gov.br/pt_PT/dataset/estacoes-de-tratamento-de-esgoto-2019
+    module: supply
+    spatial: point
+    status: get
+    confidence: S
+  - id: sinisa
+    name: SINISA (ex-SNIS) sanitation & solid waste
+    url: https://www.gov.br/cidades/pt-br/acesso-a-informacao/acoes-e-programas/saneamento/sinisa
+    module: supply
+    spatial: municipality / provider
+    status: get
+    confidence: S
+  - id: cetesb_rsu_inventory
+    name: CETESB Inventário Estadual de Resíduos Sólidos Urbanos (+ IQR layer)
+    url: https://cetesb.sp.gov.br/residuossolidos/wp-content/uploads/sites/26/2024/05/Inventario-Estadual-de-Residuos-Solidos-Urbanos-no-Estado-de-Sao-Paulo-2023.pdf
+    module: supply
+    spatial: municipality / landfill
+    status: get
+    confidence: S
+  - id: pilar2b_fde
+    name: PILAR-2b FDE competing-use and availability factors
+    module: supply
+    status: have
+
+  # ---------------- COSTS ----------------
+  - id: epe_nt_2025_08
+    name: EPE NT-EPE-DPG-SDB-2025-08 Investimentos e Custos O&M Biocombustíveis 2026-2035
+    url: https://www.epe.gov.br/sites-pt/publicacoes-dados-abertos/publicacoes/PublicacoesArquivos/publicacao-343/topico-780/NT-EPE-DPG-SDB-2025-08_Investimentos_Custos_O_e_M_Bios_2026-2035.pdf
+    module: costs
+    provides: [capex_factor_R$_per_Nm3d, opex_R$_per_Nm3]
+    status: get
+    confidence: S
+  - id: epe_nt_2023_07
+    name: EPE NT-EPE-DPG-SDB-2023-07 (2025-2034)
+    url: https://www.epe.gov.br/sites-pt/publicacoes-dados-abertos/publicacoes/PublicacoesArquivos/publicacao-343/topico-729/NT-EPE-DPG-SDB-2023-07_Investimentos_Custos_O_e_M_Bios_2025-2034.pdf
+    module: costs
+    status: get
+    confidence: S
+  - id: bndes_operacoes
+    name: BNDES open data — operações de financiamento não automáticas
+    url: https://dadosabertos.bndes.gov.br/dataset/operacoes-financiamento
+    module: costs
+    provides: [client, cnpj, municipality, description, contracted_value, rate, cost_base, grace_months, term]
+    format: CSV (; delimiter, Windows-1252, decimal comma)
+    license: ODbL
+    status: get
+    confidence: S
+  - id: bndes_td159
+    name: BNDES TD 159 — A hora do biometano no Brasil (2024)
+    url: https://web.bndes.gov.br/bib/jspui/bitstream/1408/24146/1/PRFol_216049_TD%20n.%20159_A%20hora%20do%20biometano%20no%20Brasi.pdf
+    module: costs
+    status: get
+    confidence: S
+  - id: fiesp_sp_biomethane_2024
+    name: FIESP-led consortium study — biomethane competitiveness in SP (2024)
+    url: https://brasilenergia.com.br/petroleoegas/competitividade-do-biogas-e-biometano-nos-mercados-de-gas
+    module: costs
+    status: get   # locate original report
+    confidence: S
+  - id: iea_biogas_outlook_2020
+    name: IEA Outlook for Biogas and Biomethane (2020)
+    url: https://iea.blob.core.windows.net/assets/5b757571-c8d0-464f-baad-bc30ec5ff46e/OutlookforBiogasandBiomethane.pdf
+    module: costs
+    status: get
+    confidence: S
+  - id: sifreca
+    name: ESALQ-LOG SIFRECA freight prices
+    url: https://sifreca.esalq.usp.br/
+    module: costs
+    spatial: route
+    temporal: weekly
+    access: partial subscription
+    status: paid
+    confidence: S
+  - id: contran_882
+    name: CONTRAN Res. 882/2021 weights and dimensions
+    url: https://www.abti.org.br/anexos/20211213_res_contran_882_limites_pesos_dimensoes.pdf
+    module: costs
+    status: get
+    confidence: S
+  - id: iea_sp_vtn
+    name: IEA-SP land prices (Valor da Terra Nua)
+    url: https://iea.agricultura.sp.gov.br/out/precosdeterraagricolas.php
+    module: costs
+    spatial: municipality / EDR
+    temporal: semiannual
+    status: get
+    confidence: S
+
+  # ---------------- REVENUES & MARKET ----------------
+  - id: anp_biomethane_plants
+    name: ANP biomethane producers — capacity & monthly volume per plant
+    module: market
+    local_path: Pilar-2b/analysis/data/05c_anp_biometano_plants_latest.csv ; 05e_anp_biometano_plant_volume_monthly.csv
+    spatial: per plant
+    temporal: monthly 2020-2026
+    status: have
+    confidence: V
+  - id: mme_boletim_gn
+    name: MME Boletim Mensal de Acompanhamento da Indústria de Gás Natural
+    url: https://www.gov.br/mme/pt-br/assuntos/secretarias/petroleo-gas-natural-e-biocombustiveis/publicacoes-1/boletim-mensal-de-acompanhamento-da-industria-de-gas-natural
+    module: market
+    spatial: distributor
+    temporal: monthly
+    status: get
+    confidence: S
+  - id: arsesp_tarifas
+    name: ARSESP gas distribution tariffs (Comgás, Necta, Naturgy SP Sul)
+    url: https://www.arsesp.sp.gov.br/Paginas/Tarifas.aspx
+    module: market
+    status: get
+    confidence: S
+  - id: argus_biomethane
+    name: Argus Brazil biomethane price assessments
+    url: https://www.argusmedia.com/pt/news-and-insights/latest-market-news/2771482-viewpoint-brazil-s-biomethane-at-a-crossroads
+    module: market
+    access: subscription (headlines public)
+    status: paid
+    confidence: S
+  - id: iepuc_boletim_biometano
+    name: IEPUC/PUC-Rio monthly biomethane bulletin (from Jul 2026)
+    url: https://www.iepuc.puc-rio.br/
+    module: market
+    temporal: monthly
+    status: get
+    confidence: S
+  - id: anp_precos_combustiveis
+    name: ANP weekly fuel price survey (station level)
+    url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/serie-historica-de-precos-de-combustiveis
+    module: market
+    spatial: station / municipality
+    status: have   # user reports fuel prices held; confirm coverage
+    confidence: K
+  - id: b3_cbio
+    name: B3 CBIO prices
+    url: https://www.b3.com.br/pt_br/b3/sustentabilidade/produtos-e-servicos-esg/credito-de-descarbonizacao-cbio/
+    module: market
+    temporal: daily
+    status: get
+    confidence: K
+  - id: aneel_ccee
+    name: ANEEL tariffs and CCEE PLD
+    url: https://dadosabertos.aneel.gov.br
+    module: market
+    status: have   # user reports energy prices held; confirm
+    confidence: K
+  - id: iea_sp_input_prices
+    name: IEA-SP prices paid by farmers (fertilizers)
+    url: http://www.iea.agricultura.sp.gov.br
+    module: market
+    status: get
+    confidence: K
+
+  # ---------------- REGULATION ----------------
+  - id: reg_lei_14993_2024
+    name: Lei 14.993/2024 Combustível do Futuro (biomethane program)
+    module: regulation
+    status: get
+    confidence: S
+  - id: reg_decreto_12614_2025
+    name: Decreto 12.614/2025
+    url: https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2025/decreto/d12614.htm
+    module: regulation
+    confidence: S
+  - id: reg_cnpe_4_2026
+    name: CNPE Res. 4/2026 — 0.5% target for 2026
+    module: regulation
+    confidence: S
+  - id: reg_anp_995_996_2026
+    name: ANP Res. 995/2026 (targets, CGOB) and 996/2026 (certification, issuance)
+    url: https://www.legisweb.com.br/legislacao/?id=491704
+    module: regulation
+    confidence: S
+  - id: reg_anp_1006_2026
+    name: ANP Res. 1.006/2026 biomethane specification (replaces 886 & 906/2022)
+    url: https://www.legisweb.com.br/legislacao/?id=499173
+    module: regulation
+    confidence: S
+  - id: reg_anp_987_2025
+    name: ANP Res. 987/2025 producer authorization (replaces 734/2018)
+    url: https://www.legisweb.com.br/legislacao/?id=482161
+    module: regulation
+    confidence: S
+  - id: reg_arsesp_1765_2025
+    name: ARSESP Del. 1.765/2025 TUSD-Verde (interconnection)
+    url: https://www.arsesp.sp.gov.br/LegislacaoArquivos/DELIBERA%C3%87%C3%83O%20ARSESP%20N%C2%BA%201765,%20de%2023%20de%20Dezembro%20de%202025.pdf
+    module: regulation
+    confidence: S
+  - id: reg_arsesp_744_1342
+    name: ARSESP Del. 744/2017 and 1.342/2022 (biomethane in distribution)
+    module: regulation
+    confidence: S
+
+  # ---------------- SPATIAL / ENVIRONMENT ----------------
+  - id: infra_gas_rail_power_roads
+    name: Gas transport+distribution, city gates, injection points, rail, transmission, roads
+    module: spatial
+    status: have
+  - id: exclusion_layers
+    name: Siting exclusion layers
+    module: spatial
+    status: have
+  - id: datageo_sp
+    name: DataGEO / IDEA-SP
+    url: http://datageo.ambiente.sp.gov.br/app/?ctx=DATAGEO
+    module: spatial
+    status: get
+    confidence: S
+  - id: der_sre
+    name: DER-SP state road network
+    url: https://dadosabertos.sp.gov.br/organization/departamento-de-estradas-de-rodagem-der?res_format=SHP
+    module: spatial
+    status: get
+    confidence: S
+  - id: dnit_snv
+    name: DNIT SNV federal roads
+    url: https://servicos.dnit.gov.br/dadosabertos/
+    module: spatial
+    status: get
+    confidence: S
+  - id: osm_sudeste
+    name: OpenStreetMap Sudeste extract (routing)
+    url: https://download.geofabrik.de/south-america/brazil/sudeste.html
+    module: spatial
+    status: get
+    confidence: K
+  - id: zaa_sucro_sp
+    name: Zoneamento Agroambiental do Setor Sucroenergético SP (SAD-69)
+    url: https://www.ciiagro.sp.gov.br/Zoneamento_Agroambiental/index.htm
+    module: spatial
+    status: get
+    confidence: S
+  - id: car_sicar
+    name: CAR/SICAR rural properties, APP, RL
+    url: https://consultapublica.car.gov.br/publico/imoveis/index
+    module: spatial
+    status: get
+    confidence: S
+  - id: rossi_2017_soils
+    name: Mapa Pedológico do Estado de SP (Rossi 2017)
+    url: https://geo.cati.sp.gov.br/server/rest/services/Hosted/Pedologico_Rossi_2017/MapServer
+    module: spatial
+    status: get
+    confidence: S
+  - id: fabdem
+    name: FABDEM bare-earth DEM (Hawker et al. 2022, doi:10.1088/1748-9326/ac4d4f)
+    url: https://gee-community-catalog.org/projects/fabdem/
+    module: spatial
+    status: get
+    confidence: S
+  - id: br_dwgd
+    name: BR-DWGD gridded daily weather (Xavier et al. 2022, doi:10.1002/joc.7731)
+    url: https://github.com/AlexandreCandidoXavier/BR-DWGD
+    module: environment
+    status: get
+    confidence: S
+  - id: era5_land
+    name: ERA5-Land (Muñoz-Sabater et al. 2021, doi:10.5194/essd-13-4349-2021)
+    module: environment
+    status: get
+    confidence: S
+  - id: epe_webmap
+    name: EPE WebMap (gas, biofuel, power layers)
+    url: https://gisepeprd2.epe.gov.br/WebMapEPE/
+    module: spatial
+    status: get
+    confidence: S
+  - id: aneel_sigel
+    name: ANEEL SIGEL
+    url: https://sigel.aneel.gov.br/
+    module: spatial
+    status: get
+    confidence: S
+
+  # ---------------- INTERNATIONAL BENCHMARKS (priors, not direct inputs) ----------------
+  - id: intl_de_mastr
+    name: Germany Marktstammdatenregister (all generation units incl. ~biogas plants; commissioning/decommissioning dates)
+    url: https://www.marktstammdatenregister.de/MaStR/Datendownload
+    also: [https://zenodo.org/records/14843222, https://open-mastr.readthedocs.io/en/latest/]
+    module: intl_benchmark
+    provides: [plant_location, capacity, commissioning_date, decommissioning_date, fuel]
+    format: XML dumps (daily), Zenodo bundles, Python open-mastr
+    use: size distributions, plant survival/shutdown hazard (risk prior), repowering
+    status: get
+    confidence: S
+  - id: intl_de_dbfz_resources
+    name: DBFZ Ressourcendatenbank (biomass residue potentials & current use, CC BY 4.0)
+    url: https://biogas.fnr.de/service/forschung-live/projekte/dbfz-ressourcendatenbank-potenzial-von-abfaellen-und-reststoffen-nutzen
+    module: intl_benchmark
+    use: method template for theoretical→technical→mobilisable potential (compare with PILAR-2b FDE)
+    status: get
+    confidence: S
+  - id: intl_de_dbfz_operator_survey
+    name: DBFZ annual operator survey (Betreiberbefragung) & Anlagenbestand reports
+    url: https://www.dbfz.de/pressemediathek/presse/pressemitteilungen/pressemitteilung-25022020
+    module: intl_benchmark
+    use: operating hours, availability, substrate mix, upgrading plant performance distributions
+    status: get
+    confidence: S
+  - id: intl_de_bmp3
+    name: FNR/DBFZ Biogas-Messprogramm III (~60 plants, technical/biological/economic efficiency)
+    url: https://www.fnr.de/fileadmin/Projekte/2021/Mediathek/bmp_2020_web_stand2021.pdf
+    module: intl_benchmark
+    use: empirical full-scale vs lab yield, parasitic load, availability, cost structure
+    status: get
+    confidence: S
+  - id: intl_de_ktbl
+    name: KTBL Wirtschaftlichkeitsrechner Biogas + Faustzahlen Biogas
+    url: https://www.ktbl.de/webanwendungen/wirtschaftlichkeitsrechner-biogas-neuanlagen
+    module: intl_benchmark
+    use: component-level CAPEX/OPEX structure, labour, model plants (incl. biomethane route)
+    status: get
+    confidence: S
+  - id: intl_dk_dea_catalogue
+    name: Danish Energy Agency Technology Data — renewable fuels (biogas, upgrading; xlsx data sheets with projections)
+    url: https://ens.dk/en/energy-sources/biogas-denmark
+    module: intl_benchmark
+    use: standardized CAPEX/OPEX & efficiencies with 2030/2050 trajectories (learning priors)
+    status: get
+    confidence: S
+  - id: intl_dk_biogas_outlook
+    name: Biogas Danmark — Biogas Outlook 2024 (manure-based co-digestion at scale)
+    url: https://www.biogas.dk/wp-content/uploads/2024/05/Biogas-Outlook-2024-05-30-WEB-engelsk.pdf
+    module: intl_benchmark
+    use: manure base-load co-digestion analog
+    status: get
+    confidence: S
+  - id: intl_se_energimyndigheten
+    name: Swedish Energy Agency / Energigas Sverige biogas statistics (330 plants; 2,688 GWh in 2025; 67% upgraded)
+    url: https://www.energigas.se/fakta-om-gas/biogas/statistik-om-biogas/
+    module: intl_benchmark
+    use: plant-type mix (co-digestion, WWTP, farm), upgrading share
+    status: get
+    confidence: S
+  - id: intl_se_lidkoping
+    name: Lidköping biogas plant (Gasum) — food-industry residues, water scrubbing, LBG
+    url: https://www.gasum.com/en/gasum/supply-chain/biogas-plants/lidkoping-biogas-plant/
+    also: [https://task37.ieabioenergy.com/wp-content/uploads/sites/32/2022/03/Case_Study_LBG_web.pdf]
+    module: intl_benchmark
+    use: off-grid liquefied biomethane (virtual pipeline) analog for mills far from the grid
+    status: get
+    confidence: S
+  - id: intl_fr_odre
+    name: France ODRÉ / GRDF biomethane injection sites (851 sites, 16.3 TWh/yr capacity, Aug 2026)
+    url: https://odre.opendatasoft.com/explore/dataset/points-dinjection-de-biomethane-en-france/
+    also: [https://opendata.grdf.fr/explore/dataset/les-sites-dinjection-de-biomethane-en-france/, https://odre.opendatasoft.com/explore/dataset/registre-biomethane-trimestre/]
+    module: intl_benchmark
+    use: per-site capacity, commissioning, feedstock type, grid queue (reserved capacity) dynamics
+    status: get
+    confidence: S
+  - id: intl_fr_bionorrois
+    name: BioNorrois (TotalEnergies + Cristal Union) — sugar-beet pulp + agri-food waste, 100→153 GWh/yr
+    url: https://totalenergies.com/news/news/totalenergies-joins-forces-cristal-union-produce-biogas-sugar-beet-pulp
+    module: intl_benchmark
+    use: closest seasonal sugar-industry analog (campaign + pulp storage + co-substrates)
+    status: get
+    confidence: S
+  - id: intl_eu_eba_gie_map
+    name: EBA/GIE European Biomethane Map 2025 & EBA Statistical Report (1,678 plants)
+    url: https://www.gie.eu/publications/maps/european-biomethane-map/
+    module: intl_benchmark
+    status: get
+    confidence: S
+  - id: intl_eu_bip_cost_study
+    name: Biomethane Industrial Partnership TF4 — current cost of biomethane from real industry data (Oct 2023)
+    url: https://bip-europe.eu/wp-content/uploads/2023/10/BIP_TF4-study_Full-slidedeck_Oct2023.pdf
+    module: intl_benchmark
+    use: real-plant CAPEX/OPEX by size and feedstock; scale effects
+    status: get
+    confidence: S
+  - id: intl_eu_oies_2026
+    name: OIES NG203 Biomethane in Europe — why scaling up is harder than it looks (Jan 2026)
+    url: https://www.oxfordenergy.org/wpcms/wp-content/uploads/2026/01/NG203-Biomethane-in-Europe.pdf
+    module: intl_benchmark
+    use: cost trends (no sustained decline since late 2010s), policy dependence lessons
+    status: get
+    confidence: S
+  - id: intl_eu_acer_ifri_2026
+    name: ACER 2026 gas decarbonisation monitoring; IFRI June 2026 European biomethane sector
+    url: https://www.acer.europa.eu/sites/default/files/documents/Publications/ACER-2026-Gas-Decarbonisation.pdf
+    also: [https://www.ifri.org/sites/default/files/2026-06/ifri_cornot-gandolphe_european_biomethane_sector_june2026.pdf]
+    module: intl_benchmark
+    use: policy/market design lessons for CGOB mandate
+    status: get
+    confidence: S
+  - id: intl_us_agstar
+    name: US EPA AgSTAR Livestock Anaerobic Digester Database (incl. shut-down projects)
+    url: https://www.epa.gov/agstar/livestock-anaerobic-digester-database
+    module: intl_benchmark
+    use: manure digester sizes, technologies, and failure/shutdown rates
+    status: get
+    confidence: S
+  - id: intl_iea_task37
+    name: IEA Bioenergy Task 37 country reports & case stories (Brazil is a member country)
+    url: https://task37.ieabioenergy.com/country-reports/
+    module: intl_benchmark
+    status: get
+    confidence: S
+  - id: intl_sugarbeet_pulp_ad
+    name: Sugar beet press pulp digestion in sugar factories (Hungary case; IIRB proceedings)
+    url: https://pubmed.ncbi.nlm.nih.gov/18957765/
+    also: [https://www.iirb.org/fileadmin/IIRB/Congresses/71st_IIRB_Congress/abstracts_proceedings/71_gaschler_et_al_abstracts.pdf]
+    module: intl_benchmark
+    use: campaign-season (~100 d) operation, pulp storage, co-digestion
+    status: get
+    confidence: S

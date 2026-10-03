@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MillYearExtraction",
+  "description": "One row per mill (CNPJ) per year extracted from a RenovaBio certification report or similar document. Every numeric value MUST carry page and verbatim quote; rows without them are rejected.",
+  "type": "object",
+  "required": ["source_id", "document_url", "cnpj", "mill_name", "year", "values"],
+  "properties": {
+    "source_id": {"type": "string", "description": "registry id, e.g. renovabio_cert_reports"},
+    "document_url": {"type": "string"},
+    "document_sha256": {"type": "string"},
+    "inspection_firm": {"type": "string"},
+    "cnpj": {"type": "string", "pattern": "^[0-9]{14}$"},
+    "mill_name": {"type": "string"},
+    "municipality_ibge": {"type": "string", "pattern": "^[0-9]{7}$"},
+    "route": {"type": "string", "description": "e.g. E1GC (1G cane ethanol)"},
+    "year": {"type": "integer", "minimum": 2008, "maximum": 2030},
+    "values": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["variable", "value", "unit", "page", "quote"],
+        "properties": {
+          "variable": {
+            "type": "string",
+            "enum": [
+              "cane_processed", "anhydrous_ethanol", "hydrated_ethanol", "sugar",
+              "vinasse_generated", "vinasse_applied", "filter_cake", "straw_recovered",
+              "bagasse_surplus", "electricity_exported", "neea_anhydrous", "neea_hydrated",
+              "eligible_fraction"
+            ]
+          },
+          "value": {"type": "number"},
+          "unit": {"type": "string", "description": "as written in the document, e.g. t, L, m3, MWh, gCO2eq/MJ, %"},
+          "page": {"type": "integer"},
+          "table_or_section": {"type": "string"},
+          "quote": {"type": "string", "maxLength": 500, "description": "verbatim text or table row the value came from"},
+          "notes": {"type": "string"}
+        }
+      }
+    },
+    "extraction": {
+      "type": "object",
+      "properties": {
+        "model": {"type": "string"},
+        "prompt_sha256": {"type": "string"},
+        "extracted_at": {"type": "string", "format": "date-time"},
+        "human_audited": {"type": "boolean"},
+        "auditor": {"type": "string"}
+      }
+    }
+  }
+}

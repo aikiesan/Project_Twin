@@ -1,0 +1,21 @@
+id,project,location,uf,feedstock,capacity_value,capacity_unit,capacity_basis,investment_total_R$M,bndes_R$M,year,status,source,confidence,notes
+1,Onebio / Biometano Verde Paulínia (Edge + Orizon),Paulínia,SP,landfill gas,225000,Nm3/d,nominal,,449.7,2025-2026,operating (Mar 2026),canalsolar.com.br; eixos.com.br; brasil61,S,BNDES loan only; total CAPEX unknown
+2,Essencis Biometano Caieiras,Caieiras,SP,landfill gas,68000,m3/d,nominal,,93.8,2023,operating,abrema.org.br; eixos.com.br,S,CNG by truck
+3,Cocal plant 1,Narandiba,SP,vinasse + filter cake + straw,25000,m3/d,unclear,150,,2021,operating,forbes.com.br; jornalcana; novacana,S,+R$30M distribution pipeline; ANP cap 27112 m3/d
+4,Cocal plant 2,Paraguaçu Paulista,SP,vinasse + filter cake + poultry manure,60000,m3/d,harvest,216,135,2025,operating (Sep 2025),agfeed.com.br; abrema.org.br; cocal.com.br,S,
+5,Raízen Costa Pinto,Piracicaba,SP,vinasse + filter cake,26000000,m3/yr,annual,300,,2022-2025,operating,novacana; revistarpanews,S,ANP lists 130368 m3/d — check basis
+6,São Martinho Santa Cruz,Américo Brasiliense,SP,vinasse,63000,m3/d,harvest (Apr-Nov),250,,2025,start 2H2025,eixos.com.br; jornalcana; argusmedia,S,IFC loan US$165M
+7,GNR Mauá (Lara + MDC),Mauá,SP,landfill gas,65000,Nm3/d,nominal,,101.9,2026,construction (COD 1H2027),cenarioenergia; technibus; agenciainfra,S,Combined total with #8 R$245M
+8,GNR Vila Velha (Lara + MDC),Vila Velha,ES,landfill gas,32000,Nm3/d,nominal,,78.8,2026,construction,same as 7,S,
+9,BP Bioenergy Tropical,Edéia,GO,vinasse,67000,Nm3/d,unclear,275.8,244.9,2026,construction (2027),jornalcana; cnnbrasil; novacana,S,
+10,Bioo Paraná,Toledo,PR,agro-industrial residues,11000000,m3/yr,annual,196,148.5,2026,construction,cenarioenergia; canaonline,S,Includes food-grade CO2 + fertilizer
+11,Geo bio gas&carbon Tamboara (expansion),Tamboara,PR,sugarcane residues,1500,Nm3/h,nominal,41,37.6,2024,expansion,dgabc; agenciagov; eixos,S,Expansion only
+12,Solví São Leopoldo,São Leopoldo,RS,landfill gas,36700,m3/d,nominal,95.4,76.4,2026,operating (Aug 2026),cenarioenergia; agenciainfra,S/D,Total derived from 80.1% share
+13,Gás Verde Ecoparque Pernambuco,Igarassu,PE,landfill gas,45600,m3/d,nominal,90.2,72.2,2026,construction,movimentoeconomico.com.br,S,
+14,Atvos,Nova Alvorada do Sul,MS,vinasse + filter cake,28300000,m3/yr,annual,350,,2025-2026,construction,novacana; correiodoestado; semadesc.ms.gov.br,S,
+15,Adecoagro Ivinhema (expansion),Ivinhema,MS,vinasse,30000,Nm3/d,unclear (new vs total),225.7,,2027,planned,canalrural; biosulms,S,
+16,ZEG Biogás (Vibra) Tupaciguara,Tupaciguara,MG,vinasse,15000,m3/d,nominal (expandable 30000),78.6,,2025,operating (Oct 2025),udop.com.br; minutomt,S,
+17,ZEG Biogás + Pindorama,,AL,vinasse,36000,m3/d,unclear (6M m3/yr also cited),62.5,,2025,,abegas.org.br/arquivos/90688; canaonline,S,Sources disagree (R$60-65M)
+18,ZEG Biogás + Coagro,Campos,RJ,sugarcane residues,3700000,m3/yr,annual,60,,2026,construction,eixos.com.br,S,
+19,Tereos pilot,,SP,vinasse,,,pilot,15,,,pilot,canaonline,S,
+20,Raízen Bonfim (biogas-to-power reference),Guariba,SP,vinasse + filter cake,21,MW,electric,153,,2020,operating,canalenergia.com.br,S,Digester CAPEX reference (power route)

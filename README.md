@@ -23,6 +23,9 @@ Techno-economic and spatial simulation of biomethane production in São Paulo (C
 | `registry/parameters.csv` | 60 model parameters with central/range/unit/source/confidence |
 | `registry/projects_capex.csv` | 20 Brazilian biomethane projects (capacity + investment) |
 | `templates/` | Method-doc, ADR, partner data request and LLM extraction (JSON schema) templates |
+| `research_notes/` | Full raw findings of every research sweep (R00–R06), with all URLs and numbers |
+| `evidence/` | Primary documents acquired: RenovaBio report (Usina Santa Adélia, read in full) + ANP monthly extracts for SP plants |
+| `ACCESS_AT_HOME.md` | How to get all of this on your home machine |
 
 ## Confidence flags (used everywhere)
 

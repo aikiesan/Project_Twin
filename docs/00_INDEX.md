@@ -48,5 +48,9 @@
 | 23 | [References](23_REFERENCES.md) |
 | 99 | [Session notes — how we got here](99_SESSION_NOTES.md) |
 
-## G. Decisions
+## G. Raw material
+- `../research_notes/` — R00–R06 full research reports (all URLs, numbers, flags)
+- `../evidence/` — primary documents and data extracts (V-level)
+
+## H. Decisions
 `decisions/ADR-0001` … — see [decisions/README.md](decisions/README.md).

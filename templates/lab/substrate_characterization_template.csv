@@ -1,0 +1,2 @@
+substrate_id,source_site,sample_date,material,ts_pct_fm,vs_pct_ts,cod_g_l,cod_g_kg_fm,so4_g_l,k_g_l,tkn_g_l,tan_g_l,p_g_l,ph,density_t_m3,temperature_c,method_ref,lab,notes
+vinasse_millA_2026-10,millA (code only),2026-10-05,vinasse,,,,,,,,,,,,,"e.g. APHA 2540 / 5220",LABIOEN,"synthetic example row - delete; keep partner names out of public files"

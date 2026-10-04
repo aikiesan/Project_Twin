@@ -1,0 +1,4 @@
+experiment_id,lab,substrate_id,bottle_id,role,replicate,temperature_c,inoculum_id,inoculum_vs_g,substrate_vs_g,day,cum_ch4_nml,notes
+E6-2026-01,LABIOEN,filter_cake_millA_2026-10,B01,sample,1,55,INOC-2026-10,15.0,7.5,0,0,"synthetic example row - delete"
+E6-2026-01,LABIOEN,blank,B10,blank,1,55,INOC-2026-10,15.0,0,0,0,"synthetic example row - delete"
+E6-2026-01,LABIOEN,cellulose,B20,positive_control,1,55,INOC-2026-10,15.0,7.5,0,0,"synthetic example row - delete"

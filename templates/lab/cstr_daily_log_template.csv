@@ -1,0 +1,2 @@
+reactor_id,date,working_volume_l,temperature_c,feed_substrate_id,feed_mass_g,feed_vs_g,feed_cod_g,effluent_volume_l,biogas_nl,ch4_pct,co2_pct,h2s_ppm,ph,fos_mg_l,tac_mg_caco3_l,vfa_mg_l,tan_mg_l,k_mg_l,notes
+R1,2026-10-05,4.0,55,vinasse_millA_2026-10;filter_cake_millA_2026-10,250;20,4.1;3.9,,0.13,0,0,0,,,,,,,,,"synthetic example row - delete; multiple substrates separated by ';' with matching ';' lists"

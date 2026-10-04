@@ -1,0 +1,51 @@
+[project]
+name = "sp-biomethane-engine"
+version = "0.0.1"
+description = "Techno-economic and spatial simulation engine for biomethane production in São Paulo State (CP2B / NIPE-UNICAMP)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary until first paper (then GPL-3.0 to match PILAR-2b)" }
+authors = [{ name = "CP2B / NIPE-UNICAMP" }]
+dependencies = [
+  "numpy>=1.26",
+  "pandas>=2.2",
+  "scipy>=1.11",     # includes HiGHS via scipy.optimize.milp
+  "pyyaml>=6.0",
+  "jsonschema>=4.21",
+  "pypdf>=4.0",
+]
+
+[project.optional-dependencies]
+geo = ["geopandas>=1.0", "shapely>=2.0", "pyproj>=3.6", "h3>=4.1", "rasterio>=1.3", "pyarrow>=15"]
+opt = ["highspy>=1.7", "linopy>=0.3"]
+stats = ["SALib>=1.5", "pymc>=5.10", "arviz>=0.18"]
+db = ["sqlalchemy>=2.0", "psycopg[binary]>=3.1", "geoalchemy2>=0.14"]
+nb = ["jupyterlab>=4.1", "matplotlib>=3.8"]
+dev = ["pytest>=8.0", "ruff>=0.4", "black>=24.0", "pre-commit>=3.6", "nbstripout>=0.7"]
+
+[project.scripts]
+engine = "engine.cli:main"
+
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/engine"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N", "W"]
+ignore = ["N803", "N806"]   # allow math-style names (V, Q, CRF) in model code
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]

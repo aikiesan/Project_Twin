@@ -1,0 +1,31 @@
+# Local stack: PostGIS (port 5433, so it does not clash with a local PILAR-2b DB) + Jupyter/engine.
+# Usage:  cp .env.example .env  &&  docker compose up -d
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: engine
+      POSTGRES_USER: engine
+      POSTGRES_PASSWORD: ${PGPASSWORD:-change-me}
+    ports: ["5433:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U engine -d engine"]
+      interval: 10s
+      retries: 10
+  jupyter:
+    build: .
+    command: >
+      uv run --extra nb --extra geo --extra stats
+      jupyter lab --ip=0.0.0.0 --no-browser --ServerApp.token='' --ServerApp.root_dir=/work
+    ports: ["8888:8888"]
+    environment:
+      DATABASE_URL: postgresql://engine:${PGPASSWORD:-change-me}@db:5432/engine
+    volumes: [".:/work"]
+    working_dir: /work
+    depends_on:
+      db: { condition: service_healthy }
+volumes:
+  pgdata: {}

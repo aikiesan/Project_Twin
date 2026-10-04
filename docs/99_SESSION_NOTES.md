@@ -135,4 +135,4 @@ Next technical steps:
 - Compare `anp_biomethane_open_data_2026_04` with `anp_biomethane_plants` and log any conflict.
 - Move `FONTES.md` (Atlas SP 2020 factors) into `parameters.csv` as S rows, then verify against the pages.
 - Use the 30 m MapBiomas 2024 raster (1.16 GB, in `07_DADOS_GIS_BASE`) to replace the 90 m screening raster.
-- Fill in the missing `publisher` fields; these are 69 of the old validator errors.
+- Registry validator: 0 errors since the fix in PR #1 (publishers filled).

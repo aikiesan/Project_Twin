@@ -1,0 +1,6 @@
+# Pipeline parameters (versioned; part of the run hash). No modelling numbers here —
+# model parameters live in registry/parameters.csv.
+mapbiomas:
+  # REQUIRED before running cane_area_h3: legend code(s) for sugarcane in the MapBiomas
+  # collection you downloaded, as CLI args, e.g. "--class-code <code>". Check the legend.
+  cane_code_args: "--class-code TODO"

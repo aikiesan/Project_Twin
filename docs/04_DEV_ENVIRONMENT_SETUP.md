@@ -112,7 +112,7 @@ make down
 ## 6. Bring PILAR-2b data in (read-only)
 - [ ] `pg_dump -Fc -n public $PILAR2B_DATABASE_URL > pilar2b.dump`, then `pg_restore` into localhost:5433 and rename the schema to `pilar2b`.
 - [ ] Copy `data/canonical_parameters/feedstocks.yaml` and the ANP CSVs (`05c`, `05e`) from `../pilar-2b/` into `data/raw/pilar2b/`, then register them with sha256.
-- [ ] The PILAR-2b ingest adapter for engine releases lives in `integration/pilar2b/engine_release/`. Copy it into `pilar-2b/cp2b-workspace/NewLook/backend/ingest/sources/` when the first release exists (docs/18 §3).
+- [ ] The PILAR-2b ingest adapter for engine releases is planned but not written yet. It is designed in `docs/99_SESSION_NOTES.md` (2026-10-04) and docs/18 §3.
 
 ## 7. Migrate to its own repository (when you start coding full-time)
 This keeps the full history of `sp-biomethane-engine/`:

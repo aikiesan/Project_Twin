@@ -1,0 +1,78 @@
+{
+ "summary": "Build engine v0 modules (registry+export, RenovaBio extractor, economics, process, supply, siting, ANP calibration) and adversarially review/fix each",
+ "result": [
+  {
+   "key": "registry-export",
+   "built": {
+    "module": "registry validation + export release bundle (Task A: A1 registry tooling, A2 engine->PILAR-2b bundle)",
+    "files": [
+     "/home/user/aprenda_sobre_biometano/sp-biomethane-engine/src/engine/registry.py",
+     "/home/user/aprenda_sobre_biometano/sp-biomethane-engine/src/engine/export/bundle.py",
+     "/home/user/aprenda_sobre_biometano/sp-biomethane-engine/src/engine/export/__main__.py",
+     "/home/user/aprenda_sobre_biometano/sp-biomethane-engine/templates/release_manifest_schema.json",
+     "/home/user/aprenda_sobre_biometano/sp-biomethane-engine/tests/test_registry.py",
+     "/home/user/aprenda_sobre_biometano/sp-biomethane-engine/tests/test_export.py",
+     "/home/user/aprenda_sobre_biometano/sp-biomethane-engine/docs/08_VERIFICATION_PROTOCOL.md",
+     "/home/user/aprenda_sobre_biometano/sp-biomethane-engine/docs/18_PILAR2B_INTEGRATION.md"
+    ],
+    "public_api": [
+     "engine.registry.Issue(level: str, file: str, row: int | None, id: str | None, message: str)  # frozen dataclass; str(issue) -> 'ERROR file:line [id]: message'",
+     "engine.registry.validate_parameters(path=PARAMETERS_CSV) -> list[Issue]",
+     "engine.registry.validate_sources(path=SOURCES_YAML) -> list[Issue]",
+     "engine.registry.validate_projects_capex(path=PROJECTS_CAPEX_CSV) -> list[Issue]",
+     "engine.registry.validate_all(registry_dir=REGISTRY_DIR) -> list[Issue]",
+     "engine.registry.summary_markdown(registry_dir=REGISTRY_DIR) -> str",
+     "engine.registry.param_hash(params: Mapping | None = None, *, path=PARAMETERS_CSV, length: int = 12) -> str",
+     "engine.registry.main(argv: Sequence[str] | None = None) -> int  # python -m engine.registry validate [--strict] | summary | hash [--registry-dir DIR]",
+     "engine.registry constants: ISSUE_LEVELS, SOURCE_STATUSES, PARAMETER_COLUMNS, SOURCE_REQUIRED_KEYS, SOURCE_OPTIONAL_KEYS, SOURCE_DOWNLOAD_KEYS, URL_PLACEHOLDERS, PROJECTS_REQUIRED_COLUMNS, PROJECTS_INVESTMENT_COLUMNS",
+     "engine.export.bundle.build_bundle(tables: Mapping[str, pd.DataFrame], out_dir, *, version: str, run_id: str, params_hash: str, sources_used: Sequence[str], scenarios: Sequence[str], created_at: str | None = None, git_commit: str | None = None, crs: str | None = None, private_columns_blocklist=DEFAULT_PRIVATE_COLUMN_PATTERNS, allow_extra=False, strict=False, overwrite=False, sources_path=None, schema_path=MANIFEST_SCHEMA_PATH) -> dict",
+     "engine.export.bundle.verify_bundle(bundle_dir, schema_path=MANIFEST_SCHEMA_PATH) -> list[str]  # [] == intact",
+     "engine.export.bundle.release_dir(version, exports_root=ROOT/'exports') -> Path  # exports/v<version>",
+     "engine.export.bundle.column_unit_ok(column: str, table_has_unit_column: bool = False) -> bool",
+     "engine.export.bundle.manifest_schema_errors(manifest, schema_path=...) -> list[str]",
+     "engine.export.bundle.load_manifest_schema(path=...) -> dict",
+     "engine.export.bundle.sha256_file(path, chunk_bytes=1<<20) -> str",
+     "engine.export.bundle.BundleError(ValueError), BundleWarning(UserWarning)",
+     "engine.export.bundle constants: CONTRACT_TABLES, CONTRACT_KEY_COLUMNS, CONTRACT_CRS='EPSG:4674', GEOMETRY_COLUMNS, DEFAULT_PRIVATE_COLUMN_PATTERNS, UNIT_TOKENS, KNOWN_DIMENSION_COLUMNS, MANIFEST_SCHEMA_PATH, MANIFEST_SCHEMA_VERSION='0.1.0'",
+     "engine.export.__main__.main(argv) -> int  # python -m engine.export verify <bundle_dir>"
+    ],
+    "tests_passed": 91,
+    "tests_failed": 0,
+    "lint_clean": true,
+    "limitations": [
+     "Some validation results are expected xfails, not failures. Running test_registry.py and test_export.py gives 91 passed and 2 xfailed. The 2 xfails are the real-registry checks for sources.yaml and projects_capex.csv, which xfail with the full error list. The parameters.csv check on the real registry passes. The full suite gives 123 passed and 2 xfailed in about 17 s; my two files take about 1.5 s.",
+     "The real registry currently fails validation, so CI will fail. `python -m engine.registry validate` exits 1 (73 errors, 111 warnings), and the existing CI step `uv run python -m engine.registry validate` in .github/workflows/ci.yml will fail until the registry owner fixes sources.yaml and project 12. I did not edit any registry file.",
+     "The range-order check in parameters.csv is pairwise, which is slightly stricter than the spec. The spec says partial numeric values are fine. I still check every pair that is numeric, so central=5 with high=3 and a blank low is an error. Blank values never cause an error.",
+     "Compound confidence flags such as 'S/D' are errors in both parameters.csv and projects_capex.csv. The vocabulary is a single V/S/K/D letter.",
+     "'Optional keys' for sources.yaml is my own definition. Missing `access` or `license` gives one warning per source. `status: have` without `accessed`/`sha256`/`local_path` gives one more warning (CLAUDE.md rule 3). Together these account for 91 of the 111 warnings.",
+     "In projects_capex.csv, capacity units in 'm3/...' without the 'N' prefix get a warning, because the project basis is Nm3 at 0 °C, 1 atm. This is my own rule and accounts for 12 warnings.",
+     "URLs and DOIs are checked only for their form, since there is no network. The V-flag check only tests that a non-empty page and quote exist.",
+     "For CSV records spanning several lines, the reported line number is the record's last line.",
+     "build_bundle does not parse geometry (no shapely or geopandas). WKT strings and WKB bytes are passed through, and WKB is written as hex in the CSV. No GeoParquet 'geo' metadata is written, because its CRS must be PROJJSON and I cannot produce that without pyproj. The CRS travels in manifest.crs, and both the builder and the schema enforce EPSG:4674 whenever a geom or geometry column exists.",
+     "The confidentiality blocklist only looks at table and column names plus the attrs flags. It cannot detect partner data stored under an innocuous column name.",
+     "Parquet and manifest hashes are byte-reproducible for the same inputs, created_at, git_commit and library versions. The pandas and pyarrow versions are embedded in the Parquet metadata, so upgrading them changes the hashes.",
+     "migrations/0XX_engine_tables.sql (listed in docs/18 §2) is not generated.",
+     "Per-table required columns are only warnings (CONTRACT_KEY_COLUMNS), because the column list in §2 is still a sketch."
+    ],
+    "open_questions": [
+     "Should a missing `publisher` in sources.yaml really be an error? The task spec lists it as a required key, so 70 of the 81 real sources fail. The alternative is to accept `citation` as a substitute for papers (essd_zheng_2022, essd_ditommaso_2024) or to downgrade it to a warning. The decision belongs to the registry owner. Until then, CI's `python -m engine.registry validate` step fails.",
+     "Project 12 in projects_capex.csv is flagged 'S/D' (total investment derived from an 80.1% BNDES share). Which single flag should it carry? D, with the S provenance explained in notes, seems natural, but that needs human confirmation.",
+     "Several columns in the docs/18 §2 contract carry no unit: facilities `capacity`, lcob_results `npv` and `irr`, supply_curve `lcob`, sites `scale`. Proposed names: capacity_nm3_d, npv_brl_<year>, irr_frac, lcob_brl_nm3. This needs agreement with PILAR-2b.",
+     "`sites` in docs/18 §2 has no id column, but lcob_results refers to `site_id`. Should `sites` carry `site_id`?",
+     "The format of `month` in hex_supply and mill_month is unspecified ('YYYY-MM' or 1-12). How should `mill_month` intervals be named (suggested: <col>_p05/<col>_p95)? What type is `status_by_year` (JSON or struct)?",
+     "Should the geometry encoding be fixed by the contract (WKB vs WKT)? Should GeoParquet metadata be required? The latter needs pyproj or geopandas in the engine environment.",
+     "Should CI gate on `validate --strict` once the errors are fixed, or stay at errors-only?"
+    ],
+    "proposed_registry_rows": [],
+    "notes_for_integrator": "WHAT CHANGED\n- src/engine/registry.py: new code is appended below the existing API. The only other edits are the module docstring and the import block: `from dataclasses import dataclass` became `from dataclasses import asdict, dataclass, is_dataclass`, and I added argparse, hashlib, io, json, re, Counter, Mapping/Sequence and Any. load_parameters, get_param, load_sources, load_projects_capex and Param are unchanged; git diff shows only that one import line removed. There is a `__main__` guard, so `python -m engine.registry validate|summary|hash` works and has a subprocess test.\n- src/engine/export/bundle.py and templates/release_manifest_schema.json (draft 2020-12, checked with Draft202012Validator.check_schema).\n- src/engine/export/__main__.py: `python -m engine.export verify <dir>`.\n- Tests: tests/test_registry.py and tests/test_export.py. Fixtures are synthetic and labelled as such; the only fixture URLs are on example.org.\n- Docs: an \"Implementation status (v0 code, 2026-10)\" section is appended to docs/08 and to docs/18. Existing text is untouched.\n\nHOW TO USE\n- Every build_bundle argument after out_dir is keyword-only.\n- Pass `created_at` and `git_commit` explicitly for reproducible manifests. If `created_at` is None, now(UTC) is used. If `git_commit` is None, a read-only `git rev-parse HEAD` is run.\n- `params_hash` should come from engine.registry.param_hash(). For \"registry file plus overrides\", use param_hash({\"registry\": param_hash(), \"overrides\": {...}}).\n- `sources_used` ids are checked against registry/sources.yaml; pass `sources_path` in tests.\n- The bundle is written to a sibling temp folder, then renamed into place. An existing out_dir is refused unless overwrite=True, and even then only when it is empty or already holds a manifest.json.\n\nREAL REGISTRY: `python -m engine.registry validate` exits 1 with 73 errors and 111 warnings. Messages are verbatim below.\n\nERRORS (73). Every sources.yaml error has the form \"ERROR sources.yaml:<line> [<id>]: missing required key(s): <keys>\". Listed as line id: keys:\n103 ibge_pam_seade: url, confidence; 110 mapbiomas_cana: url, confidence; 128 essd_zheng_2022: publisher, url; 135 essd_ditommaso_2024: publisher; 142 s2_harvest_detection: publisher, url; 153 livestock_points_sp: publisher, url, confidence; 158 ibge_ppm: publisher; 166 lupa_2016_17: publisher; 173 cda_gedave_gta: publisher; 180 mapa_sif: publisher; 188 ana_ete_2019: publisher; 195 sinisa: publisher; 202 cetesb_rsu_inventory: publisher; 209 pilar2b_fde: publisher, url, confidence; 215 epe_nt_2025_08: publisher; 222 epe_nt_2023_07: publisher; 228 bndes_operacoes: publisher; 237 bndes_td159: publisher; 243 fiesp_sp_biomethane_2024: publisher; 249 iea_biogas_outlook_2020: publisher; 255 sifreca: publisher; 264 contran_882: publisher; 270 iea_sp_vtn: publisher; 280 anp_biomethane_plants: publisher, url; 288 mme_boletim_gn: publisher; 296 arsesp_tarifas: publisher; 302 argus_biomethane: publisher; 309 iepuc_boletim_biometano: publisher; 316 anp_precos_combustiveis: publisher; 323 b3_cbio: publisher; 330 aneel_ccee: publisher; 336 iea_sp_input_prices: publisher; 344 reg_lei_14993_2024: publisher, url; 349 reg_decreto_12614_2025: publisher, status; 354 reg_cnpe_4_2026: publisher, url, status; 358 reg_anp_995_996_2026: publisher, status; 363 reg_anp_1006_2026: publisher, status; 368 reg_anp_987_2025: publisher, status; 373 reg_arsesp_1765_2025: publisher, status; 378 reg_arsesp_744_1342: publisher, url, status; 384 infra_gas_rail_power_roads: publisher, url, confidence; 388 exclusion_layers: publisher, url, confidence; 392 datageo_sp: publisher; 398 der_sre: publisher; 404 dnit_snv: publisher; 410 osm_sudeste: publisher; 416 zaa_sucro_sp: publisher; 422 car_sicar: publisher; 428 rossi_2017_soils: publisher; 434 fabdem: publisher; 440 br_dwgd: publisher; 446 era5_land: publisher, url; 451 epe_webmap: publisher; 457 aneel_sigel: publisher; 465 intl_de_mastr: publisher; 475 intl_de_dbfz_resources: publisher; 482 intl_de_dbfz_operator_survey: publisher; 489 intl_de_bmp3: publisher; 496 intl_de_ktbl: publisher; 503 intl_dk_dea_catalogue: publisher; 510 intl_dk_biogas_outlook: publisher; 517 intl_se_energimyndigheten: publisher; 524 intl_se_lidkoping: publisher; 532 intl_fr_odre: publisher; 540 intl_fr_bionorrois: publisher; 547 intl_eu_eba_gie_map: publisher; 553 intl_eu_bip_cost_study: publisher; 560 intl_eu_oies_2026: publisher; 567 intl_eu_acer_ifri_2026: publisher; 575 intl_us_agstar: publisher; 582 intl_iea_task37: publisher; 588 intl_sugarbeet_pulp_ad: publisher.\nTotals: publisher 70, url 13, status 7, confidence 6.\nERROR projects_capex.csv:13 [12]: confidence 'S/D' is not one of V/S/K/D (use a single flag; explain mixed provenance in notes)\n\nWARNINGS (111)\nparameters.csv (7):\nWARNING parameters.csv:8 [vin_ts_vs]: non-numeric central '16 / 9': kept as Param.raw_central, Param.central is None\nWARNING parameters.csv:8 [vin_ts_vs]: non-numeric low '15-50 / 8-35': kept as Param.raw_low, Param.low is None\nWARNING parameters.csv:15 [fc_ts_vs]: non-numeric central '28 / 74': kept as Param.raw_central, Param.central is None\nWARNING parameters.csv:15 [fc_ts_vs]: non-numeric low '25-30 / 70-78': kept as Param.raw_low, Param.low is None\nWARNING parameters.csv:29 [fc_storage_loss]: non-numeric central '12 (4 mo) / 22 (6 mo)': kept as Param.raw_central, Param.central is None\nWARNING parameters.csv:51 [capacity_factor]: central is blank: Param.central is None and require_central() raises\nWARNING parameters.csv:51 [capacity_factor]: flag V but no page and verbatim quote recorded (add 'page'/'quote' columns, docs/08_VERIFICATION_PROTOCOL.md §3-4)\n\nsources.yaml, status 'have' (10):\nWARNING sources.yaml:72 [unica_data]: status 'have' but download record incomplete — missing accessed, sha256, local_path (CLAUDE.md §2 rule 3)\nThe other nine have the identical message, ids at lines 103 ibge_pam_seade, 110 mapbiomas_cana, 153 livestock_points_sp, 209 pilar2b_fde, 316 anp_precos_combustiveis, 330 aneel_ccee, 384 infra_gas_rail_power_roads and 388 exclusion_layers, plus line 280 anp_biomethane_plants, whose message reads \"missing accessed, sha256\" instead.\n\nsources.yaml, missing optional keys (81): form \"WARNING sources.yaml:<line> [<id>]: missing optional key(s): <keys>\".\n- Only `license` missing: renovabio_cert_reports, anp_renovabio_cert_panel, anp_cbio_panel, anp_ethanol_producers, mapa_sapcana, unica_data, conab_cana, iea_sp_db, cetesb_pav, sifreca, argus_biomethane.\n- Only `access` missing: bndes_operacoes.\n- Every other source (69) is missing both `access, license`.\n\nprojects_capex.csv (13):\nWARNING projects_capex.csv:<line> [<id>]: capacity_unit 'm3/d' has no reference conditions (project basis is Nm3 at 0 °C, 1 atm); confirm the basis before normalising\n- Applies to ids 2, 3, 4, 6, 12, 13, 16 and 17 (lines 3, 4, 5, 7, 13, 14, 17, 18).\n- The same message with 'm3/yr' applies to ids 5, 10, 14 and 18 (lines 6, 11, 15, 19).\nWARNING projects_capex.csv:21 [20]: capacity_unit 'MW' is not a gas-flow unit (Nm3/d, Nm3/h, m3/yr, ...); convert before using this row in specific-CAPEX (R$ per Nm3/d) analyses\n\nTo regenerate the full verbatim list: .venv/bin/python -m engine.registry validate"
+   },
+   "review": null
+  },
+  null,
+  null,
+  null,
+  null,
+  null,
+  null
+ ]
+}

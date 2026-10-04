@@ -1,0 +1,682 @@
+{
+ "summary": "Online research sweep (projects/costs, parameter verification, SP data access, market/regulation) with adversarial claim verification",
+ "result": [
+  {
+   "key": "R07-projects-costs",
+   "research": {
+    "file_written": "/home/user/aprenda_sobre_biometano/sp-biomethane-engine/research_notes/R07_projects_costs_update_2026.md",
+    "searches_used": 25,
+    "blocked_domains": [
+     "eixos.com.br",
+     "agazeta.com.br",
+     "cenarioenergia.com.br",
+     "agenciadenoticias.bndes.gov.br",
+     "agfeed.com.br",
+     "abegas.org.br",
+     "novacana.com",
+     "epe.gov.br",
+     "copersucar.com.br",
+     "gov.br"
+    ],
+    "key_findings": [
+     "Every WebFetch was blocked by the egress proxy, so all values are flagged S (search snippet or secondary news) or D (derived). No V values were obtained.",
+     "13 new projects found (ids 21-33). Orizon dominates the landfill pipeline: Jaboatão-PE R$258M for ~108k m3/d (inaugurated Mar 2026); Tremembé-SP 32.4k Nm3/d for ~R$109.2M (REIDI); Fazenda Rio Grande-PR R$241.76M (REIDI), sharing 170k m3/d with Guatapará-SP; Itapevi-SP 25k m3/d Edge offtake; Piratininga ~25k m3/d; three NE plants at ~R$150M each; RJ JV with Gás Verde at 2x100k m3/d.",
+     "Agro and manure segment, absent from the registry: H2A + Copercampos, Campos Novos-SC (swine manure), 16k m3/d for R$65M including a CO2 unit; Agric (Energisa), Campos Novos-SC, 25k m3/d for R$80M; Lurean Tulipa, Carambeí-PR, 31,440 Nm3/d for R$116.05M (REIDI Portaria 231/2026). Derived specific CAPEX is R$3,200-4,100 per m3/d.",
+     "Copersucar: up to R$600M for two new mill plants (50-60k m3/d, per plant vs combined unclear), construction late 2026/early 2027, inside an R$8 bi 10-year plan.",
+     "Corrections to existing rows. Atvos capacity is ~28 Mm3 per harvest, not per year. Adecoagro's 30k Nm3/d is NEW capacity (D: diesel replaced 8M L vs 2M L today implies roughly 5x total). São Martinho has been operating since Oct 2025 at ~15.6 Mm3 per harvest (248 d at 63k, consistent with harvest-day basis), co-financed by BNDES + FINEP. Raízen Costa Pinto is 72k Nm3/d plus 160 t/d CO2, consistent with 26 Mm3/yr on an annual-average basis.",
+     "BNDES funding splits: BP Edéia Fundo Clima R$193.4M + Finem R$51.4M; Bioo Fundo Clima R$101.5M + Finem R$47.1M; GNR Mauá/Vila Velha Fundo Clima + Finem. Gás Verde's R$131.1M (May 2025) covers Igarassu biomethane (R$90.2M) and the Seropédica bio-CO2 liquefaction unit (R$51.3M).",
+     "Landfill specific CAPEX benchmark R$2,300 per m3/d is supported by Jaboatão (2,389) and Mauá + Vila Velha (2,526). The small landfill at Tremembé (3,370) points to a scale effect.",
+     "Grid connection evidence: ES Gás will invest R$7M to connect the Vila Velha plant (headline only). The Caieiras-Comgás link needs ~5.3 km of network plus a Bio-Citygate (no cost found). TUSD-Verde is to be expressed in R$/m3 and cover interconnection O&M and investment only; no value is published. Comgás expects 800k m3/d of biomethane injection from new connections.",
+     "The LCOB R$0.78-1.83/m3 (sugar-energy, 2 Mt/yr), registered as EPE in parameters.csv, is attributed in a 2026 snippet to Instituto 17 (2022) RT08. It should be re-attributed.",
+     "EPE snippet: 4 sugar-energy projects (3 SP + 1 MT) total ~230k Nm3/d for R$838M CAPEX, which derives to R$3,643 per Nm3/d. A separate EPE figure of ~R$35 bi to meet biomethane supply 2026-2035 conflicts in scope with the R$3.0 bi for 25 units in R02.",
+     "The MME REIDI portarias are the best primary source for paired capacity and CAPEX data (company, CNPJ, Nm3/d, R$). They were blocked here and are the top item to verify."
+    ],
+    "claims": [
+     {
+      "claim": "Orizon Jaboatão landfill biomethane plant investment and capacity; inaugurated Mar 2026; built May 2024-end 2025; injects into Copergás",
+      "value": "R$258M; ~108,000 m3/d",
+      "unit": "R$ M; m3/d",
+      "url": "https://www.diariodepernambuco.com.br/economia/2026/03/11710937-com-investimento-de-rs-258-milhoes-planta-de-biometano-e-inaugurada-em-jaboatao.html",
+      "flag": "S",
+      "quote_or_snippet": "The Orizon unit received an investment of R$ 258 million ... capacity to produce approximately 108,000 m3 per day of biomethane, and construction began in May 2024 and was completed by the end of 2025."
+     },
+     {
+      "claim": "Orizon Tremembé (SP) landfill biomethane capacity and investment (REIDI)",
+      "value": "32,400 Nm3/d; ~R$109.2M incl. taxes",
+      "unit": "Nm3/d; R$ M",
+      "url": "https://eixos.com.br/gas-natural/biogas/mme-habilita-projeto-de-biometano-da-orizon-em-tremembe-no-reidi/",
+      "flag": "S",
+      "quote_or_snippet": "production capacity of 32,400 Nm3/day of biomethane from landfill biogas, with estimated investments of around R$ 109.2 million, considering taxes ... average volume of 35 thousand m3/day from the beginning of the third quarter of 2027 (Neogás)"
+     },
+     {
+      "claim": "Orizon Fazenda Rio Grande (PR) REIDI goods and services subject to PIS/Cofins, Portaria SNPGB/MME 222 of 23 Jun 2026",
+      "value": "241.76",
+      "unit": "R$ M",
+      "url": "https://diariodotransporte.com.br/2026/08/17/projeto-de-biometano-da-orizon-no-parana-recebe-incentivo-fiscal-federal-e-reforca-avanco-do-combustivel-que-ja-chega-aos-onibus/",
+      "flag": "S",
+      "quote_or_snippet": "registered an estimated R$ 241.76 million in goods and services for the Fazenda Rio Grande project that would have PIS/Cofins tax incidence"
+     },
+     {
+      "claim": "Orizon-Estre: Fazenda Rio Grande (PR) + Guatapará (SP) combined capacity from 2027; Piratininga landfill ~25k m3/d from 2027",
+      "value": "170,000 combined; 25,000",
+      "unit": "m3/d",
+      "url": "https://www.abegas.org.br/arquivos/92241",
+      "flag": "S",
+      "quote_or_snippet": "Fazenda Rio Grande ... and Guatapará ... together producing up to 170 thousand m3/day of biomethane starting in 2027; Piratininga landfill ... approximately 25 thousand m3/day starting in 2027"
+     },
+     {
+      "claim": "Orizon Itapevi Edge offtake minimum average volume from 2H2026",
+      "value": "25,000",
+      "unit": "m3/d",
+      "url": "https://eixos.com.br/empresas/edge-fecha-contrato-com-orizon-para-aquisicao-de-biometano-de-aterro-em-sp/",
+      "flag": "S",
+      "quote_or_snippet": "contract for sale of renewable gas to Edge starting in the 2nd half of 2026, with a minimum average volume of 25 thousand m3/day"
+     },
+     {
+      "claim": "Orizon three NE plants (Maceió, Aracaju, João Pessoa) investment",
+      "value": "~150 each; ~450 total",
+      "unit": "R$ M",
+      "url": "https://movimentoeconomico.com.br/economia/combustivel/2026/03/27/orizon-investe-r-258-mi-em-planta-de-biometano-em-pe-e-planeja-3-fabricas-no-ne/",
+      "flag": "S",
+      "quote_or_snippet": "estimated investment of about R$ 150 million for each one, totaling about R$ 450 million"
+     },
+     {
+      "claim": "Orizon + Gás Verde (Urca) JV Nova Iguaçu and São Gonçalo capacity per plant",
+      "value": "~100,000 each (another snippet says 180,000 for both)",
+      "unit": "m3/d",
+      "url": "https://eixos.com.br/empresas/orizon-e-urca-se-unem-para-investir-em-plantas-de-biometano-no-rio-de-janeiro/",
+      "flag": "S",
+      "quote_or_snippet": "production capacity of about 100 thousand m3/day in each plant ... investment ... 'hundreds of millions of reais'"
+     },
+     {
+      "claim": "Compass-Orizon Paulínia JV: Compass investment cap and capacity",
+      "value": "up to R$355M; 180,000 initial, up to 300,000",
+      "unit": "R$ M; m3/d",
+      "url": "https://eixos.com.br/empresas/compass-e-orizon-se-unem-para-produzir-biometano-em-paulinia/",
+      "flag": "S",
+      "quote_or_snippet": "capacity to initially produce 180 thousand m3/day starting in 2025, but which could reach up to 300 thousand m3/day ... Compass will invest up to R$ 355 million"
+     },
+     {
+      "claim": "Copersucar two new biomethane plants: investment and capacity",
+      "value": "up to R$600M; 50,000-60,000 m3/d",
+      "unit": "R$ M; m3/d",
+      "url": "https://agfeed.com.br/negocios/com-ate-r-600-milhoes-copersucar-coloca-mais-gas-e-duas-novas-usinas-no-seu-projeto-de-biometano/",
+      "flag": "S",
+      "quote_or_snippet": "two new biomethane production plants ... estimated production between 50 to 60 thousand cubic meters per day, based on processing 3 to 4 million tons of sugarcane"
+     },
+     {
+      "claim": "Copersucar 10-year biomethane investment plan",
+      "value": "8",
+      "unit": "R$ bi",
+      "url": "https://www.novacana.com/noticias/copersucar-aposta-r-8-bilhoes-biometano-proximos-dez-anos-131025",
+      "flag": "S",
+      "quote_or_snippet": "Copersucar plans to invest R$ 8 billion in biomethane over the next ten years"
+     },
+     {
+      "claim": "H2A Bioenergia + Copercampos swine-manure plant, Campos Novos SC",
+      "value": "R$65M; 16,000 m3/d biomethane; 23,000 m3/d biogas; 12 t/d CO2",
+      "unit": "R$ M; m3/d",
+      "url": "https://clickpetroleoegas.com.br/dejetos-suinos-viram-energia-brasil-inaugura-em-sc-a-1a-usina-de-biometano-certificada-pela-anp-com-aporte-de-r-65-milhoes-rpc95/",
+      "flag": "S",
+      "quote_or_snippet": "inaugurada no dia 26 de março, em Campos Novos (SC), com investimento de R$ 65 milhões ... 16 mil m3 de biometano, 23 mil m3 de biogás e 12 toneladas de CO2"
+     },
+     {
+      "claim": "Agric ((re)energia/Energisa) Campos Novos poultry + swine plant",
+      "value": "R$80M; 25,000 m3/d",
+      "unit": "R$ M; m3/d",
+      "url": "https://www.gazetadopovo.com.br/santa-catarina/sc-inaugura-usina-de-biometano-dejetos-suinos-potencial-bilionario-do-setor/",
+      "flag": "S",
+      "quote_or_snippet": "Agric ... começou a comercializar desde meados de 2025, com investimento de R$ 80 milhões ... capacidade para 25 mil metros cúbicos/dia de biometano (snippet attribution among several results uncertain)"
+     },
+     {
+      "claim": "Lurean S.A. Projeto Tulipa, Carambeí PR (REIDI Portaria SNPGB/MME 231, 23 Sep 2026)",
+      "value": "R$116.05M; 31,440 Nm3/d; 400 t/d waste",
+      "unit": "R$ M; Nm3/d",
+      "url": "https://diariodotransporte.com.br/2026/09/28/projeto-de-r-116-milhoes-para-produzir-biometano-no-parana-preve-combustivel-para-veiculos/",
+      "flag": "S",
+      "quote_or_snippet": "estimated investment of R$ 116.05 million ... processing up to 400 tons per day ... production of up to 31,440 Nm3 of biomethane daily"
+     },
+     {
+      "claim": "Raízen Costa Pinto daily capacity and CO2",
+      "value": "72,000 Nm3/d; 160 t/d CO2",
+      "unit": "Nm3/d",
+      "url": "https://www.fecombustiveis.org.br/noticia/raizen-anuncia-investimento-de-r-300-milhoes-em-planta-de-biometano/249628",
+      "flag": "S",
+      "quote_or_snippet": "26 milhões de Nm3/ano ... 72 mil Nm3/dia de biometano e 160 ton/dia de CO2 biogênico"
+     },
+     {
+      "claim": "São Martinho Santa Cruz capacity per harvest; operating since Oct 2025; financing",
+      "value": "15.6 Mm3 per harvest; BNDES + FINEP",
+      "unit": "m3 per safra",
+      "url": "https://revistarpanews.com.br/unidade-santa-cruz-da-sao-martinho-tera-planta-de-biometano/",
+      "flag": "S",
+      "quote_or_snippet": "capacidade para produção aproximada de 15,6 milhões de m3 de biometano durante período de moagem ... contará com financiamento do BNDES e FINEP"
+     },
+     {
+      "claim": "Atvos Nova Alvorada do Sul capacity basis per harvest; investment",
+      "value": "~28 Mm3 per safra; >R$350M",
+      "unit": "m3 per harvest; R$ M",
+      "url": "https://atvos.com/atvos-avanca-na-implantacao-de-sua-primeira-planta-de-biometano-no-mato-grosso-do-sul/",
+      "flag": "S",
+      "quote_or_snippet": "capacidade estimada de produzir cerca de 28 milhões de metros cúbicos de biometano por safra ... investimento superior a R$ 350 milhões"
+     },
+     {
+      "claim": "Adecoagro Ivinhema expansion: two new digesters together, new capacity by end-2027",
+      "value": "30,000",
+      "unit": "Nm3/d",
+      "url": "https://www.canalrural.com.br/agricultura/adecoagro-investira-r-226-milhoes-para-quintuplicar-producao-de-biometano/",
+      "flag": "S",
+      "quote_or_snippet": "dois novos biodigestores em sequência, que juntos terão capacidade de produzir até 30 mil Nm3 de biometano por dia ... substituir aproximadamente 8 milhões de litros de diesel por ano ... além dos 2 milhões de litros já compensados"
+     },
+     {
+      "claim": "BP Edéia BNDES split",
+      "value": "Fundo Clima 193.4; Finem 51.4",
+      "unit": "R$ M",
+      "url": "https://www.novacana.com/noticias/bndes-aprova-r-245-milhoes-bp-bioenergy-erguer-planta-biometano-060426",
+      "flag": "S",
+      "quote_or_snippet": "R$ 193.4 million from the Climate Fund and R$ 51.4 million from Finem"
+     },
+     {
+      "claim": "Bioo Toledo BNDES split",
+      "value": "Fundo Clima 101.5; Finem 47.1",
+      "unit": "R$ M",
+      "url": "https://agenciadenoticias.bndes.gov.br/sul/Com-R$-1485-mi-BNDES-apoia-usina-de-biometano-da-Bioo-no-Parana/",
+      "flag": "S",
+      "quote_or_snippet": "R$ 101.5 million from the Fundo Clima and R$ 47.1 million from Finem"
+     },
+     {
+      "claim": "Gás Verde BNDES approval covering Igarassu biomethane and Seropédica bio-CO2 unit (May 2025)",
+      "value": "BNDES 131.1; total 141.5 (Seropédica 51.3; Igarassu 90.2)",
+      "unit": "R$ M",
+      "url": "https://udop.com.br/noticia/2025/05/28/bndes-aprova-r-131-1-mi-para-primeira-usina-de-co2-verde-do-pais-e-nova-planta-de-biometano",
+      "flag": "S",
+      "quote_or_snippet": "Ao todo, serão investidos R$ 141,5 milhões nos dois projetos, sendo R$ 51,3 milhões em Seropédica e R$ 90,2 milhões em Igarassu"
+     },
+     {
+      "claim": "Gás Verde production growth plan to 2029",
+      "value": "160,000 to 650,000",
+      "unit": "m3/d",
+      "url": "https://revistamineracao.com.br/2025/05/28/bndes-financiamento-usina-co2-verde-planta-biometano/",
+      "flag": "S",
+      "quote_or_snippet": "projeta elevar a produção nacional de 160 mil m3 por dia para 650 mil m3 por dia (snippet merged from several results incl. movimentoeconomico 2026/08/12)"
+     },
+     {
+      "claim": "ES Gás investment to connect GNR Vila Velha biomethane plant to grid",
+      "value": "7",
+      "unit": "R$ M",
+      "url": "https://agazeta.com.br/es/economia/es-gas-investira-r-7-milhoes-para-conectar-planta-de-biometano-em-vila-velha-0926",
+      "flag": "S",
+      "quote_or_snippet": "ES Gás investirá R$ 7 milhões para conectar planta de biometano em Vila Velha (headline)"
+     },
+     {
+      "claim": "Caieiras-Comgás interconnection scope",
+      "value": "~5.3 km network + Bio-Citygate",
+      "unit": "km",
+      "url": "https://www.terra.com.br/economia/planta-de-biometano-de-aterro-de-caieiras-tem-conexao-aprovada-a-rede-da-comgas,fba3cd010ce5580458d30ca2b015f446gmf200gq.html",
+      "flag": "S",
+      "quote_or_snippet": "será necessária a construção de aproximadamente 5,3 quilômetros de rede, além da implantação de uma Estação de Transferência de Custódia (Bio-Citygate)"
+     },
+     {
+      "claim": "TUSD-Verde design basis",
+      "value": "R$/m3; covers only interconnection O&M + investment",
+      "unit": "R$/m3",
+      "url": "https://cibiogas.org/noticias/arsesp-abre-consulta-publica-sobre-a-interconexao-de-plantas-de-biometano-a-rede-de-distribuicao-de-gas-e-propoe-a-tusd-verde/",
+      "flag": "S",
+      "quote_or_snippet": "A TUSD-Verde seria expressa em R$/m3 e baseada nos custos e investimentos requeridos exclusivamente para as interconexões"
+     },
+     {
+      "claim": "LCOB sugar-energy 2 Mt cane/yr attributed to Instituto 17 (2022), not EPE",
+      "value": "0.78-1.83",
+      "unit": "R$/m3",
+      "url": "https://i17.eco.br/wp-content/uploads/2022/11/RT08-2022.pdf",
+      "flag": "S",
+      "quote_or_snippet": "Segundo dados do Instituto 17 (2022), o custo de produção de biometano (LCOB) para a indústria sucroenergética com processamento de 2 milhões de toneladas/ano varia entre R$/m3 0,78 e 1,83 (snippet; i17 URL listed in the same results)"
+     },
+     {
+      "claim": "EPE: 4 sugar-energy biomethane projects (3 SP + 1 MT) capacity and CAPEX (document attribution unverified)",
+      "value": "~230,000 Nm3/d; R$838M",
+      "unit": "Nm3/d; R$ M",
+      "url": "https://www.epe.gov.br/sites-pt/publicacoes-dados-abertos/publicacoes/PublicacoesArquivos/publicacao-343/topico-699/NT-EPE-DPG-SDB-2023-05_Investimentos_Custos_O_e_M_Bios_2024-2033.pdf",
+      "flag": "S",
+      "quote_or_snippet": "Four projects linked to the sugarcane sector (three in São Paulo and one in Mato Grosso) have a total production capacity of about 230 thousand Nm3/day and a CAPEX of R$ 838 million"
+     },
+     {
+      "claim": "EPE investment needed to meet biomethane supply 2026-2035",
+      "value": "~35",
+      "unit": "R$ bi",
+      "url": "https://www.epe.gov.br/sites-pt/publicacoes-dados-abertos/publicacoes/PublicacoesArquivos/publicacao-343/topico-780/NT-EPE-DPG-SDB-2025-08_Investimentos_Custos_O_e_M_Bios_2026-2035.pdf",
+      "flag": "S",
+      "quote_or_snippet": "A EPE estimou que a capacidade suficiente para efetivar a oferta de biometano seria da ordem de R$ 35 bilhões para o período 2026-2035"
+     },
+     {
+      "claim": "Generic complete vehicle-grade upgrading plant cost range (source unclear)",
+      "value": "10-50 per project; payback 5-8 yr",
+      "unit": "R$ M",
+      "url": "https://transportemoderno.com.br/2026/09/22/biometano-ganha-escala-com-r-1807-milhoes-do-bndes/",
+      "flag": "S",
+      "quote_or_snippet": "O investimento em uma planta completa de upgrading para biometano veicular fica entre R$ 10 mi e R$ 50 mi por projeto, com payback de 5 a 8 anos (snippet; exact source page uncertain)"
+     },
+     {
+      "claim": "SP potential supply (Instituto 17 + PSR + Amplum study)",
+      "value": "6.4M Nm3/d from 181 plants (84% sugar-energy, 16% landfill)",
+      "unit": "Nm3/d",
+      "url": "https://jornalcana.com.br/mercado/estudo-destaca-qual-e-a-oferta-potencial-de-biometano-no-estado-de-sao-paulo/",
+      "flag": "S",
+      "quote_or_snippet": "O estado de São Paulo tem oferta potencial de 6,4 milhões de metros cúbicos normais (Nm3) de biometano por dia ... 181 plantas (sendo 84% do setor sucroenergético e 16% de aterros sanitários)"
+     },
+     {
+      "claim": "Ultragaz Paulínia biomethane supply (dispensing) station capacity",
+      "value": "20,000 m3/d; ~200 trucks",
+      "unit": "m3/d",
+      "url": "https://cenarioenergia.com.br/2026/08/18/ultragaz-inaugura-estacao-de-biometano-em-paulinia-para-descarbonizar-frota-pesada/",
+      "flag": "S",
+      "quote_or_snippet": "capacity to supply up to 20 thousand m3 of renewable fuel per day and serve approximately 200 trucks"
+     },
+     {
+      "claim": "Cocal Paraguaçu Paulista harvest-basis capacity and planned 80 km pipeline to Marília with Necta",
+      "value": "60,000 m3/d harvest; 80 km",
+      "unit": "m3/d; km",
+      "url": "https://agfeed.com.br/negocios/cocal-avanca-com-biometano-e-projeta-novo-gasoduto-de-80-quilometros-para-escoar-gas/",
+      "flag": "S",
+      "quote_or_snippet": "installed capacity of up to 60 thousand cubic meters per day of renewable gas during harvest season ... planned 80 km pipeline to Marília (SP) in partnership with Necta"
+     }
+    ],
+    "proposed_rows": [
+     "projects_capex.csv: 21,Orizon Jaboatão,Jaboatão dos Guararapes,PE,landfill gas,108000,m3/d,nominal,258,,2024-2026,operating (inaugurated Mar 2026),diariodepernambuco.com.br 2026/03; cenarioenergia.com.br 2026/03/27; abrema.org.br 2026/03/30,S,Copergás grid injection; built May 2024-end 2025; D: R$2389 per m3/d",
+     "projects_capex.csv: 22,Orizon Tremembé,Tremembé,SP,landfill gas,32400,Nm3/d,nominal,109.2,,2026,REIDI approved; COD 2H2027,eixos.com.br (mme-habilita-projeto-de-biometano-da-orizon-em-tremembe-no-reidi); megawhat.energy; abegas.org.br/arquivos/100783,S,Investment = REIDI estimate incl. taxes; Neogás offtake avg 35000 m3/d from 3Q2027 (conflict); D: R$3370 per Nm3/d",
+     "projects_capex.csv: 23,Orizon Fazenda Rio Grande (with Estre),Fazenda Rio Grande,PR,landfill gas,,,combined 170000 m3/d with Guatapará (id 24),241.76,,2026,REIDI approved (Portaria SNPGB/MME 222 of 23 Jun 2026); COD 2027,diariodotransporte.com.br 2026/08/17; abegas.org.br/arquivos/92241,S,Investment = goods/services subject to PIS/Cofins (REIDI) not total CAPEX",
+     "projects_capex.csv: 24,Orizon Guatapará (with Estre),Guatapará,SP,landfill gas,,,combined 170000 m3/d with Fazenda Rio Grande (id 23),,,2025-2027,announced (COD 2027),abegas.org.br/arquivos/92241,S,Ribeirão Preto metro; per-plant split not disclosed",
+     "projects_capex.csv: 25,Orizon Estre Piratininga landfill,Piratininga (municipality to verify),SP,landfill gas,25000,m3/d,projected production,,,2027,announced,abegas.org.br/arquivos/92241; neofeed.com.br,S,Snippet says 'Piratininga landfill in São Paulo' owned by Estre",
+     "projects_capex.csv: 26,Orizon Itapevi,Itapevi,SP,landfill gas,25000,m3/d,offtake contract min average (Edge),,,2026,construction (supply from 2H2026),eixos.com.br (edge-fecha-contrato-com-orizon-para-aquisicao-de-biometano-de-aterro-em-sp),S,Contract volume not nameplate",
+     "projects_capex.csv: 27,Orizon NE pipeline (Maceió; Aracaju; João Pessoa),Maceió/Aracaju/João Pessoa,AL/SE/PB,landfill gas,,,,450,,2026-2028,planned (next 2 years),movimentoeconomico.com.br 2026/03/27; folhape.com.br/economia/.../476842,S,~R$150M per plant x3; capacities not disclosed",
+     "projects_capex.csv: 28,Orizon + Gás Verde (Urca) JV Nova Iguaçu,Nova Iguaçu,RJ,landfill gas,100000,m3/d,nominal (approx.),,,2026,JV formed,eixos.com.br (orizon-e-urca-se-unem); fecombustiveis.org.br/noticia/.../259591,S,Investment for both RJ plants 'hundreds of millions' undisclosed; other source 180000 m3/d for both (conflict)",
+     "projects_capex.csv: 29,Orizon + Gás Verde (Urca) JV São Gonçalo,São Gonçalo,RJ,landfill gas,100000,m3/d,nominal (approx.),,,2026,JV formed,same as 28,S,See 28",
+     "projects_capex.csv: 30,Copersucar system 2 new mill plants (undisclosed),,,sugarcane residues,,,50000-60000 m3/d (per plant vs combined unclear),600,,2026-2027,planned (construction late 2026/early 2027),agfeed.com.br (com-ate-r-600-milhoes-copersucar...); novacana.com/noticias/copersucar-aposta-r-8-bilhoes-biometano-proximos-dez-anos-131025,S,Investment is upper bound ('até R$600M'); 3-4 Mt cane",
+     "projects_capex.csv: 31,H2A Bioenergia + Copercampos,Campos Novos,SC,swine manure,16000,m3/d,nominal,65,,2026,operating (inaugurated 26 Mar 2026),clickpetroleoegas.com.br; economiasc.com 2026/03/25; culturacamposnovos.com.br,S,Also 23000 m3/d biogas + 12 t/d food-grade CO2 (basis unclear); D: R$4063 per m3/d incl. CO2",
+     "projects_capex.csv: 32,Agric ((re)energia / Grupo Energisa),Campos Novos,SC,poultry + swine residues,25000,m3/d,nominal,80,,2025,operating (sales since mid-2025),gazetadopovo.com.br (sc-inaugura-usina-de-biometano-dejetos-suinos); nsctotal.com.br,S,Snippet attribution uncertain; D: R$3200 per m3/d",
+     "projects_capex.csv: 33,Lurean S.A. Projeto Tulipa,Carambeí,PR,agro-industrial organic waste (400 t/d),31440,Nm3/d,nominal (max),116.05,,2026,REIDI approved (Portaria SNPGB/MME 231 of 23 Sep 2026),diariodotransporte.com.br 2026/09/28; atlaspublico.com.br/noticias/secretaria-do-mme-aprova-enquadramento-de-usina-de-89738,S,Investment = REIDI estimate; D: R$3691 per Nm3/d"
+    ],
+    "gaps": [
+     "No V values: every WebFetch was blocked by the egress proxy. All rows need a primary read (BNDES press releases, MME REIDI portarias, ANP authorisations, company releases).",
+     "MME REIDI portaria list 2024-2026 (gov.br/mme .../reidi/2026/) not extracted. It is the best source of paired CNPJ + Nm3/d + R$ data.",
+     "No 2024-26 cost or capacity data found for Zilor, Usina Coruripe (own plant), Tereos beyond the pilot, other BP Bunge mills, Geo new plants, Scania/Vale, Vibra-ZEG beyond Tupaciguara, or Necta/Naturgy calls. FINEP was found only as a São Martinho co-financier, with no amount.",
+     "BNDES approvals Jan-Aug 2026 not covered systematically. Process the bndes_operacoes CSV filtered on 'biometano'.",
+     "Cost components still missing: upgrading unit price curves (R$ per Nm3/h by technology), digester R$/m3 of reactor volume, CNG compression and bulk-truck logistics R$/m3.km, O&M R$/Nm3 by route, TUSD-Verde tariff values, and interconnection R$/km (only ES Gás R$7M headline found).",
+     "EPE NT 2025-08 cost tables (route breakdown, price year, OPEX scope) unread. The R$35 bi vs R$3.0 bi scope conflict is unresolved, as is which EPE note holds the 230k Nm3/d / R$838M sugar-energy subset.",
+     "LCOB values of the Instituto 17 + PSR + Amplum SP study and the Copersucar 2025 study PDF not retrieved (blocked).",
+     "Capacity basis still unclear for BP Edéia, Copersucar's 2 plants (per plant vs combined), H2A (16k biomethane vs 23k biogas), the Orizon RJ JV (2x100k vs 180k), Paulínia (180k/225k/300k), and Piratininga (municipality unconfirmed).",
+     "Conflicts to log in docs/21: Paulínia investment (BNDES R$449.7M vs Compass up to R$355M vs NeoFeed R$240M); São Martinho R$250M CAPEX vs IFC US$165M; Tremembé 32.4k nameplate vs 35k offtake; Atvos per-harvest vs annual basis; ZEG Pindorama R$60M vs R$65M."
+    ]
+   },
+   "verified": null
+  },
+  {
+   "key": "R08-parameter-verification",
+   "research": {
+    "file_written": "/home/user/aprenda_sobre_biometano/sp-biomethane-engine/research_notes/R08_parameter_verification.md",
+    "key_findings": [
+     "No row could be promoted to V. Egress policy blocked every primary/open-access host (mdpi, IPCC NGGIP, PMC, EuropePMC, EPE, legisweb, bioRxiv, SciELO, CORE, Semantic Scholar, DTU Orbit, OSTI, SGC, UNICAMP/USP/UNESP repositories). Only GitHub, GitLab and PyPI were reachable. All new evidence is S, from search snippets or secondary sources.",
+     "ANP Res. 1.006/2026 (S): PCS (HHV) is 35,000-43,000 kJ/m3 for CO/SE/S and 34,000-38,400 for the North. Wobbe is 46,500-53,500 kJ/m3 (40,500-45,000 North). Both are referred to 20 C, 101.325 kPa, dry basis. Converted to the project's 0 C basis, the PCS floor is 37.6 MJ/Nm3, which implies at least ~94% CH4 unless the gas is enriched with hydrocarbons (allowed only for PCS/Wobbe adjustment).",
+     "Proposed hhv_biomethane = 38.4 MJ/Nm3 (0 C) [37.6-39.8], flag D. It is derived from a K constant (pure CH4 HHV 39.82 MJ/Nm3) and an assumed 96.5% CH4, so it needs an ISO 6976 check.",
+     "bmp_fullscale is mis-attributed. Janke 2020 (Renew. Energy) gives continuous CSTR 224 mL CH4/g VS against batch BMP 185/174/222, so continuous is at or above batch (ratio about 1.0-1.3), not 0.85. Flag K and find another source.",
+     "fc_bmp conflict: Janke 2015 IJMS batch gives 245-281 NmL/g VS, above the registry high of 260.",
+     "b0_cattle conflict: IPCC 2006 Latin America values (via secondary) are dairy 0.13 and other cattle 0.10 m3 CH4/kg VS, swine 0.29. The registry central of 0.20 is not an IPCC Latin America value. 2019 Refinement snippets give 0.24 for high-productivity dairy and 0.13 for low-productivity.",
+     "vin_k2o conflict: by mash type, K2O is 1.2-2.1 (juice), 3.34-4.6 (mixed) and 3.74-7.83 g/L (molasses). The registry high of 4.6 excludes molasses vinasse.",
+     "Vinasse leaves distillation at about 90 C (Volpi preprint) or 85-90 C (PT secondary sources). This supports the 55 C thermophilic choice. Proposed as new param vin_temp. Vinasse density: not found.",
+     "Janke 2015 vinasse BMP: 246/273/302 NmL CH4 per g COD added. Barbosa 2022 gives 0.40 L/g COD removed, above the 0.35 theoretical at 0 C, so it is likely on a non-STP volume basis. The bases need harmonising.",
+     "Barbosa 2022 (JWPE 47) gives 30-day restart to 19 kg COD/m3/d, but in a UASB, not a CSTR. The registry high of 60 d has no source. The cod_so4_crit central of 10 interpolates between the two tested ratios (12 and 7.5), so it should be flagged D.",
+     "EPE OPEX factor R$0.150/Nm3 reconfirmed (S). The O&M basis is BNDES data for a reference plant of 33 Mm3/yr biogas giving 18.2 Mm3/yr biomethane (about 49.9k Nm3/d). The source document for the lcob_epe_sucro LCOB (0.78-1.83 R$/m3) is still unidentified.",
+     "CNPEM SUCRE assumes 140 kg straw DM/t cane, 50% recovery (scenarios 30/50/70%), 80 t cane/ha and a 35 km average straw radius, compared with the registry haul_dist of 25 km.",
+     "Hoffstadt 2020: up to 27% biogas loss after 6 months of ensiling (batch) and ~20% (Baserga) after 6 months. Volpi s-CSTR: 230 NmL CH4/g VS and 83 +/- 13% removal. Kiyuna 2017: -35% CH4 when COD/SO4 drops from 12 to 7.5. All re-confirmed at S.",
+     "New high-value lead: the Embrapa BiogasFert methodology PDF on biogas/biomethane potential from Brazilian swine and cattle herds."
+    ],
+    "claims": [
+     {
+      "claim": "ANP Res. 1.006/2026 PCS (higher heating value) limits for Centro-Oeste/Sudeste/Sul",
+      "value": "35000-43000",
+      "unit": "kJ/m3 at 293.15 K, 101.325 kPa, dry basis",
+      "url": "https://www.legisweb.com.br/legislacao/?id=499173",
+      "quote_or_snippet": "Poder Calorífico Superior ... 35.000 a 43.000 kJ/m³ ... valores referidos a 293,15K (20°C) e 101,325kPa (1atm) em base seca (search summary)",
+      "flag": "S"
+     },
+     {
+      "claim": "ANP Res. 1.006/2026 PCS limits North region (grouping with Nordeste inconsistent across snippets)",
+      "value": "34000-38400",
+      "unit": "kJ/m3 (20 C, 1 atm, dry)",
+      "url": "https://www.legisweb.com.br/legislacao/?id=499173",
+      "quote_or_snippet": "34.000 a 38.400 (Norte) e 35.000 a 43.000 (Nordeste, Centro-Oeste, Sudeste e Sul)",
+      "flag": "S"
+     },
+     {
+      "claim": "ANP Res. 1.006/2026 Wobbe index limits outside North region",
+      "value": "46500-53500",
+      "unit": "kJ/m3 (20 C, 1 atm, dry)",
+      "url": "https://www.legisweb.com.br/legislacao/?id=499173",
+      "quote_or_snippet": "Índice de Wobbe ... 40.500 a 45.000 kJ/m³ (Norte) e 46.500 a 53.500 kJ/m³ (demais regiões)",
+      "flag": "S"
+     },
+     {
+      "claim": "ANP 1.006/2026 published 12 Aug 2026, in force 13 Aug 2026, revokes 886/2022 and 906/2022",
+      "value": "Res. ANP 1.006 of 11 Aug 2026",
+      "unit": "",
+      "url": "https://www.gov.br/anp/pt-br/canais_atendimento/imprensa/noticias-comunicados/anp-aprova-resolucao-sobre-especificacao-e-controle-da-qualidade-do-biometano",
+      "quote_or_snippet": "A norma entrou em vigor em 13 de agosto de 2026 e consolida ... 886/2022 ... e nº 906/2022 ... expressamente revogadas",
+      "flag": "S"
+     },
+     {
+      "claim": "Biomethane HHV derived at 0 C basis (96.5% CH4 x 39.82 MJ/Nm3 pure CH4)",
+      "value": "38.4 [37.6-39.8]",
+      "unit": "MJ/Nm3 (0 C, 101.325 kPa)",
+      "url": "https://www.legisweb.com.br/legislacao/?id=499173",
+      "quote_or_snippet": "Derived: ANP floor 35.0 MJ/m3 at 20 C x 293.15/273.15 = 37.6; pure CH4 HHV 39.82 is prior knowledge",
+      "flag": "D"
+     },
+     {
+      "claim": "Filter cake BMP, three samples, batch",
+      "value": "245-281",
+      "unit": "NmL CH4/g VS",
+      "url": "https://doi.org/10.3390/ijms160920685",
+      "quote_or_snippet": "methane yield achieved by the three filter cake samples ... varying between 245–281 NmL·gVS⁻¹",
+      "flag": "S"
+     },
+     {
+      "claim": "Filter cake methane per fresh matter",
+      "value": "50-58",
+      "unit": "Nm3 CH4/t FM",
+      "url": "https://doi.org/10.3390/ijms160920685",
+      "quote_or_snippet": "converted to methane production per fresh matter (50 up to 58 Nm³·ton_FM⁻¹)",
+      "flag": "S"
+     },
+     {
+      "claim": "Vinasse BMP per COD added, autonomous distillery vs two annexed plants (35 d batch)",
+      "value": "246±15; 273±2; 302±6",
+      "unit": "NmL CH4/g COD",
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4613226/",
+      "quote_or_snippet": "Vinasse from the autonomous plant achieved the lowest methane yield after 35 days (246 ± 15 NmL·gCOD⁻¹) ... (273 ± 02 and 302 ± 06 NmL·gCOD⁻¹)",
+      "flag": "S"
+     },
+     {
+      "claim": "Filter cake BMP untreated / autoclaved / autoclaved+NaOH, and semi-continuous steady-state yield",
+      "value": "185 / 174 / 222; CSTR 224",
+      "unit": "mL CH4/g VS",
+      "url": "https://www.sciencedirect.com/science/article/abs/pii/S0960148119306883",
+      "quote_or_snippet": "at steady-state no significant differences in methane yield were observed among the reactors with an average of 224 mL CH₄/g VS",
+      "flag": "S"
+     },
+     {
+      "claim": "Co-digestion vinasse + filter cake + deacetylation liquor in s-CSTR at 55 C: methane yield and removal",
+      "value": "230; 83 ± 13",
+      "unit": "NmL CH4/g VS; % organic matter removal",
+      "url": "https://www.biorxiv.org/content/10.1101/2021.02.24.432031v2.full",
+      "quote_or_snippet": "reached production of 230 NmLCH₄ gSV⁻¹ and organic matter removal efficiency 83% ± 13",
+      "flag": "S"
+     },
+     {
+      "claim": "Vinasse temperature leaving distillation columns",
+      "value": "90",
+      "unit": "C",
+      "url": "https://www.biorxiv.org/content/10.1101/2021.02.24.432031v2.full",
+      "quote_or_snippet": "vinasse leaves the distillation columns at 90°C ... The operating temperature was 55°C",
+      "flag": "S"
+     },
+     {
+      "claim": "Vinasse temperature at distillation outlet (PT secondary)",
+      "value": "85-90",
+      "unit": "C",
+      "url": "https://www.rbciamb.com.br/Publicacoes_RBCIAMB/article/download/206/170/724",
+      "quote_or_snippet": "A vinhaça sai dos aparelhos de destilação em média de 85 a 90 °C (search summary over PT result set; exact page among results not resolved)",
+      "flag": "S"
+     },
+     {
+      "claim": "Vinasse generation per litre of ethanol",
+      "value": "12 typical; 10-15 range",
+      "unit": "L vinasse/L ethanol",
+      "url": "https://unica.com.br/noticias/vinhaca-biofertilizante-e-energia-sustentavel/",
+      "quote_or_snippet": "taxa de geração ... 12 litros de vinhaça por litro de etanol ... entre 10 a 15 litros (search summary over PT result set)",
+      "flag": "S"
+     },
+     {
+      "claim": "Vinasse K2O by mash type: molasses / juice / mixed",
+      "value": "3.74-7.83 / 1.2-2.1 / 3.34-4.6",
+      "unit": "g/L K2O",
+      "url": "https://www.fatecjales.edu.br/revista-agro/images/artigos/1a_edicao/volume10-1/vinhaca-conceito-desafios-e-oportunidades-uma-revisao-bibliografica.pdf",
+      "quote_or_snippet": "3.740 - 7.830 mg/L para melaço, 1.200 - 2.100 mg/L para caldo, e 3.340 - 4.600 mg/L para misto (search summary over PT result set)",
+      "flag": "S"
+     },
+     {
+      "claim": "Vinasse pH by mash type: molasses / juice / mixed",
+      "value": "4.2-5.0 / 3.7-4.6 / 4.4-4.6",
+      "unit": "-",
+      "url": "https://www.fatecjales.edu.br/revista-agro/images/artigos/1a_edicao/volume10-1/vinhaca-conceito-desafios-e-oportunidades-uma-revisao-bibliografica.pdf",
+      "quote_or_snippet": "pH variam entre 4,2 - 5,0 para melaço, 3,7 - 4,6 para caldo, e 4,4 - 4,6 para misto",
+      "flag": "S"
+     },
+     {
+      "claim": "Filter cake generation per tonne of cane crushed",
+      "value": "30-40 (some 20-40)",
+      "unit": "kg/t cane",
+      "url": "https://repositorio.unesp.br/bitstreams/532df024-72e7-424f-8517-09a9b8215acb/download",
+      "quote_or_snippet": "For each tonne of sugarcane crushed, 30 to 40 kg of filter cake is produced ... others reference a range of 20 to 40 kg/t",
+      "flag": "S"
+     },
+     {
+      "claim": "Filter cake moisture content",
+      "value": "70-80",
+      "unit": "% wet basis",
+      "url": "http://static.sites.sbq.org.br/rvq.sbq.org.br/pdf/BernardinoNoPrelo.pdf",
+      "quote_or_snippet": "Filter cake has a high water content that can vary between 70% and 80%",
+      "flag": "S"
+     },
+     {
+      "claim": "Straw generation and recovery assumption (CNPEM SUCRE)",
+      "value": "140 kg DM/t cane; 50% recovered",
+      "unit": "kg DM/t cane; fraction",
+      "url": "https://cnpem.br/en/palha-da-cana-pode-gerar-355-twh-de-energia/",
+      "quote_or_snippet": "producing 140 kg of straw (dry basis) per ton of sugarcane and collecting half of all straw generated",
+      "flag": "S"
+     },
+     {
+      "claim": "SUCRE scenario collection fractions, mean radius and cane productivity",
+      "value": "30/50/70%; 35 km; 80 t cane/ha",
+      "unit": "%; km; t/ha",
+      "url": "https://cnpem.br/palha-de-cana-pode-gerar-energia-para-suprir-70-do-consumo-residencial-no-pais/",
+      "quote_or_snippet": "approximately 30%, 50%, and 70% of available straw ... average radius of 35 km, average productivity of 80 TC/ha",
+      "flag": "S"
+     },
+     {
+      "claim": "COD/sulfate ratio drop from 12 to 7.5 reduces methane potential",
+      "value": "-35",
+      "unit": "% CH4 potential",
+      "url": "https://link.springer.com/article/10.1007/s13399-023-05036-5",
+      "quote_or_snippet": "A 35% decrease in methane production potential was observed when the COD/sulfate ratio decreased from 12 to 7.5 due to ... hydrogen sulfide ... pH values (> 8) [Kiyuna et al. 2017 Bioresour Technol 232:103-112, via search summary]",
+      "flag": "S"
+     },
+     {
+      "claim": "UASB restart time after off-season to 19 kg COD/m3/d",
+      "value": "30",
+      "unit": "d",
+      "url": "https://www.sciencedirect.com/science/article/abs/pii/S2214714422001076",
+      "quote_or_snippet": "The time required for UASB's restart subjected to vinasse up to 19 kg COD.m⁻³.d⁻¹ can be reached in 30 days",
+      "flag": "S"
+     },
+     {
+      "claim": "UASB on vinasse at 33 kg COD/m3/d: COD removal and CH4 production rate",
+      "value": "84; 10",
+      "unit": "%; L CH4/L/d",
+      "url": "https://www.sciencedirect.com/science/article/abs/pii/S2214714422001076",
+      "quote_or_snippet": "UASB subjected to vinasse at 33 kg COD.m⁻³.d⁻¹ showed COD removal of 84% and methane production of 10 L CH₄.L⁻¹.d⁻¹",
+      "flag": "S"
+     },
+     {
+      "claim": "Energy cane ensiling biogas losses after 6 months (batch peak; Baserga calculation)",
+      "value": "up to 27; ~20",
+      "unit": "% of biogas potential",
+      "url": "https://doi.org/10.3390/agronomy10060821",
+      "quote_or_snippet": "Peak biogas losses through ensiling of up to 27% after six months ... Baserga, the loss would be approximately 20% after six months",
+      "flag": "S"
+     },
+     {
+      "claim": "IPCC 2006 B0 swine / dairy cows / other cattle (Brazil-context secondary)",
+      "value": "0.29 / 0.13 / 0.10",
+      "unit": "m3 CH4/kg VS",
+      "url": "https://www.embrapa.br/documents/1355242/0/Biog%C3%A1sFert+-+Metodologia+para+estimar+o+potencial+de+biog%C3%A1s+e+biometano+a+partir+de+plant%C3%A9is+su%C3%ADnos+e+bovinos+no+Brasil.pdf",
+      "quote_or_snippet": "B₀ é de 0,29 m³ CH₄/kg SV para suínos, 0,13 m³ CH₄/kg SV para vacas de leite, e 0,1 m³ CH₄/kg SV para outros bovinos (search summary over Embrapa/USP result set; exact doc not resolved)",
+      "flag": "S"
+     },
+     {
+      "claim": "IPCC 2019 Refinement cattle B0 by region/productivity and dairy Table 10.16",
+      "value": "0.19 NA; 0.18 WE; 0.17 EE/Oceania; 0.18 other high-prod; 0.13 low-prod; dairy 0.24",
+      "unit": "m3 CH4/kg VS",
+      "url": "https://www.ipcc-nggip.iges.or.jp/public/2019rf/pdf/4_Volume4/19R_V4_Ch10_Livestock.pdf",
+      "quote_or_snippet": "0.19 m³ CH₄/kg VS for North America, 0.18 for Western Europe, 0.17 for Eastern Europe and Oceania, 0.18 for other high-productivity systems, or 0.13 for low-productivity ... dairy cows ... 0.24 ... Table 10.16 (search summary; ambiguous)",
+      "flag": "S"
+     },
+     {
+      "claim": "IPCC 2019 pasture paired B0 and market swine B0 as used in whep R package",
+      "value": "0.19 (pasture, Table 10.17 Updated fn 2 p.10.70); 0.45 market swine",
+      "unit": "m3 CH4/kg VS",
+      "url": "https://github.com/eduaguilera/whep/pull/1227",
+      "quote_or_snippet": "0.19 m³ CH₄/kg VS: Pasture/range/paddock ... Table 10.17 (Updated), footnote 2, p. 10.70 ... 0.45 m³ CH₄/kg VS: Market swine",
+      "flag": "S"
+     },
+     {
+      "claim": "Membrane upgrading electricity consumption (Angelidaki et al. 2018 comparison table)",
+      "value": "0.18-0.20 raw; 0.14-0.26 clean",
+      "unit": "kWh/Nm3 biogas",
+      "url": "https://backend.orbit.dtu.dk/ws/files/190081841/BiogasUpgrade_Review.pdf",
+      "quote_or_snippet": "membrane separation showing consumption for raw biogas of 0.18–0.20 kWh/Nm³ and for clean biogas of 0.14–0.26 kWh/Nm³",
+      "flag": "S"
+     },
+     {
+      "claim": "Two-stage membrane electricity consumption (source not resolved; possibly Frontiers review)",
+      "value": "0.2-0.38",
+      "unit": "kWh/Nm3 raw biogas",
+      "url": "https://www.frontiersin.org/journals/chemical-engineering/articles/10.3389/fceng.2021.775788/full",
+      "quote_or_snippet": "two internal compression phases are required, with raw biogas requiring an electrical power supply ranging between 0.2 to 0.38 kWh/Nm³",
+      "flag": "S"
+     },
+     {
+      "claim": "EPE OPEX reference factor for biomethane and total OPEX 2026-2035",
+      "value": "0.150; 5.0 bi",
+      "unit": "R$/Nm3; R$",
+      "url": "https://www.epe.gov.br/sites-pt/publicacoes-dados-abertos/publicacoes/PublicacoesArquivos/publicacao-343/topico-780/NT-EPE-DPG-SDB-2025-08_Investimentos_Custos_O_e_M_Bios_2026-2035.pdf",
+      "quote_or_snippet": "operational costs (Opex) between 2026 and 2035 estimated at R$ 5.0 billion for biomethane, with reference factor of R$ 0.150/Nm³",
+      "flag": "S"
+     },
+     {
+      "claim": "EPE O&M cost basis: BNDES reference plant biogas and biomethane output (EPE edition unresolved)",
+      "value": "33 biogas; 18.2 biomethane",
+      "unit": "million Nm3/yr",
+      "url": "https://www.epe.gov.br/sites-pt/publicacoes-dados-abertos/publicacoes/PublicacoesArquivos/publicacao-343/topico-729/NT-EPE-DPG-SDB-2023-07_Investimentos_Custos_O_e_M_Bios_2025-2034.pdf",
+      "quote_or_snippet": "operation and maintenance costs were calculated based on data provided by BNDES, referring to a biogas production plant profile of 33 million Nm³/year and 18.2 million Nm³/year of biomethane",
+      "flag": "S"
+     },
+     {
+      "claim": "Fuess, Garcia & Zaiat 2018 STOTEN 634:29-40 DOI and sampling design (key SP vinasse characterization)",
+      "value": "doi:10.1016/j.scitotenv.2018.03.326; 13 samples May-Dec",
+      "unit": "",
+      "url": "https://www.sciencedirect.com/science/article/abs/pii/S0048969718310866",
+      "quote_or_snippet": "characterized over seven months (May to December) ... in 13 samples",
+      "flag": "S"
+     }
+    ],
+    "proposed_rows": [
+     "parameters.csv UPDATE fc_bmp: high 260 -> 281; source -> 'Janke 2020 Renew Energy S0960148119306883; Volpi 2022 10.1007/s12155-021-10293-1; Janke et al. 2015 IJMS 10.3390/ijms160920685 (batch 245-281 NmL/g VS)'; confidence S (unchanged); notes -> 'Janke 2020: BMP untreated 185 / autoclaved 174 / +NaOH 222; CSTR steady state 224 (R08)'",
+     "parameters.csv UPDATE bmp_fullscale: central 0.85 (unchanged); low 0.70 (unchanged); high 1.0 -> 1.2; source -> 'Unattributed (K); Janke 2020 Renew Energy S0960148119306883 shows continuous 224 >= batch 185/174/222 mL CH4/g VS (ratio ~1.0-1.3)'; confidence S -> K; notes -> 'Cited source does not support <1; find primary before use (R08 conflict)'",
+     "parameters.csv UPDATE b0_cattle: central 0.20 -> 0.13; low 0.13 -> 0.10; high 0.30 -> 0.24; source -> 'IPCC 2006 Vol4 Ch10 Annex 10A (LatAm dairy 0.13; other cattle 0.10) via secondary; IPCC 2019 Refinement Table 10.16 dairy high-productivity 0.24 (snippet)'; confidence K -> S; notes -> 'Consider splitting into b0_dairy and b0_other_cattle; IPCC m3 basis likely ~20 C (0.67 kg/m3; K) -> x~0.93 for Nm3 at 0 C; verify Tables 10A-4/10A-5'",
+     "parameters.csv UPDATE b0_swine: central 0.30 -> 0.29; low 0.25 -> 0.29; high 0.45 (unchanged); source -> 'IPCC 2006 Vol4 Ch10 Annex 10A (0.29 LatAm/developing) via secondary; 0.45 market swine via whep PR #1227 (region/edition unclear)'; confidence K -> S; notes -> 'Verify Table 10A-7 and 2019 Table 10.16'",
+     "parameters.csv UPDATE b0_poultry: no value change; notes -> 'Not found in R08 (2026-10-04); remains K; verify IPCC 2006 Table 10A-9 / 2019 Table 10.16'",
+     "parameters.csv UPDATE vin_k2o: high 4.6 -> 7.8; source -> 'Overview tables; PT secondary by mash type (R08)'; confidence S; notes -> 'Near K inhibition onset; by mash: juice 1.2-2.1; mixed 3.34-4.6; molasses 3.74-7.83 g/L K2O'",
+     "parameters.csv UPDATE vin_ph: no value change; notes -> 'Alkalinization or recirculation needed; by mash: juice 3.7-4.6; mixed 4.4-4.6; molasses 4.2-5.0 (PT secondary; R08)'",
+     "parameters.csv UPDATE straw_recov: low '' -> 0.3; high '' -> 0.7; source -> 'CNPEM/LNBR SUCRE (keep >=7 t DM/ha/yr on soil); scenarios 30/50/70% https://cnpem.br/palha-de-cana-pode-gerar-energia-para-suprir-70-do-consumo-residencial-no-pais/'; confidence S",
+     "parameters.csv UPDATE straw_gen: source -> 'CNPEM/LNBR SUCRE https://cnpem.br/en/palha-da-cana-pode-gerar-355-twh-de-energia/'; confidence S; notes -> 'SUCRE assumption (not measured); paired with 80 t cane/ha'",
+     "parameters.csv UPDATE fc_gen: no value change; notes -> 'Most sources 30-40 kg/t; some 20-40; moisture 70-80% (R08)'",
+     "parameters.csv UPDATE fc_ts_vs: no value change; notes -> 'PT secondary moisture 70-80% -> TS 20-30% (R08)'",
+     "parameters.csv UPDATE cod_removal: no value change; notes -> 'Volpi 2021 s-CSTR 55 C: 83 +/- 13%; Barbosa 2022 UASB: 84% at 33 kg COD/m3 d (R08)'",
+     "parameters.csv UPDATE codig_bmp: no value change; notes -> 'UNICAMP Moraes group; 230 NmL CH4/g VS reconfirmed in preprint 10.1101/2021.02.24.432031 (S; R08)'",
+     "parameters.csv UPDATE temp: no value change; source -> 'Volpi 2021 10.1007/s00253-021-11635-x (preprint 10.1101/2021.02.24.432031); Ferraz Jr 2016'; notes -> 'Vinasse leaves distillation at ~90 C (Volpi; S) / 85-90 C (PT secondary; S); see vin_temp'",
+     "parameters.csv UPDATE cod_so4_crit: no value change; source -> 'Kiyuna Fuess Zaiat 2017 Bioresour Technol 232:103-112 (tested 12 vs 7.5: -35% CH4 potential)'; confidence S -> D; notes -> 'Central 10 interpolated between tested ratios; not a reported threshold'",
+     "parameters.csv UPDATE restart_days: no value change; source -> 'Barbosa Alves Del Nery Sakamoto Pozzi Damianovic 2022 J Water Process Eng 47 (sciencedirect S2214714422001076)'; confidence S; notes -> 'UASB not CSTR; restart to 19 kg COD/m3 d in 30 d; high 60 is K; switching to molasses -69.7% CH4'",
+     "parameters.csv UPDATE vin_ch4_yield: no value change; notes -> 'Theoretical 0.35 at 0 C; Janke 2015 BMP 0.246-0.302 per g COD added (see vin_bmp_cod); Barbosa 2022 0.40 L/g COD removed > theoretical -> non-STP volume basis; harmonise'",
+     "parameters.csv UPDATE upg_elec_membrane: no value change; source -> 'Angelidaki et al. 2018 Biotechnol Adv 10.1016/j.biotechadv.2018.01.011 (table: membrane 0.18-0.20 kWh/Nm3 raw; 0.14-0.26 clean; snippet); Bauer 2013 SGC 270'; confidence K -> S; notes -> 'Second snippet: two-stage membranes 0.2-0.38 kWh/Nm3 raw (source unresolved); consider high 0.38 after V'",
+     "parameters.csv UPDATE upg_ch4_recovery: no value change; notes -> 'Not found in R08; SGC 270 OSTI copy https://www.osti.gov/etdeweb/servlets/purl/22090519 is the lead'",
+     "parameters.csv UPDATE fc_storage_loss: no value change; notes -> 'GAP - LABIOEN experiment; Hoffstadt 2020: up to 27% biogas loss after 6 mo (batch) and ~20% (Baserga) after 6 mo; 4-mo values not re-seen in R08'",
+     "parameters.csv UPDATE opex_epe: no value change; notes -> 'R$0.150/Nm3 reconfirmed (S); O&M basis = BNDES reference plant 33 Mm3/yr biogas -> 18.2 Mm3/yr biomethane (see epe_ref_plant_bm); snippet total OPEX 2026-35 R$5.0 bi vs R02 R$1.1 bi - scope unresolved'",
+     "parameters.csv UPDATE capex_epe: no value change; notes -> 'Mix of landfill and agro; doc id NT-EPE-DPG-SDB/008/2025 (Oct 2025); number not re-seen in R08 (epe.gov.br blocked)'",
+     "parameters.csv UPDATE lcob_epe_sucro: no value change; source -> 'EPE (document unresolved; candidates: PDE2034 Caderno de Oferta de Biocombustiveis; AP-EPE-DPG-SDB-2024-64; NT DEA 17/14)'; confidence S; notes -> 'Source not found after 3 targeted searches (R08); do not use without V'",
+     "parameters.csv UPDATE haul_dist: no value change; notes -> 'GAP - derive from catchment model; CNPEM SUCRE assumes 35 km mean straw collection radius (see straw_radius_sucre)'",
+     "parameters.csv UPDATE vin_gen: no value change; notes -> 'Distinguish generated vs applied vs available for AD (Santa Adelia applied ~5.6 L/L); PT secondary: 12 typical, 10-15 range (R08)'",
+     "parameters.csv NEW: hhv_bm_spec_se,process,Biomethane PCS (HHV) spec limits CO/SE/S (ANP Res. 1.006/2026),,35.0,43.0,MJ per m3 (20 C; 101.325 kPa; dry),ANP Res. 1.006/2026 spec table via search snippet (legisweb.com.br id=499173),S,North 34.0-38.4 (NE grouping conflicts between snippets); methods NBR 15213 / ASTM D3588 / ISO 6976; hydrocarbon enrichment allowed only to adjust PCS and Wobbe; verify V",
+     "parameters.csv NEW: wobbe_bm_spec_se,process,Biomethane Wobbe index spec limits outside North (ANP Res. 1.006/2026),,46.5,53.5,MJ per m3 (20 C; 101.325 kPa; dry),ANP Res. 1.006/2026 spec table via search snippet (legisweb.com.br id=499173),S,North 40.5-45.0; verify V",
+     "parameters.csv NEW: hhv_biomethane,costs,Biomethane HHV for energy and price conversion,38.4,37.6,39.8,MJ per Nm3 (0 C; 101.325 kPa),Derived: central = 0.965 x pure-CH4 HHV 39.82 MJ/Nm3 (K; verify ISO 6976); low = ANP 1.006/2026 PCS floor 35.0 MJ/m3 at 20 C x 293.15/273.15; high = pure CH4,D,Assumes 96.5 mol% CH4 (ANP 8/2015 SE minimum; S); replace with plant gas analysis; 1 MMBtu ~ 27.5 Nm3 at central",
+     "parameters.csv NEW: vin_temp,process,Vinasse temperature at distillation outlet,90,85,90,C,Volpi et al. 2021 preprint 10.1101/2021.02.24.432031 (90 C); PT secondary compilations (85-90 C),S,Supports thermophilic AD with little or no heating; cooling may be needed",
+     "parameters.csv NEW: vin_bmp_cod,process,Vinasse BMP per COD added (batch 35 d),273,246,302,NmL CH4 per g COD added,Janke et al. 2015 IJMS 16:20685 10.3390/ijms160920685 (PMC4613226),S,246 autonomous distillery; 273 and 302 annexed plants; per COD added not removed",
+     "parameters.csv NEW: b0_other_cattle,process,Manure B0 non-dairy cattle (IPCC 2006 Latin America),0.10,,,m3 CH4 per kg VS (IPCC volume basis),IPCC 2006 GL Vol4 Ch10 Annex 10A via secondary search summary (Embrapa BiogasFert result set),S,Verify Table 10A-5; IPCC m3 basis likely ~20 C (0.67 kg/m3; K)",
+     "parameters.csv NEW: epe_ref_plant_bm,costs,EPE/BNDES O&M reference plant biomethane output,18.2,,,million Nm3 biomethane per yr,EPE O&M technical note (edition 2023-05/2023-07/2025-08 unresolved) citing BNDES data,S,From 33 million Nm3/yr biogas; ~49.9k Nm3/d biomethane (D); defines scale of opex_epe",
+     "parameters.csv NEW: straw_radius_sucre,spatial,Mean straw collection radius (SUCRE scenario assumption),35,,,km,CNPEM/LNBR SUCRE via search snippet (cnpem.br),S,Assumption not measurement; 80 t cane/ha; compare haul_dist 25 km"
+    ],
+    "gaps": [
+     "No primary document was opened because of the egress allowlist, so no parameter could be promoted to V. Every row needs a V pass from an unrestricted network (queue in section 5 of the note).",
+     "ANP Res. 1.006/2026 limits for CH4, CO2, O2, N2, H2S, total S, dew point and methane number were not retrieved. Only PCS and Wobbe were seen in snippets, and the regional grouping conflicts between snippets (North vs North+Northeast).",
+     "IPCC 2006 Tables 10A-4 to 10A-9 and IPCC 2019 Table 10.16/10.16a B0 values are secondary/snippet-level only. Poultry B0 was not found.",
+     "The source document for lcob_epe_sucro (0.78-1.83 R$/m3) is still unidentified.",
+     "capex_epe value, price year and OPEX scope (feedstock, digestate, energy) were not re-seen. The EPE total OPEX conflicts: R$5.0 bi in the snippet vs R$1.1 bi in R02.",
+     "Vinasse COD and sulfate values from Fuess et al. 2018 STOTEN (doi:10.1016/j.scitotenv.2018.03.326) were not retrieved. Vinasse density was not found anywhere.",
+     "olr_max_cstr and hrt_cstr have no new evidence. The Janke 2015 IJMS 16:23210 open PDF is located but blocked.",
+     "straw_bmp was not re-searched (search budget).",
+     "upg_ch4_recovery (membrane) was not found. The SGC 270 (Bauer 2013) OSTI copy is blocked.",
+     "The source of the 0.85 BMP-to-full-scale factor is unknown, and its cited source (Janke 2020) contradicts it.",
+     "The 4-month filter cake/energy cane storage loss values (6-16% / 13-22%) were not re-seen.",
+     "The pure-CH4 HHV constant (39.82 MJ/Nm3) and the IPCC 0.67 kg/m3 volume basis are prior knowledge and need ISO 6976 / IPCC Eq. 10.23 verification."
+    ],
+    "blocked_domains": [
+     "www.mdpi.com",
+     "www.ipcc-nggip.iges.or.jp",
+     "pmc.ncbi.nlm.nih.gov",
+     "pubmed.ncbi.nlm.nih.gov",
+     "europepmc.org",
+     "www.ebi.ac.uk",
+     "www.epe.gov.br",
+     "www.legisweb.com.br",
+     "www.biorxiv.org",
+     "www.scielo.br",
+     "core.ac.uk",
+     "pdfs.semanticscholar.org",
+     "api.semanticscholar.org",
+     "api.crossref.org",
+     "api.openalex.org",
+     "doi.org",
+     "backend.orbit.dtu.dk",
+     "www.osti.gov",
+     "www.sgc.se",
+     "repositorio.unicamp.br",
+     "www.teses.usp.br",
+     "repositorio.unesp.br",
+     "bv.fapesp.br",
+     "cnpem.br",
+     "cibiogas.org",
+     "cetesb.sp.gov.br",
+     "www.gov.br",
+     "www.in.gov.br",
+     "atosoficiais.com.br",
+     "legislacao.regoola.io",
+     "www.gasnet.com.br",
+     "98fmnatal.com.br",
+     "cloud.agroclimate.org",
+     "climateactiontransparency.org",
+     "unosd.un.org",
+     "greencalculus.com",
+     "www.researchgate.net",
+     "www.sciencedirect.com",
+     "link.springer.com",
+     "www.frontiersin.org",
+     "unica.com.br",
+     "www.iea.org",
+     "web.archive.org"
+    ],
+    "searches_used": 25
+   },
+   "verified": null
+  }
+ ]
+}

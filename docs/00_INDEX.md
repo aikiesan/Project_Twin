@@ -46,10 +46,14 @@
 | 21 | [Risks, conflicts & open questions](21_RISKS_AND_OPEN_QUESTIONS.md) |
 | 22 | [Glossary (PT/EN)](22_GLOSSARY.md) |
 | 23 | [References](23_REFERENCES.md) |
+| 24 | [Four-month plan — two drafts to merge](plan_drafts/README.md) (5 Oct 2026 – 5 Feb 2027) |
 | 99 | [Session notes — how we got here](99_SESSION_NOTES.md) |
 
 ## G. Raw material
-- `../research_notes/` — R00–R06 full research reports (all URLs, numbers, flags)
+- `../research_notes/` — R00–R10 full research reports (all URLs, numbers, flags; R07–R10 S-flagged, verification pending)
+- `../research_notes/raw/` — structured workflow results (claims, proposed rows, validation report)
+- `../registry/staging/` — proposed registry rows not yet merged
+- `../tools/agent_workflows/` — Claude Code multi-agent workflow scripts used to build the project
 - `../evidence/` — primary documents and data extracts (V-level)
 
 ## H. Decisions

@@ -1,0 +1,67 @@
+                            Relatório de Auditoria                              RQ 0607.1
+                                 RenovaBio                                       24/05/24
+                                    E1GC                                        Pág. 1/3
+
+DADOS SINTETICOS PARA TESTE - NAO SAO DADOS REAIS
+(synthetic test fixture for tests/test_renovabio.py; every number below is made up)
+
+1 IDENTIFICAÇÃO DAS PARTES
+      1.1 FIRMA INSPETORA
+Razão Social:                            Firma Inspetora Sintetica Ltda.
+CNPJ:                                    98.765.432/0001-98
+
+      1.2 PRODUTOR/IMPORTADOR DE BIOCOMBUSTÍVEL
+                                         Usina Sintetica de Teste S.A. -
+Razão Social
+                                         Unidade Ficticia - SP
+CNPJ:                                    12.345.678/0001-95
+Rota de produção:                        E1GC
+
+2 INFORMAÇÕES GERAIS DO PROJETO
+Período da RenovaCalc
+                                         2019 e 2020
+auditado:
+                                         Etanol Anidro: 55,50 gCO2eq/MJ
+Nota de Eficiência Energético-           (certificação anterior: 57,00 gCO2eq/MJ)
+Ambiental:
+                                         Etanol Hidratado: 54,25 gCO2eq/MJ
+ Fração do volume de
+                                          90,00% (certificação anterior: 80,00%)
+ biocombustível elegível:
+                            Relatório de Auditoria                              RQ 0607.1
+                                 RenovaBio                                       24/05/24
+                                    E1GC                                        Pág. 2/3
+
+
+2. Critérios de Elegibilidade e Volume Elegível
+Item                Questão                     Resultados da Auditoria
+        Cálculo está correto?                     Cana processada:
+                                                       2019: 1.000.000,00 ton
+                                                       2020: 1.200.000,00 ton
+
+8. Dados Fase Industrial - Extração Etanol 1G Cana
+Item                Questão                     Resultados da Auditoria
+                                                  Etanol Anidro: “Rendimento Etanol
+                                                  Anidro 2020.pdf”
+
+                                                  2019 = 50.000.000,00 Litros
+                                                  2020 = 60.000.000,00 Litros
+
+                                                  Etanol Hidratado: “Rendimento
+                                                  Etanol Hidratado 2020.pdf”
+
+                                                  2019 = 30.000.000,00 Litros
+                                                  2020 = 36.000.000,00 Litros
+                            Relatório de Auditoria                              RQ 0607.1
+                                 RenovaBio                                       24/05/24
+                                    E1GC                                        Pág. 3/3
+
+
+9. Dados Fase Industrial - Vinhaça (secao sintetica)
+Item                Questão                     Resultados da Auditoria
+                                                  Vinhaça gerada na destilaria:
+
+                                                  Produto     Vinhaça (L)
+                                                  2019        960.000.000,00
+                                                  2020        1.920.000.000,00
+

@@ -1,11 +1,48 @@
 # 04 — Development environment setup (step by step, at home)
 
-Target: Windows + Docker Desktop with WSL2 (Ubuntu). On Linux or macOS, skip the WSL steps.
+Two supported routes:
+- **Native Windows with an MSYS2 UCRT64 or Git Bash terminal.** This is the route tested on the project PC on 2026-10-04, at `A:\Project_Twin`. See §0b.
+- **WSL2 (Ubuntu).** Use it if you need Linux-only tools, such as OSRM builds outside Docker or osmium. See §1–§8. On Linux or macOS, follow §1–§8 and skip the WSL steps.
 Last updated: 2026-10-04. These steps match the current `pyproject.toml`, `uv.lock`, `Makefile` and `docker-compose*.yml`.
 
 ## 0. Two warnings
 - ⚠️ **Never put the repository or `data/` inside OneDrive** (or any other sync folder). Syncing `.git` and rasters that run to several GB corrupts both.
 - ⚠️ Keep the code and data **inside the WSL filesystem** (`~/projects/...`), not on `C:\` (`/mnt/c/...`). Raster I/O through `/mnt/c` is many times slower.
+
+## 0b. Native Windows quick path (tested 2026-10-04, MSYS2 UCRT64, `A:\Project_Twin`)
+
+Paste **one block at a time** and wait for the `$` prompt. When several lines are pasted at once, a long-running Windows program such as `uv` can swallow the lines queued behind it. `| tail` hides all progress until the command ends, so leave it off for long runs.
+
+```bash
+# 1. uv (Python manager). The system Python does not matter: uv brings 3.11 for the project
+/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+echo 'export PATH="$(cygpath "$USERPROFILE")/.local/bin:$PATH"' >> ~/.bashrc
+echo 'export UV_LINK_MODE=copy' >> ~/.bashrc          # uv cache on C:, project on A: (no hardlinks)
+echo 'export PATH="$PATH:/c/Program Files/Docker/Docker/resources/bin"' >> ~/.bashrc   # Docker Desktop CLI
+source ~/.bashrc && uv --version
+```
+```bash
+# 2. clone (autocrlf=false keeps evidence files byte-identical, so their sha256 hashes match)
+mkdir -p /a/Project_Twin && cd /a/Project_Twin
+git clone -c core.autocrlf=false -b ccr-35b12b87-0r0g25 https://github.com/aikiesan/aprenda_sobre_biometano.git
+cd aprenda_sobre_biometano/sp-biomethane-engine
+mkdir -p data/{raw,interim,processed,routing,private} ../../materiais/{01_artigos,02_relatorios_tecnicos,03_renovabio_laudos,04_lab,05_parceiros_NDA,06_apresentacoes}
+```
+```bash
+# 3. environment + tests (about 2 min; everything passes except 2 expected xfails = known registry gaps)
+uv sync --python 3.11 --extra dev --extra geo --extra stats
+uv run pytest -p no:warnings
+```
+
+Notes from the first install:
+- **PyMC without a C compiler.**
+  - Windows has no `g++`, so PyTensor would fall back to very slow pure-Python ops.
+  - `import engine` therefore sets `PYTENSOR_FLAGS="mode=NUMBA,cxx="` on Windows when no `g++` is found, using `engine.configure_pytensor_defaults`. Import `engine` before `pymc` in notebooks.
+  - In the terminal you can export the same variable in `~/.bashrc`.
+  - Measured on the project PC: the Bayesian tests pass in 20 s and 34 s.
+- **Ctrl+C in MSYS2 can leave a Python process running.** Check with `tasklist | grep -i python` and stop it with `taskkill //PID <pid> //F`.
+- **Docker Desktop** must be running. Then run `cp .env.example .env` and `docker compose up -d db` to start PostGIS on port 5433.
+- **Getting updates:** run `git pull` in `sp-biomethane-engine/` to receive what Claude sessions push.
 
 ## 1. Local directory layout
 

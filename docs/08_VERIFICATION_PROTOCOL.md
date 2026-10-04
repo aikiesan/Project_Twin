@@ -101,7 +101,7 @@ Most of the registry was compiled from search snippets and prior knowledge becau
   - `capacity_factor` has a blank `central`, and is flagged V without a page or quote.
 - **Consequences.**
   - `python -m engine.registry validate` exits 1 today. The CI step that runs it fails until `sources.yaml` and project 12 are fixed.
-  - `tests/test_registry.py::test_real_registry_has_no_validation_errors` passes for `parameters.csv`. It **xfails** for `sources.yaml` and `projects_capex.csv` and lists every error, so the gaps stay visible. The test turns green once they are fixed.
+  - `tests/test_registry.py::test_real_registry_has_no_validation_errors` passes for all three files since 2026-10-04, when the missing `publisher` and `status` fields were filled. If a registry error comes back, the test xfails and lists every error, and CI fails at the `engine.registry validate` step.
 
 **Limitations.**
 - No network access, so URLs and DOIs are checked only for form, not for whether they resolve.

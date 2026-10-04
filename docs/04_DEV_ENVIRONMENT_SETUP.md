@@ -29,7 +29,7 @@ cd Project_Twin
 mkdir -p data/{raw,interim,processed,routing,private} ../materiais/{01_artigos,02_relatorios_tecnicos,03_renovabio_laudos,04_lab,05_parceiros_NDA,06_apresentacoes}
 ```
 ```bash
-# 3. environment + tests (about 2 min; everything passes except 2 expected xfails = known registry gaps)
+# 3. environment + tests (about 2 min; everything passes; CI also runs the registry validator)
 uv sync --python 3.11 --extra dev --extra geo --extra stats
 uv run pytest -p no:warnings
 ```

@@ -8,7 +8,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v3
-      - run: uv sync --extra dev
+      - run: uv sync --extra dev --extra geo --extra stats
       - run: uv run ruff check src tests
       - run: uv run black --check src tests
       - run: uv run python -m engine.registry validate

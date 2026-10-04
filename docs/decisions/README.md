@@ -10,3 +10,6 @@ Status values: Proposed · Accepted · Superseded by ADR-XXXX.
 | [0003](ADR-0003-dvc-for-data-and-pipeline.md) | DVC for data versioning and pipeline | Proposed |
 | [0004](ADR-0004-huff-allocation-calibrated-on-renovabio.md) | Huff allocation calibrated on RenovaBio mill data | Proposed |
 | [0005](ADR-0005-hierarchical-bayesian-capex.md) | Hierarchical Bayesian CAPEX model with international priors | Proposed |
+| [0006](ADR-0006-osrm-car-profile-v0-routing.md) | OSRM (car profile) for v0 road-network distances | Proposed |
+| [0007](ADR-0007-pymc-for-bayesian-calibration.md) | PyMC as primary Bayesian engine; Stan/brms as cross-check | Proposed |
+| [0008](ADR-0008-lab-data-templates.md) | Tidy CSV templates as the lab ↔ engine contract | Proposed |

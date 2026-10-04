@@ -1,0 +1,10 @@
+# Optional routing service (OSRM) for road-network OD matrices — see scripts/routing/README.md.
+# Build the graph first:  bash scripts/routing/setup_osrm.sh
+# Then:                   docker compose -f docker-compose.routing.yml up -d
+services:
+  osrm:
+    image: ghcr.io/project-osrm/osrm-backend
+    command: osrm-routed --algorithm mld --max-table-size 10000 /data/region.osrm
+    ports: ["5000:5000"]
+    volumes: ["./data/routing:/data"]
+    restart: unless-stopped

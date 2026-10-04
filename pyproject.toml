@@ -36,6 +36,7 @@ packages = ["src/engine"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+filterwarnings = ["ignore::PendingDeprecationWarning:rasterio.*"]
 
 [tool.ruff]
 line-length = 100

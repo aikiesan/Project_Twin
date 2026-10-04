@@ -6,6 +6,6 @@
 - Merge a row into `../projects_capex.csv` only after checking its source. The MME REIDI portarias are the best primary source for paired capacity and CAPEX.
 - Then run `make registry`.
 
-`inventory_raw_2026-10-04.csv` (one row per dataset, per-file sha256) and `inventory_raw_folders_2026-10-04.csv` (one row per `data/raw/<source_id>/`, folder digest from `engine.ingest.inventory.sha256_tree`) record the first import from `A:/Pilar-2b` (git `1d24ada5+dirty`).
+`inventory_raw_2026-10-04.csv` (one row per dataset, per-file sha256) and `inventory_raw_folders_2026-10-04.csv` (one row per `data/raw/<source_id>/`, folder digest from `engine.ingest.inventory.sha256_tree`) record the 2026-10-04 imports: from `A:/Pilar-2b` (git `1d24ada5+dirty`, 13 folders) and from other local folders via `scripts/ingest/local_holdings.yaml` (9 folders).
 - The folder digests are the `sha256` values in `../sources.yaml`.
 - These are records, not proposals: re-run the inventory and compare to detect any change in `data/raw/`.

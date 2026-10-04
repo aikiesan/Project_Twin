@@ -781,7 +781,7 @@ sources:
     provides: [feedstock_bmp, fde_flow_factors, references, sp_totals_2023]
     format: YAML / CSV / XLSX / JSON
     access: internal
-    license: TODO check the Pilar-2b repository license
+    license: GPL-3.0 (Pilar-2b repository LICENSE)
     status: have
     confidence: K
     local_path: data/raw/pilar2b_canonical_parameters/
@@ -798,7 +798,7 @@ sources:
     temporal: 2023
     format: CSV / JSON
     access: internal
-    license: TODO check the Pilar-2b repository license
+    license: GPL-3.0 (Pilar-2b repository LICENSE)
     status: have
     confidence: K
     local_path: data/raw/pilar2b_residue_streams_sp/
@@ -830,3 +830,186 @@ sources:
       derivatives (analysis/build_aneel_biogas_gd.py, which gives the URL). 05h has uncommitted
       edits in Pilar-2b, but the change is a row reorder only, with identical values (checked
       with git diff, 2026-10-04).
+
+  # ---------------- HELD LOCALLY — other local folders, imported 2026-10-04 ----------------
+  # Copied by `python -m engine.ingest.local_import scripts/ingest/local_holdings.yaml`; origin
+  # paths, bytes and per-file sha256 in data/interim/import_local_holdings_log.tsv. sha256 below is
+  # the folder digest (engine.ingest.inventory.sha256_tree). Survey: docs/24_LOCAL_HOLDINGS_SURVEY.md.
+  - id: cp2b_redu_v2
+    name: CP2B / PILAR-2b São Paulo dataset v2.0 — residue BMP/TS/VS, availability factors, CH4 by municipality and stream, provenance
+    publisher: CP2B / NIPE-UNICAMP (Cerejo, Lamparelli, Moraes, Aguiar 2026), deposited in REDU (Unicamp Dataverse)
+    url: https://doi.org/10.25824/redu/F36WP9
+    module: supply
+    provides: [bmp, ts_vs, cn_ratio, fc_fcp_fs_fl, fde_percent, ch4_real_m3_yr_by_municipality_stream, parameters_provenance, validation_plants]
+    spatial: municipality (645, SP)
+    temporal: base years in 04_METADATA/base_years.csv
+    format: CSV / XLSX / JSON / MD
+    access: open
+    license: CC BY 4.0 (README-1.md)
+    status: have
+    confidence: V
+    local_path: data/raw/cp2b_redu_v2/
+    sha256: 5211d531d432e38d2767628ad7e4c3b9bf832be7ed6d1b410374f5bd8786c475   # 29 files, 1.6 MB
+    accessed: '2026-10-04'
+    notes: >-
+      The published version of what pilar2b_canonical_parameters / pilar2b_fde /
+      pilar2b_residue_streams_sp hold as working copies: cite this one. Tables only
+      (01_DATABASE, 03_SUPPLEMENTARY, 04_METADATA). The 02_GEOSPATIAL part (286 MB .7z) is not
+      imported; its layers duplicate data/raw holdings, and the extracted copy is incomplete.
+      Values are CP2B-derived (D) with literature sources in parameters_provenance.csv.
+  - id: anp_mapa_ethanol_biodiesel_plants
+    name: Ethanol (448) and biodiesel (77) plants with capacities — EPE WebMap export
+    publisher: ANP and MAPA (credit in the EPE WebMap layer metadata), exported via EPE WebMap
+    url: https://gisepeprd2.epe.gov.br/WebMapEPE/
+    module: supply
+    provides: [plant_name, uf, municipality, lat, lon, status, cane_crushing_class_t, anhydrous_m3_d, hydrated_m3_d, biodiesel_m3_d, cnpj_biodiesel]
+    spatial: per plant, Brazil
+    format: CSV (; delimiter)
+    access: open
+    license: TODO verify EPE WebMap terms
+    status: have
+    confidence: S
+    local_path: data/raw/anp_mapa_ethanol_biodiesel_plants/
+    sha256: ceb622abf75ee43b205900d87adab502cd35742d4019bfcdc3886f72b28767f3   # 2 files
+    accessed: '2026-10-04'
+    notes: >-
+      From Downloads/06_DADOS_ENERGIA_EPE. Export date not recorded in the CSV (the WebMap
+      shapefiles next to it carry createDate 2020-09-11). URL as in the epe_webmap entry.
+      Cane class is a range, not a crush figure.
+  - id: conab_mills_2025
+    name: CONAB active ethanol and sugar production units in Brazil, 2025 (points)
+    publisher: Conab
+    url: https://portaldeinformacoes.conab.gov.br/mapeamentos-agricolas.html
+    module: supply
+    provides: [mill_points, perfil_usina_destilaria_mista]
+    spatial: per mill, Brazil
+    temporal: 2025 (metadata 2025-11-19)
+    format: ESRI Shapefile (zip)
+    access: open
+    license: TODO verify Conab terms
+    status: have
+    confidence: V
+    local_path: data/raw/conab_mills_2025/
+    sha256: 6d5bcd2d633537c6f84b8fe5979acbfde008b62f6ae91fe8f5712b9a58d39579   # 1 zip
+    accessed: '2026-10-04'
+    notes: URL and date from the bundled .shp.xml. Copied from a folder of the ABIOVE project (public Conab file).
+  - id: conab_cane_series_costs
+    name: CONAB sugarcane historical series and surveys by UF (area, cane, sugar, ethanol, ATR) + production costs
+    publisher: Conab
+    url: TODO Conab portal download URL (not recorded with the files)
+    module: supply
+    provides: [cane_area_kha, cane_mt, sugar_kt, ethanol_anhydrous_ml, ethanol_hydrated_ml, atr_kg_t, crop_cost_brl_per_ha]
+    spatial: UF (cane); municipality x crop (costs)
+    temporal: cane 2005/06 onwards; costs 2018 onwards
+    format: TXT (; delimiter, fixed-width padded text)
+    access: open
+    license: TODO verify Conab terms
+    status: have
+    confidence: S
+    local_path: data/raw/conab_cane_series_costs/
+    sha256: 2efcad49991c3cccef8a5d469b0ca69781b9004ac9608963804acc10c917ce10   # 3 files
+    accessed: '2026-10-04'
+    notes: >-
+      dsc_safra_previsao shows the series mixes UNICA and Conab figures per row: keep that column
+      when using it. Production in thousand t / thousand L; costs nominal BRL (price year = row
+      year/month). Copied from a folder of the ABIOVE project (public Conab files).
+  - id: anp_biomethane_open_data_2026_04
+    name: ANP biomethane open data — plant capacity/processed volume and state production, monthly 01/2020-04/2026
+    publisher: ANP
+    url: https://www.gov.br/anp/pt-br/assuntos/producao-e-fornecimento-de-biocombustiveis/biometano
+    module: market
+    provides: [authorized_capacity_m3_d, biogas_processing_capacity_m3_d, biogas_processed_m3_d, utilisation_pct, production_by_state_m3]
+    spatial: per plant (CNPJ) and state
+    temporal: monthly 2020-01 to 2026-04
+    format: CSV (, delimiter, decimal comma in quotes)
+    access: open
+    license: TODO verify ANP open-data license
+    status: have
+    confidence: S
+    local_path: data/raw/anp_biomethane_open_data_2026_04/
+    sha256: f5580201f0ca526250fc466d83337a50301d3ca534b9a916e415936be41476a2   # 2 files
+    accessed: '2026-10-04'
+    notes: >-
+      Direct ANP open-data files (Biometano_DadosAbertos_CSV_Capacidade/Producao). Compare with the
+      PILAR-2b vendored copy in anp_biomethane_plants before choosing one; log differences as a
+      conflict (rule 7). Volumes are m³ with no stated reference conditions: confirm the basis.
+      The URL is the ANP page cited by PILAR-2b; the exact dataset URL was not recorded.
+  - id: cetesb_ictem_2023
+    name: CETESB ICTEM 2023 — municipal sewage collection and treatment index (polygons)
+    publisher: CETESB (via DataGeo / SIMA-SP)
+    url: https://datageo.ambiente.sp.gov.br/geoserver/datageo/VWM_ICTEM_CETESB_2023_POL/wfs?version=1.0.0&request=GetFeature&outputFormat=SHAPE-ZIP&typeName=VWM_ICTEM_CETESB_2023_POL
+    module: supply
+    provides: [ictem, sewage_collection_pct, sewage_treatment_pct]
+    spatial: municipality (SP)
+    temporal: 2023
+    format: ESRI Shapefile (zip)
+    access: open
+    license: TODO verify DataGeo terms
+    status: have
+    confidence: V
+    local_path: data/raw/cetesb_ictem_2023/
+    sha256: ed47cd1039a8fd0673ecca3656680eb41cbd175d90cf53ec81e4c89f84ab2855   # 1 zip
+    accessed: '2026-10-04'
+    notes: URL from the wfsrequest.txt inside the zip; downloaded 2025-06-25. Complements ana_ete_2019.
+  - id: ibge_censo_2022_pop_sp
+    name: IBGE Census 2022 — resident population, area and density per SP municipality
+    publisher: IBGE (table as exported by CP2B Maps)
+    url: https://sidra.ibge.gov.br
+    module: supply
+    provides: [population_2022, area_km2, density_inhab_km2]
+    spatial: municipality (645, SP)
+    temporal: 2022
+    format: CSV (decimal comma in quotes)
+    access: open
+    license: TODO verify IBGE terms
+    status: have
+    confidence: S
+    local_path: data/raw/ibge_censo_2022_pop_sp/
+    sha256: 4d19a077bcf74bf249a15fd9fea1f5d21ecd15845076e29c4ac82fcc7e9377a4   # 1 file
+    accessed: '2026-10-04'
+    notes: >-
+      From A:/CP2B_Maps (aggregate public table; nothing else from that folder imported). The SIDRA
+      table number is not recorded with the file; the CP2B Maps workbook next to it cites
+      SIDRA 4714. The workbook itself (IBGE_2022_POP.xlsx) is a 56-byte broken file, not imported.
+  - id: seade_geo_ambiente_transporte
+    name: GeoSEADE layers — protected areas (federal/state/municipal, PI/US), indigenous lands, INCRA settlements, UGRHI, power distributors, railways and stations, dry ports
+    publisher: Fundação Seade (GeoSEADE), compiling MMA, Funai, Incra, IGC, Aneel, Ministério da Infraestrutura/ANTT, Receita Federal
+    url: TODO GeoSEADE download URL (not recorded with the files)
+    module: siting
+    provides: [protected_areas, indigenous_lands, rural_settlements, ugrhi, distributor_areas, railways, railway_stations, dry_ports]
+    spatial: SP
+    temporal: 2011-2024 per layer (see metadados xlsx)
+    format: ESRI Shapefile (zips) + metadata XLSX
+    access: open
+    license: TODO verify GeoSEADE terms
+    status: have
+    confidence: S
+    local_path: data/raw/seade_geo_ambiente_transporte/
+    sha256: a5561843d6af38b71fbcb42d340bb68a9f79b1d798d38b086e6d94ec6fed867e   # 14 files
+    accessed: '2026-10-04'
+    notes: >-
+      Layer publisher, reference year and CRS (SIRGAS 2000, EPSG:4674) per the bundled
+      metadados_geoseade_infraestrutura_e_meio_ambiente.xlsx: protected areas MMA 2024, indigenous
+      lands Funai 2024, settlements Incra 2024, UGRHI IGC 2011, distributors Aneel 2023, railways
+      Min. Infraestrutura 2024, stations ANTT 2024, dry ports Seade/Receita Federal 2023.
+      Candidates for exclusion_layers and infra_gas_rail_power_roads.
+  - id: lapig_pasture_vigor_col9
+    name: LAPIG pasture vigour (degradation class) per municipality, Collection 9, 2008-2023
+    publisher: LAPIG/UFG
+    url: https://pastagem.org
+    module: supply
+    provides: [pasture_area_ha_by_vigour_class]
+    spatial: municipality (Brazil; geocod_mun)
+    temporal: annual 2008-2023
+    format: CSV
+    access: open
+    license: TODO verify LAPIG terms
+    status: have
+    confidence: S
+    local_path: data/raw/lapig_pasture_vigor_col9/
+    sha256: 97a24bfbbdfd5bfc8ae601b46c1b54cb5410bdd4bf41b37f4fc7a60f5163d42c   # 16 files, 36.6 MB
+    accessed: '2026-10-04'
+    notes: >-
+      From A:/ILUC_NIPE (public LAPIG tables used in the ABIOVE ILUC work). URL from
+      README_DICIONARIO_PIPELINE.md there. Classes Ausente / Intermediário / Severo. geocod_mun is
+      a float (e.g. 5100201.0): cast to int.

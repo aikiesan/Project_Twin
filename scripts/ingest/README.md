@@ -45,3 +45,18 @@ uv run python -m engine.ingest.inventory data/raw --out data/interim/inventory_r
 ```
 
 `--folders-out` writes one row per `data/raw/<source_id>/` with a folder digest (`sha256_tree`: sorted relative paths + per-file sha256). That digest is the `sha256` in each `sources.yaml` entry. The dated copies of both CSVs are in `registry/staging/`.
+
+## `local_holdings.yaml` + `engine.ingest.local_import`
+
+Datasets held in other local folders, such as Downloads, `A:\ILUC_NIPE` and `A:\CP2B_Maps`, are listed in the reviewable manifest `local_holdings.yaml`. The survey behind it is `docs/25_LOCAL_HOLDINGS_SURVEY.md`.
+
+```bash
+uv run python -m engine.ingest.local_import scripts/ingest/local_holdings.yaml --dry-run
+uv run python -m engine.ingest.local_import scripts/ingest/local_holdings.yaml            # copy
+uv run python -m engine.ingest.local_import scripts/ingest/local_holdings.yaml --only cetesb_ictem_2023
+```
+
+- It follows the same rules as above: read-only on the origin, never overwrites, and logs every copy (with sha256) to `data/interim/import_local_holdings_log.tsv`.
+- **Deny list.** The importer refuses, and stops, if a path contains any of `DENY_SUBSTRINGS` in `src/engine/ingest/local_import.py`. The list covers `CP2B_Maps_V3`, NDA folders, the farm registry with contacts, the full ANEEL GD file with CPF numbers, and HARVEX material.
+- **Roots.** Override a root with an environment variable, for example `LOCAL_ROOT_DOWNLOADS=D:/dl`.
+- **Afterwards:** run the inventory (above), register each new folder in `registry/sources.yaml`, then `dvc add data/raw`.

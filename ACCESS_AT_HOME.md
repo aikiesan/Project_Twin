@@ -8,25 +8,18 @@ Everything from the planning session lives in this folder:
 ## Option A — just read (no setup)
 Open the link above in a browser. Start with `PROJECT.md`, then `docs/19_ROADMAP_STEP_BY_STEP.md`.
 
-## Option B — copy to your machine
+## Option B — set it up on your machine (recommended)
+Follow **`docs/04_DEV_ENVIRONMENT_SETUP.md`**: §1 is the folder layout, §2 the one-time setup, and §3 the project itself.
+The short version (WSL Ubuntu, not OneDrive):
 ```bash
-# inside WSL (not OneDrive!)
-mkdir -p ~/projects && cd ~/projects
-git clone --branch ccr-35b12b87-0r0g25 --single-branch https://github.com/aikiesan/aprenda_sobre_biometano.git seed-tmp
-cp -r seed-tmp/sp-biomethane-engine ~/projects/sp-biomethane-engine
-rm -rf seed-tmp
+mkdir -p ~/projects/cp2b && cd ~/projects/cp2b
+git clone -b ccr-35b12b87-0r0g25 https://github.com/aikiesan/aprenda_sobre_biometano.git
+cd aprenda_sobre_biometano/sp-biomethane-engine && make setup && make test
 ```
+Run `git pull` to receive what later Claude sessions push.
 
-## Option C — give it its own repository (recommended before coding)
-1. On github.com create an **empty private** repo, e.g. `aikiesan/sp-biomethane-engine` (no README).
-2. Then:
-```bash
-cd ~/projects/sp-biomethane-engine
-git init -b main && git add . && git commit -m "Seed from planning session 2026-10-03"
-git remote add origin https://github.com/aikiesan/sp-biomethane-engine.git
-git push -u origin main
-```
-(Or ask Claude in a new session that has the new repo connected to do the push.)
+## Option C — give it its own repository (when coding full-time)
+Use `git subtree split` so the history is kept. See `docs/04_DEV_ENVIRONMENT_SETUP.md` §7.
 
 ## What's where
 | Folder | Content |
@@ -34,6 +27,6 @@ git push -u origin main
 | `PROJECT.md`, `CLAUDE.md`, `README.md` | Charter, working rules, orientation |
 | `docs/` | 00–23 + 99: the organized plan and methods |
 | `registry/` | sources (81), parameters (60), projects (20) |
-| `research_notes/` | Full research findings R00–R06 |
+| `research_notes/` | Full research findings R00–R10 (R07–R10: S-flagged, verification pending) |
 | `evidence/` | RenovaBio report PDF + text; ANP monthly SP extract |
 | `templates/` | ADR, method doc, partner request, extraction schema |

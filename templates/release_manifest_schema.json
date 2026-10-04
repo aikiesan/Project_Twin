@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "sp-biomethane-engine release manifest (engine -> PILAR-2b)",
+  "description": "manifest.json written by engine.export.bundle.build_bundle for a release bundle exports/vX.Y.Z/. Contract: docs/18_PILAR2B_INTEGRATION.md section 2. Every data file is listed with its sha256, byte size, row count and column schema so the PILAR-2b ingest gates can verify the bundle without trusting the producer.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifest_schema_version",
+    "contract",
+    "engine",
+    "version",
+    "run_id",
+    "created_at",
+    "git_commit",
+    "params_hash",
+    "sources_used",
+    "source_versions",
+    "scenarios",
+    "crs",
+    "extra_tables",
+    "files",
+    "warnings"
+  ],
+  "properties": {
+    "manifest_schema_version": {
+      "description": "Version of this manifest schema (not of the release).",
+      "const": "0.1.0"
+    },
+    "contract": {
+      "description": "Document that defines the bundle contract.",
+      "type": "string",
+      "minLength": 1
+    },
+    "engine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "sp-biomethane-engine" },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "version": {
+      "description": "Release version, Semantic Versioning 2.0.0 without a leading 'v' (the 'v' belongs to the tag / folder name).",
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+    },
+    "run_id": {
+      "description": "Identifier of the model run that produced the tables (CLAUDE.md section 3, Identifiers).",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "created_at": {
+      "description": "ISO 8601 timestamp with an explicit UTC offset or Z.",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2}(\\.\\d+)?)?(Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "git_commit": {
+      "description": "Commit of the engine code (null when it could not be determined).",
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{7,40}$"
+    },
+    "params_hash": {
+      "description": "engine.registry.param_hash() of the parameter set used for the run.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{8,64}$"
+    },
+    "sources_used": {
+      "description": "Ids from registry/sources.yaml used to produce the tables.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "source_versions": {
+      "description": "Per source id: the accessed date and sha256 recorded in registry/sources.yaml (null when not recorded).",
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["accessed", "sha256"],
+        "properties": {
+          "accessed": { "type": ["string", "null"] },
+          "sha256": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "crs": {
+      "description": "CRS of every geometry column in the bundle; the contract fixes EPSG:4674 (SIRGAS 2000).",
+      "enum": ["EPSG:4674", null]
+    },
+    "extra_tables": {
+      "description": "Tables outside the contract table set (only present when build_bundle(allow_extra=True)).",
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" }
+    },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/file" }
+    },
+    "warnings": {
+      "description": "Non-blocking gate findings (e.g. columns without a unit suffix).",
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "if": {
+    "required": ["files"],
+    "properties": {
+      "files": {
+        "contains": {
+          "required": ["geometry_columns"],
+          "properties": { "geometry_columns": { "minItems": 1 } }
+        }
+      }
+    }
+  },
+  "then": {
+    "required": ["crs"],
+    "properties": { "crs": { "const": "EPSG:4674" } }
+  },
+  "$defs": {
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "table",
+        "format",
+        "path",
+        "sha256",
+        "bytes",
+        "rows",
+        "columns",
+        "geometry_columns"
+      ],
+      "properties": {
+        "table": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "format": { "enum": ["parquet", "csv"] },
+        "path": {
+          "description": "File name relative to the bundle folder (no sub-folders).",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*\\.(parquet|csv)$"
+        },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "rows": { "type": "integer", "minimum": 0 },
+        "columns": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/column" }
+        },
+        "geometry_columns": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["geom", "geometry"] }
+        }
+      }
+    },
+    "column": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "dtype", "arrow_type"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "dtype": { "description": "pandas dtype at export time.", "type": "string" },
+        "arrow_type": { "description": "Arrow/Parquet logical type.", "type": "string" }
+      }
+    }
+  }
+}

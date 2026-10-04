@@ -4,7 +4,14 @@ import hashlib
 
 import yaml
 
-from engine.ingest.inventory import scan, sha256_file, write_inventory_csv, yaml_stubs
+from engine.ingest.inventory import (
+    folder_manifest,
+    scan,
+    sha256_file,
+    sha256_tree,
+    write_inventory_csv,
+    yaml_stubs,
+)
 
 
 def _write(path, data: bytes):
@@ -52,3 +59,27 @@ def test_inventory_csv_roundtrip(tmp_path):
     text = out.read_text(encoding="utf-8").splitlines()
     assert text[0].startswith("id,path,format,size_bytes,sha256")
     assert len(text) == 2
+
+
+def test_sha256_tree_stable_and_sensitive(tmp_path):
+    _write(tmp_path / "src_a" / "x.csv", b"1")
+    _write(tmp_path / "src_a" / "sub" / "y.csv", b"2")
+    digest, n_files, size = sha256_tree(tmp_path / "src_a")
+    # one line per file, sorted by relative path: "sub/y.csv" < "x.csv"
+    lines = [
+        f"{rel}\0{hashlib.sha256(data).hexdigest()}\n"
+        for rel, data in (("sub/y.csv", b"2"), ("x.csv", b"1"))
+    ]
+    assert digest == hashlib.sha256("".join(lines).encode()).hexdigest()
+    assert (n_files, size) == (2, 2)
+    (tmp_path / "src_a" / "sub" / "y.csv").rename(tmp_path / "src_a" / "sub" / "z.csv")
+    assert sha256_tree(tmp_path / "src_a")[0] != digest  # a rename changes the digest
+
+
+def test_folder_manifest_one_row_per_subfolder(tmp_path):
+    _write(tmp_path / "b" / "f.txt", b"bb")
+    _write(tmp_path / "a" / "f.txt", b"a")
+    _write(tmp_path / "loose.txt", b"ignored")
+    rows = folder_manifest(tmp_path)
+    assert [r["source_id"] for r in rows] == ["a", "b"]
+    assert rows[1]["size_bytes"] == 2

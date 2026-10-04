@@ -98,3 +98,21 @@ Next steps, in order, for the local session:
 3. `docker compose ps`, then `psql \dn`, which should list the schemas `engine` and `pilar2b`.
 4. `dvc init --subdir`, then choose the remote and record it in an ADR.
 5. Continue the backlog under "Known open issues" above. Also re-run the failed build and verification agents when wanted.
+
+## 2026-10-04 (night) — local session: PILAR-2b data imported and registered
+Steps 1–2 of the list above are done.
+- **Import.** `import_local_sources.sh` ran on `A:/Pilar-2b` (git `1d24ada5+dirty`, read-only). It copied 330 files, about 510 MB, into 13 folders under `data/raw/`, with none missing. The PILAR-2b checkout was not modified.
+- **Importer fix.** PILAR-2b has two Drive export parts named `GEE_Exports-*`. The old `first_match` helper copied only the first part, which holds the pig farms. Now every part is copied, so the poultry farms, the complete farms, the web GeoJSON and the Tmax CSVs are imported as well.
+- **Dirty file imported.** `analysis/data/05h_aneel_biogas_gd_summary.csv` has uncommitted edits in PILAR-2b. `git diff` shows the change is a row reorder only, with identical values, so it was imported. The note is in `aneel_biogas_gd`.
+- **Inventory.** 145 datasets. `engine.ingest.inventory` gained `sha256_tree`, `folder_manifest` and `--folders-out`, with 2 new tests. The dated inventory CSVs are in `registry/staging/`.
+- **Registry.** `sources.yaml` now has one entry per `data/raw/` folder. 10 are new, and 3 existing ones were updated in place: `ibge_pam_seade`, `pilar2b_fde` and `anp_biomethane_plants`. Each carries a publisher, a URL, a license, the folder sha256, `local_path` and `accessed`. No new validator errors; 3 earlier errors are fixed. 69 errors remain from before, mostly older entries missing `publisher`.
+
+Open from this step:
+- **URLs not recorded in PILAR-2b**, left as `TODO`: the MapBiomas Collection 10 municipal statistics and the MapBiomas 10.1 infrastructure vectors. `cp2b_results_sicar` and `cp2b_gee_exports` are internal and use `url: local`.
+- **Licenses still TODO:** MapBiomas (believed CC BY 4.0, K), ANP and ANEEL open data, the Pilar-2b repository, and the IBGE MMD Nota Metodológica (cited, not yet read). `project_map` states Proprietary.
+- **Sensitive data:** `cp2b_results_sicar` holds CAR property codes and polygons, and `cp2b_gee_exports` holds farm points with herd size. Both are marked `access: restricted`: aggregate them before any export to PILAR-2b.
+- **Unknown provenance:** how the GEE farm points were made and the source of the Tmax grid are not documented. Ask the author.
+- **Candidates for a later import, not yet inspected:** `C:/Users/Lucas/Downloads/06_DADOS_ENERGIA_EPE` and `07_DADOS_GIS_BASE`. Do not open `A:/CP2B_Maps_V3` (LGPD). Ask before reading `A:/CP2B_Maps`.
+- **Repository:** the user created `aikiesan/Project_Twin` (public, empty) as the new home for this project. The move is pending a decision on layout and history.
+
+Next: steps 3–5 above (PostGIS check, DVC init + remote ADR, backlog).

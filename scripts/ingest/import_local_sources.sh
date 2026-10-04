@@ -78,11 +78,16 @@ copy_dir() {
   done < <(find "$dir" -type f ! -name 'desktop.ini' ! -name 'Thumbs.db' ! -name '.DS_Store' -print0 | sort -z)
 }
 
-# first_match <dir> <glob> — folder names from Google Drive exports carry a timestamp suffix
-first_match() {
-  local m
-  for m in "$1"/$2; do [ -e "$m" ] && { echo "$m"; return 0; }; done
-  echo "$1/$2"
+# copy_dir_glob <source_id> <dir> <glob> <sub-folder> — Google Drive exports carry a timestamp
+# suffix and a large export is split into several parts (GEE_Exports-…724Z, GEE_Exports-…725Z),
+# so every matching part is copied, not only the first.
+copy_dir_glob() {
+  local id="$1" dir="$2" glob="$3" sub="$4" m found=0
+  for m in "$dir"/$glob; do
+    [ -d "$m/$sub" ] || continue
+    copy_dir "$id" "$m/$sub"; found=1
+  done
+  [ "$found" = 1 ] || { echo "MISSING   $dir/$glob/$sub/"; missing=$((missing + 1)); }
 }
 
 echo "== from $SRC (git $ORIGIN_GIT) into $RAW"
@@ -103,8 +108,8 @@ copy_dir cp2b_project_map              "$BK/shapefiles/project_map_source/data"
 copy_dir ibge_pam_seade                "$FP0/PAM_1612_1613"  PAM_1612_1613
 copy_dir ibge_pam_seade                "$FP0/Agro_PAM_CONAB" Agro_PAM_CONAB
 # --- CP2B internal results ------------------------------------------------------------------------
-copy_dir cp2b_results_sicar            "$(first_match "$FPR" "CP2B_Results-*")/CP2B_Results"
-copy_dir cp2b_gee_exports              "$(first_match "$FPR" "GEE_Exports-*")/GEE_Exports"
+copy_dir_glob cp2b_results_sicar       "$FPR" "CP2B_Results-*" CP2B_Results
+copy_dir_glob cp2b_gee_exports         "$FPR" "GEE_Exports-*"  GEE_Exports
 # --- PILAR-2b tables (git-tracked there, except the two FDE files) --------------------------------
 copy_file pilar2b_fde                  "$SRC/fde_residue_availability.csv"
 copy_file pilar2b_fde                  "$BK/FDE_Disponibilidade_Residuos_CP2B.xlsx"

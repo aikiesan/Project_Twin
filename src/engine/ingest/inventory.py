@@ -93,6 +93,43 @@ def sha256_group(paths: list[Path]) -> str:
     return h.hexdigest()
 
 
+def sha256_tree(folder: Path | str) -> tuple[str, int, int]:
+    """sha256 of a whole folder, for registering one ``data/raw/<source_id>/`` as one source.
+
+    Hashes, in sorted order, one line ``<relative posix path>\\0<file sha256 hex>\\n`` per file
+    (``SKIP_DIRS`` ignored). Renaming, adding, removing or changing any file changes the digest;
+    file timestamps do not. Re-compute with this function to check a folder against the registry.
+
+    Returns:
+        ``(hex digest, number of files, total bytes)``.
+    """
+    folder = Path(folder).resolve()
+    files = sorted(
+        (p for p in folder.rglob("*") if p.is_file()),
+        key=lambda p: p.relative_to(folder).as_posix(),
+    )
+    files = [p for p in files if not any(s in SKIP_DIRS for s in p.relative_to(folder).parts)]
+    h = hashlib.sha256()
+    for p in files:
+        h.update(f"{p.relative_to(folder).as_posix()}\0{sha256_file(p)}\n".encode())
+    return h.hexdigest(), len(files), sum(p.stat().st_size for p in files)
+
+
+def folder_manifest(root: Path | str) -> list[dict[str, object]]:
+    """One row per immediate sub-folder of ``root``.
+
+    Columns: ``source_id`` (folder name), ``n_files``, ``size_bytes``, ``sha256_tree``.
+    """
+    root = Path(root).resolve()
+    rows: list[dict[str, object]] = []
+    for d in sorted(p for p in root.iterdir() if p.is_dir() and p.name not in SKIP_DIRS):
+        digest, n_files, size = sha256_tree(d)
+        rows.append(
+            {"source_id": d.name, "n_files": n_files, "size_bytes": size, "sha256_tree": digest}
+        )
+    return rows
+
+
 def slug_id(path: Path, root: Path) -> str:
     """Registry-style snake_case id from the path relative to ``root``."""
     rel = path.relative_to(root).with_suffix("")
@@ -231,9 +268,20 @@ def main(argv: list[str] | None = None) -> int:
         default=[],
         help="path substring marking confidential data (repeatable), e.g. partner, nda",
     )
+    ap.add_argument(
+        "--folders-out",
+        type=Path,
+        help="also write one row per sub-folder (source_id, n_files, size_bytes, sha256_tree)",
+    )
     args = ap.parse_args(argv)
     entries = scan(args.folder, tuple(args.private_substr))
     write_inventory_csv(entries, args.out)
+    if args.folders_out:
+        rows = folder_manifest(args.folder)
+        with open(args.folders_out, "w", newline="", encoding="utf-8") as fh:
+            w = csv.DictWriter(fh, fieldnames=["source_id", "n_files", "size_bytes", "sha256_tree"])
+            w.writeheader()
+            w.writerows(rows)
     if args.yaml:
         accessed = datetime.now(tz=UTC).date().isoformat()
         args.yaml.write_text(yaml_stubs(entries, args.module, accessed), encoding="utf-8")

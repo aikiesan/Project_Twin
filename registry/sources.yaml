@@ -3,7 +3,7 @@
 # status: have | get | lai | paid | build
 # confidence: V (read) | S (snippet, verify) | K (prior knowledge, verify)
 schema_version: 0.1
-updated: 2026-10-03
+updated: 2026-10-04
 
 sources:
   # ---------------- SUPPLY: SUGARCANE ----------------
@@ -103,10 +103,23 @@ sources:
   - id: ibge_pam_seade
     name: IBGE PAM + SEADE crop statistics
     publisher: IBGE / SEADE
+    url: https://sidra.ibge.gov.br
     module: supply
     spatial: municipality
     temporal: annual 2008-2025
+    access: open
+    license: TODO verify IBGE SIDRA and CONAB terms of use
     status: have
+    confidence: S
+    local_path: data/raw/ibge_pam_seade/
+    sha256: a289f729f1b40c7be514d9f00236db2ba21a14baff6b62a73f163241150f333c   # sha256_tree, 19 files, 88.3 MB
+    accessed: '2026-10-04'
+    notes: >-
+      Imported from A:/Pilar-2b (git 1d24ada5+dirty) 00_Fontes_Primarias/PAM_1612_1613 and
+      Agro_PAM_CONAB. PAM_1612_1613/ = SIDRA tables 1612 (temporary crops) and 1613 (permanent
+      crops), 2008-2024 (table numbers per PILAR-2b backend/data/raw/README.md). Agro_PAM_CONAB/
+      mixes CONAB grain/cane series by UF 2008-2024, SIDRA table 5457 exports and PILAR-2b-cleaned
+      maize tables; its CONAB download URL is not recorded. No SEADE file is in this folder.
   - id: mapbiomas_cana
     name: MapBiomas sugarcane class 30 m
     publisher: MapBiomas
@@ -208,8 +221,20 @@ sources:
     confidence: S
   - id: pilar2b_fde
     name: PILAR-2b FDE competing-use and availability factors
+    publisher: CP2B / NIPE-UNICAMP (PILAR-2b)
+    url: https://github.com/aikiesan/Pilar-2b
     module: supply
+    access: internal
+    license: none stated (CP2B internal)
     status: have
+    confidence: K
+    local_path: data/raw/pilar2b_fde/
+    sha256: ef9c0c137d03ede8b8034c5ce6613b30e9b6172cab9eb217de0e6662f4081ad6   # sha256_tree, 2 files
+    accessed: '2026-10-04'
+    notes: >-
+      fde_residue_availability.csv (PILAR-2b repo root, NOT git-tracked at 1d24ada5) and
+      cp2b-workspace/NewLook/backend/data/FDE_Disponibilidade_Residuos_CP2B.xlsx (tracked).
+      Factor provenance to be traced to the cited literature before use (CLAUDE.md rule 2).
 
   # ---------------- COSTS ----------------
   - id: epe_nt_2025_08
@@ -279,12 +304,24 @@ sources:
   # ---------------- REVENUES & MARKET ----------------
   - id: anp_biomethane_plants
     name: ANP biomethane producers — capacity & monthly volume per plant
+    publisher: ANP (Dados Abertos), processed by PILAR-2b
+    url: https://www.gov.br/anp/pt-br/assuntos/producao-e-fornecimento-de-biocombustiveis/biometano
     module: market
-    local_path: Pilar-2b/analysis/data/05c_anp_biometano_plants_latest.csv ; 05e_anp_biometano_plant_volume_monthly.csv
+    local_path: data/raw/anp_biomethane_plants/
+    sha256: 399545cb291100989c52d7ab839ab3e4a399dbd231b8e824ef7f43d76fb002d6   # sha256_tree, 6 files
+    accessed: '2026-10-04'
     spatial: per plant
     temporal: monthly 2020-2026
+    access: open
+    license: TODO verify ANP open-data license
     status: have
     confidence: V
+    notes: >-
+      sources/anp_biometano_capacidade.csv (plant-level monthly capacity, processed volume,
+      utilisation) and sources/anp_biometano_producao.csv (state monthly production) are the raw
+      ANP open-data files vendored in PILAR-2b; 05c-05f are PILAR-2b derivatives
+      (analysis/build_anp_biometano_dataset.py). The URL is the ANP page that script cites; the
+      exact open-data dataset URL is not recorded there. All files git-tracked at Pilar-2b 1d24ada5.
   - id: mme_boletim_gn
     name: MME Boletim Mensal de Acompanhamento da Indústria de Gás Natural
     url: https://www.gov.br/mme/pt-br/assuntos/secretarias/petroleo-gas-natural-e-biocombustiveis/publicacoes-1/boletim-mensal-de-acompanhamento-da-industria-de-gas-natural
@@ -593,3 +630,203 @@ sources:
     use: campaign-season (~100 d) operation, pulp storage, co-digestion
     status: get
     confidence: S
+
+  # ---------------- HELD LOCALLY — imported from A:/Pilar-2b on 2026-10-04 ----------------
+  # One entry per data/raw/<id>/ folder (scripts/ingest/import_local_sources.sh). sha256 is the
+  # folder digest from engine.ingest.inventory.sha256_tree; per-file hashes are in
+  # registry/staging/inventory_raw_2026-10-04.csv. Pilar-2b checkout: branch
+  # fix/test-harness-docker, git 1d24ada5+dirty. Licenses marked TODO were not stated in the files.
+  # (pilar2b_fde, ibge_pam_seade and anp_biomethane_plants are updated in place above.)
+  - id: ibge_malha_municipal_sp_2025
+    name: IBGE Malha Municipal Digital 2025 — SP municipalities
+    publisher: IBGE
+    url: https://www.ibge.gov.br/geociencias/organizacao-do-territorio/malhas-territoriais.html
+    module: spatial
+    provides: [municipality_polygons, cd_mun]
+    spatial: municipality (645, SP)
+    temporal: 2025
+    format: ESRI Shapefile
+    access: open
+    license: IBGE terms per the MMD 2025 Nota Metodológica (cited in the bundled LEIA-ME.txt; not yet read)
+    status: have
+    confidence: V
+    local_path: data/raw/ibge_malha_municipal_sp_2025/
+    sha256: 203311ac80b21cf199f737c96117049df957e2226bfdeb7e0f02f0e8820de5af   # 7 files, 21.2 MB
+    accessed: '2026-10-04'
+    notes: From 00_Fontes_Primarias-…/SP_Municipios_2025. URL taken from the bundled LEIA-ME.txt.
+  - id: mapbiomas_col10_municipal
+    name: MapBiomas Collection 10 land-use statistics per municipality (+ CP2B UF master table)
+    publisher: MapBiomas (MB_col10_municipios.csv); CP2B (MASTER_UF_MB_PAM_CONAB_2008_2024.csv)
+    url: TODO original MapBiomas statistics download URL (not recorded in PILAR-2b)
+    module: supply
+    provides: [class_area_ha_by_municipality_year]
+    spatial: municipality (all Brazil)
+    temporal: annual 1985-2024
+    format: CSV
+    access: open
+    license: TODO verify MapBiomas terms (believed CC BY 4.0 — K)
+    status: have
+    confidence: S
+    local_path: data/raw/mapbiomas_col10_municipal/
+    sha256: e2f73e91b01101cf9935a7549e69ed1b5ccf469ab5011d9cf7841383b51e5c40   # 2 files, 62.9 MB
+    accessed: '2026-10-04'
+    notes: >-
+      From 00_Fontes_Primarias/MapBiomas_col10. The MASTER_UF file is a CP2B merge of MapBiomas,
+      PAM and CONAB at UF level (derived, not primary).
+  - id: mapbiomas_agropecuaria_sp_2024
+    name: MapBiomas agriculture raster for SP 2024 (~90 m resample used by PILAR-2b)
+    publisher: MapBiomas, resampled by CP2B (project_map)
+    url: https://github.com/aikiesan/project_map
+    module: supply
+    provides: [land_use_class_raster]
+    spatial: ~90 m raster, EPSG:4326
+    temporal: 2024
+    format: GeoTIFF
+    access: internal
+    license: TODO (MapBiomas terms for the underlying data; project_map README states Proprietary)
+    status: have
+    confidence: S
+    use: screening maps only — not for sugarcane area (docs/21 C9)
+    local_path: data/raw/mapbiomas_agropecuaria_sp_2024/
+    sha256: 0cd983c6a306e0e525cec2a1a0d7a6bfb46c26855e17822243c4385ea86a2b72   # 2 files, 13.5 MB
+    accessed: '2026-10-04'
+    notes: >-
+      Metadata labels it "MapBiomas Collection 8", year 2024, class 20 = sugarcane (S, check
+      against the official legend). Same .tif is also in cp2b_project_map/rasters/. URL is the
+      repository PILAR-2b backend/data/README.md names as the source.
+  - id: mapbiomas_infra
+    name: MapBiomas 10.1 INFRAESTRUTURA vectors (plants, gas pipelines, compression, highways, substations…)
+    publisher: MapBiomas
+    url: TODO original MapBiomas infrastructure download URL (not recorded in PILAR-2b)
+    module: spatial
+    provides: [biogas_plants, ethanol_plants, biodiesel_plants, ute_biomass, gas_distribution, gas_outflow, compression_stations, gas_delivery_points, gas_processing_units, slaughterhouses, state_highways, federal_highways, substations]
+    spatial: point/line, Brazil
+    format: ESRI Shapefile
+    access: open
+    license: TODO verify MapBiomas terms (believed CC BY 4.0 — K)
+    status: have
+    confidence: S
+    local_path: data/raw/mapbiomas_infra/
+    sha256: a9597dc364e4d36ba3eb6a486c4495af451f9d3035a0a7374add75920e0e7c55   # 120 files, 105 MB
+    accessed: '2026-10-04'
+    notes: >-
+      From Pilar-2b backend/data/shapefiles/mapbiomas_infra (not git-tracked there). Version
+      "10.1" per PILAR-2b backend/data/raw/README.md. Contains __MACOSX/._* resource-fork files
+      from the zip — ignore them when reading. Candidate for infra_gas_rail_power_roads.
+  - id: cp2b_project_map
+    name: CP2B project_map data — SP layers (limits, municipalities 2024, gas pipelines, power, roads, ETEs, urban areas, biogas plants), cp2b_maps.db
+    publisher: CP2B / NIPE-UNICAMP (layers compiled from IBGE, MapBiomas, EPE and others)
+    url: https://github.com/aikiesan/project_map
+    module: spatial
+    provides: [sp_limits, municipalities_2024, gas_transport, gas_distribution, transmission_lines, substations, state_highways, etes_2019, urban_areas, biogas_plants_425, municipal_biogas_potential]
+    spatial: SP
+    format: ESRI Shapefile / SQLite / XLS / JSON
+    access: internal
+    license: Proprietary (project_map README badge) — use inside CP2B only
+    status: have
+    confidence: K
+    local_path: data/raw/cp2b_project_map/
+    sha256: 703b61f3357066778cbcfc6da5fbebe5a9285e623dddb267eefd316c075ae3e9   # 110 files, 113 MB
+    accessed: '2026-10-04'
+    notes: >-
+      Original publisher of each shapefile is in its .shp.xml metadata; trace before using any
+      layer in a paper. database/cp2b_maps.db holds municipal aggregates only (645 rows per table,
+      checked 2026-10-04), with no personal data. cp2b_biogas_dataset.jsonl is a chatbot Q&A set,
+      not data.
+  - id: cp2b_results_sicar
+    name: CP2B GEE results on CAR/SICAR properties — infrastructure distances, restrictions, crop biomass in 10/30/50 km
+    publisher: CP2B / NIPE-UNICAMP (derived from SICAR, MapBiomas and infrastructure layers)
+    url: local
+    module: siting
+    provides: [property_dist_to_infra_km, restriction_score, crop_ha_within_radius]
+    spatial: CAR rural property polygons, SP
+    format: CSV (GEE export, geometry in .geo)
+    access: restricted
+    license: none stated (CP2B internal)
+    status: have
+    confidence: K
+    local_path: data/raw/cp2b_results_sicar/
+    sha256: a582d56b7461990c4edda4382107f41511315ddbad39acc3c40bd717ccaa2620   # 17 files, 111 MB
+    accessed: '2026-10-04'
+    notes: >-
+      Property-level (cod_imovel + polygon). CAR codes can be linked to owners through the public
+      CAR consultation, so treat as sensitive: aggregate before any export to PILAR-2b. Source
+      SICAR snapshot is dated ~2025-07 (dat_atuali field). Underlying source registered as car_sicar.
+  - id: cp2b_gee_exports
+    name: CP2B Google Earth Engine exports — SP pig/poultry farm points and Tmax grids by decade
+    publisher: CP2B / NIPE-UNICAMP
+    url: local
+    module: supply
+    provides: [farm_points, herd_size, farm_biogas_potential_mwh, tmax_by_decade]
+    spatial: farm points; climate grid points, SP
+    temporal: Tmax 1991-2020 (decades)
+    format: ESRI Shapefile / GeoJSON / CSV
+    access: restricted
+    license: none stated (CP2B internal)
+    status: have
+    confidence: K
+    local_path: data/raw/cp2b_gee_exports/
+    sha256: 0df9001e35dfae51a0394815e3d4a7750de4e957bb1fd67cf8960da4ed95f20e   # 23 files, 15.7 MB
+    accessed: '2026-10-04'
+    notes: >-
+      From the two Drive export parts GEE_Exports-…121724Z (pig farms) and …121725Z (poultry,
+      complete farms, web GeoJSON, Tmax CSVs). How the farm points were made, and the source of
+      the Tmax grid, are not documented: ask the author before use. Farm-level locations: aggregate
+      before export.
+  - id: pilar2b_canonical_parameters
+    name: PILAR-2b canonical parameters — feedstocks.yaml, BMP corpus, references, SP totals
+    publisher: CP2B / NIPE-UNICAMP (PILAR-2b)
+    url: https://github.com/aikiesan/Pilar-2b
+    module: process
+    provides: [feedstock_bmp, fde_flow_factors, references, sp_totals_2023]
+    format: YAML / CSV / XLSX / JSON
+    access: internal
+    license: TODO check the Pilar-2b repository license
+    status: have
+    confidence: K
+    local_path: data/raw/pilar2b_canonical_parameters/
+    sha256: 3abbfbbe3fb90579432d4ef4e239744d19a82f36520c135d4d458232f08a7782   # 14 files
+    accessed: '2026-10-04'
+    notes: cp2b-workspace/NewLook/data/canonical_parameters, all 14 files git-tracked at 1d24ada5.
+  - id: pilar2b_residue_streams_sp
+    name: PILAR-2b municipal residue streams and biogas potential, SP 2023
+    publisher: CP2B / NIPE-UNICAMP (PILAR-2b), from IBGE PAM 2023, IBGE PPM 2023 and the CP2B DB
+    url: https://github.com/aikiesan/Pilar-2b
+    module: supply
+    provides: [residue_t_yr, biogas_m3_ch4_yr, energy_gwh_yr, conversion_factors]
+    spatial: municipality (645, SP)
+    temporal: 2023
+    format: CSV / JSON
+    access: internal
+    license: TODO check the Pilar-2b repository license
+    status: have
+    confidence: K
+    local_path: data/raw/pilar2b_residue_streams_sp/
+    sha256: 1b5b66c37f141285bd50861371e4010f6a19ff90128ae8847220cb9eb50f456a   # 5 files
+    accessed: '2026-10-04'
+    notes: >-
+      analysis/data/00-04 (SP only), git-tracked at 1d24ada5. Derived (D-type) totals:
+      the data dictionary reports 19.90 billion m³ CH4/yr with 70 % of sugarcane excluded
+      (bagasse). Use as a cross-check, not as a model input.
+  - id: aneel_biogas_gd
+    name: ANEEL distributed generation — biogas units (546, Brazil)
+    publisher: ANEEL (Dados Abertos), filtered and geocoded by PILAR-2b
+    url: https://dadosabertos.aneel.gov.br/dataset/relacao-de-empreendimentos-de-geracao-distribuida
+    module: market
+    provides: [gd_unit, installed_kw, biogas_subtype, consumer_class, municipality]
+    spatial: per GD unit
+    temporal: snapshot ref 06/2026
+    format: CSV
+    access: open
+    license: TODO verify ANEEL open-data license
+    status: have
+    confidence: S
+    local_path: data/raw/aneel_biogas_gd/
+    sha256: bd330f40d18a37ce20a32aa65a57b235a4af97d99bce3fb7824e2d6ff26b97cf   # 3 files
+    accessed: '2026-10-04'
+    notes: >-
+      Electricity (kW) layer, kept separate from ANP biomethane (m³/d). sources/aneel_biogas_gd_raw.csv
+      is the owner-filtered extract of empreendimento-geracao-distribuida.csv; 05g/05h are PILAR-2b
+      derivatives (analysis/build_aneel_biogas_gd.py, which gives the URL). 05h has uncommitted
+      edits in Pilar-2b, but the change is a row reorder only, with identical values (checked
+      with git diff, 2026-10-04).

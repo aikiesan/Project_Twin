@@ -3,4 +3,6 @@
 mapbiomas:
   # REQUIRED before running cane_area_h3: legend code(s) for sugarcane in the MapBiomas
   # collection you downloaded, as CLI args, e.g. "--class-code <code>". Check the legend.
+  # PILAR-2b's backend/data/mapbiomas/mapbiomas_metadata.json lists 20 = "Cana-de-açúcar"
+  # (secondary source, S); confirm it in the official legend of the collection you use.
   cane_code_args: "--class-code TODO"

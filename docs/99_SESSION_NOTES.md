@@ -74,3 +74,27 @@ A record of the planning conversation, so the reasoning isn't lost.
 - Allow the network domains the routines need: gov.br, geofabrik, mapbiomas and others.
 - Create an empty private repository for the migration (docs/04 §7).
 - Install DVC and R, and set up an Earth Engine account.
+
+## 2026-10-04 (evening) — local PC set up, moving to local Claude Code
+State on the project PC (`A:\Project_Twin\aprenda_sobre_biometano\sp-biomethane-engine`, MSYS2 UCRT64):
+- uv, Python 3.11 and Docker Desktop are installed, and all tests pass there: 118 fast, 2 xfail and 5 Bayesian with Numba.
+- PostGIS was started with `docker compose up -d db`; health has not been confirmed yet.
+- Work now continues in a local Claude Code session, so the files on `A:` can be inspected directly.
+
+Where the existing data lives, from a `find` on the PC:
+- **`A:\Pilar-2b`** holds the SP primary data. It is on branch `fix/test-harness-docker`, with uncommitted edits to `analysis/data/05_biogas_plants_brazil.*`, so treat it as read-only.
+- **`A:\CP2B_Maps_V3`** holds the Amasa O-D interviews, which are personal data under LGPD. Never import anything from it.
+- **`A:\cp2b_fun`** is the CP2B website and is not needed.
+- Other `A:\` folders (Paranapiacaba, Maringa, CAGED …) are unrelated projects.
+
+New tooling and findings:
+- `scripts/ingest/import_local_sources.sh` copies the SP-relevant datasets into `data/raw/<source_id>/` (README in `scripts/ingest/`). It was tested on a mock tree. The run on the real PC is still pending.
+- docs/21 C9: the PILAR-2b MapBiomas raster is a ~90 m resample, labelled "Collection 8" with year 2024, so use it for screening only.
+- `params.yaml` now notes that PILAR-2b metadata gives 20 = sugarcane (S-flag). The value stays TODO until it is checked against the official legend.
+
+Next steps, in order, for the local session:
+1. `DRY_RUN=1 bash scripts/ingest/import_local_sources.sh /a/Pilar-2b`, then the real run.
+2. Run the inventory (`scripts/ingest/README.md`), then write one `registry/sources.yaml` entry per `data/raw/` folder, with publisher, URL, license and sha256. Commit the small inventory CSV to `registry/staging/`.
+3. `docker compose ps`, then `psql \dn`, which should list the schemas `engine` and `pilar2b`.
+4. `dvc init --subdir`, then choose the remote and record it in an ADR.
+5. Continue the backlog under "Known open issues" above. Also re-run the failed build and verification agents when wanted.

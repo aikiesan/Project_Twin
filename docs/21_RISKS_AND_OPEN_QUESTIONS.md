@@ -11,6 +11,7 @@
 | C6 | Cocal Narandiba start | Press: late 2021 or Jul 2022 [S] | ANP file: 0 % every month Jul 2022–Jul 2025, first output Aug 2025 [V] | Reporting gap vs real downtime vs field mapping — ask ANP/Cocal |
 | C7 | Filter cake TS/VS and BMP | 185–260 NL/kg VS across studies | — | Use range; LABIOEN E6 |
 | C8 | ZEG/Pindorama capacity & investment | R$ 60 vs 65 M; 36 k m³/d vs 6 M m³/yr | — | Find primary source |
+| C9 | PILAR-2b raster `mapbiomas_agropecuaria_sp_2024.tif` | `mapbiomas_metadata.json`: year 2024, "MapBiomas Collection 8", EPSG:4326 | Grid 11,070 × 6,901 px over the stated bounds = 0.000808° per pixel (~90 m, 3× the 30 m MapBiomas grid) [D] | Use for screening maps only. Cane area per H3 comes from the official 30 m collection; confirm which collection the 2024 layer came from |
 
 ## 2. Open questions
 1. Can CBIO and CGOB be claimed on the **same** biomethane volume? (legal)

@@ -148,7 +148,10 @@ make down
 
 ## 6. Bring PILAR-2b data in (read-only)
 - [ ] `pg_dump -Fc -n public $PILAR2B_DATABASE_URL > pilar2b.dump`, then `pg_restore` into localhost:5433 and rename the schema to `pilar2b`.
-- [ ] Copy `data/canonical_parameters/feedstocks.yaml` and the ANP CSVs (`05c`, `05e`) from `../pilar-2b/` into `data/raw/pilar2b/`, then register them with sha256.
+- [ ] Copy the PILAR-2b files into `data/raw/` with `bash scripts/ingest/import_local_sources.sh <PILAR-2b folder>`. On the project PC the folder is `/a/Pilar-2b`.
+  - It brings in `feedstocks.yaml`, the ANP and ANEEL CSVs, the FDE factors, the municipal mesh, the MapBiomas tables and rasters, and the infrastructure layers.
+  - It is read-only on the source and never overwrites. See `scripts/ingest/README.md`.
+- [ ] Run `python -m engine.ingest.inventory data/raw ...` to get sha256 hashes, then register each folder in `registry/sources.yaml`.
 - [ ] The PILAR-2b ingest adapter for engine releases is planned but not written yet. It is designed in `docs/99_SESSION_NOTES.md` (2026-10-04) and docs/18 §3.
 
 ## 7. Migrate to its own repository (when you start coding full-time)

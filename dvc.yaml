@@ -8,13 +8,15 @@ vars:
 stages:
   inventory_raw:
     cmd: python -m engine.ingest.inventory data/raw --out data/interim/inventory_raw.csv
-      --yaml data/interim/inventory_raw_stubs.yaml --private-substr partner --private-substr nda
+      --yaml data/interim/inventory_raw_stubs.yaml --folders-out data/interim/inventory_raw_folders.csv
+      --private-substr partner --private-substr nda
     deps:
       - data/raw
       - src/engine/ingest/inventory.py
     outs:
       - data/interim/inventory_raw.csv
       - data/interim/inventory_raw_stubs.yaml
+      - data/interim/inventory_raw_folders.csv
 
   # MapBiomas sugarcane area per H3 res-8 cell, one output per year.
   # Set the legend code(s) of YOUR collection in params.yaml (mapbiomas.cane_codes).

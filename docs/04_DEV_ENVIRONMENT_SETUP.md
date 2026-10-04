@@ -24,9 +24,9 @@ source ~/.bashrc && uv --version
 ```bash
 # 2. clone (autocrlf=false keeps evidence files byte-identical, so their sha256 hashes match)
 mkdir -p /a/Project_Twin && cd /a/Project_Twin
-git clone -c core.autocrlf=false -b ccr-35b12b87-0r0g25 https://github.com/aikiesan/aprenda_sobre_biometano.git
-cd aprenda_sobre_biometano/sp-biomethane-engine
-mkdir -p data/{raw,interim,processed,routing,private} ../../materiais/{01_artigos,02_relatorios_tecnicos,03_renovabio_laudos,04_lab,05_parceiros_NDA,06_apresentacoes}
+git clone -c core.autocrlf=false https://github.com/aikiesan/Project_Twin.git
+cd Project_Twin
+mkdir -p data/{raw,interim,processed,routing,private} ../materiais/{01_artigos,02_relatorios_tecnicos,03_renovabio_laudos,04_lab,05_parceiros_NDA,06_apresentacoes}
 ```
 ```bash
 # 3. environment + tests (about 2 min; everything passes except 2 expected xfails = known registry gaps)
@@ -42,14 +42,14 @@ Notes from the first install:
   - Measured on the project PC: the Bayesian tests pass in 20 s and 34 s.
 - **Ctrl+C in MSYS2 can leave a Python process running.** Check with `tasklist | grep -i python` and stop it with `taskkill //PID <pid> //F`.
 - **Docker Desktop** must be running. Then run `cp .env.example .env` and `docker compose up -d db` to start PostGIS on port 5433.
-- **Getting updates:** run `git pull` in `sp-biomethane-engine/` to receive what Claude sessions push.
+- **Getting updates:** run `git pull` in `Project_Twin/`. Work goes through branches and pull requests against `main`.
 
 ## 1. Local directory layout
 
 ```
 WSL (Ubuntu)  ~/projects/cp2b/
-├── aprenda_sobre_biometano/        git clone (branch ccr-35b12b87-0r0g25) — until migration (§7)
-│   └── sp-biomethane-engine/       ← THE PROJECT: work here
+├── Project_Twin/                   ← THE PROJECT: git clone of aikiesan/Project_Twin (engine at the root)
+│   └── (contents below)
 │       ├── src/engine/             code (ingest · supply · process · economics · siting · calibrate · export)
 │       ├── tests/                  pytest (no network)
 │       ├── registry/               sources.yaml · parameters.csv · projects_capex.csv
@@ -108,9 +108,9 @@ Optional: R 4.4+ with `brms` and `renv` (Bayesian cross-checks, ADR-0007), and a
 
 ```bash
 mkdir -p ~/projects/cp2b && cd ~/projects/cp2b
-git clone -b ccr-35b12b87-0r0g25 https://github.com/aikiesan/aprenda_sobre_biometano.git
+git clone https://github.com/aikiesan/Project_Twin.git
 git clone https://github.com/aikiesan/Pilar-2b.git pilar-2b
-cd aprenda_sobre_biometano/sp-biomethane-engine
+cd Project_Twin
 
 make setup            # = uv sync --extra dev --extra geo --extra stats  (creates .venv from uv.lock)
 make test             # full pytest suite (Bayesian tests take ~1 min)
@@ -120,14 +120,14 @@ uv run pre-commit install
 code .                # VS Code with the "WSL" extension opens the folder inside WSL
 ```
 
-To pick up later work pushed by Claude sessions: `git pull` (same branch).
+To pick up later work: `git pull` on `main`; new work goes on a branch and is merged through a pull request.
 
 ## 4. Data folders + DVC
 
 ```bash
 mkdir -p data/{raw,interim,processed,routing,private}
-dvc init --subdir                      # --subdir because the engine is a sub-folder of the seed repo;
-                                       # after migration (§7) use plain `dvc init`
+dvc init                               # done 2026-10-04 (repo root); cache.type = hardlink,copy
+dvc add data/raw                       # done: data/raw.dvc is the only file under data/ that git tracks
 dvc remote add -d storage gdrive://<FOLDER_ID>            # public-safe data
 dvc remote add private gdrive://<PRIVATE_FOLDER_ID>       # partner / NDA data (data/private/)
 git add .dvc .dvcignore && git commit -m "Init DVC"
@@ -154,18 +154,18 @@ make down
 - [ ] Run `python -m engine.ingest.inventory data/raw ...` to get sha256 hashes, then register each folder in `registry/sources.yaml`.
 - [ ] The PILAR-2b ingest adapter for engine releases is planned but not written yet. It is designed in `docs/99_SESSION_NOTES.md` (2026-10-04) and docs/18 §3.
 
-## 7. Migrate to its own repository (when you start coding full-time)
-This keeps the full history of `sp-biomethane-engine/`:
+## 7. Own repository (done 2026-10-04)
+`sp-biomethane-engine/` was split out with its history and pushed as `main` of **`aikiesan/Project_Twin`**. The repository is public, unlike the private repo this section planned.
 ```bash
-cd ~/projects/cp2b/aprenda_sobre_biometano
-git subtree split --prefix=sp-biomethane-engine -b engine-main
-# create an EMPTY private repo on github.com, e.g. aikiesan/sp-biomethane-engine
-git push https://github.com/aikiesan/sp-biomethane-engine.git engine-main:main
-cd .. && git clone https://github.com/aikiesan/sp-biomethane-engine.git
+cd aprenda_sobre_biometano
+git subtree split -P sp-biomethane-engine -b project-twin-main
+git push https://github.com/aikiesan/Project_Twin.git project-twin-main:main
 ```
-Then:
-- install the Claude GitHub App on the new repository, so cloud sessions push there instead of the seed branch;
-- move `.github/workflows/ci.yml` into effect. It only runs at a repository root, so CI does not run in the seed repo.
+- On the project PC the clone is `A:\Project_Twin\Project_Twin`. `data/` and `.env` were moved there from the old folder.
+- `docker-compose.yml` pins `name: sp-biomethane-engine`, so the existing `pgdata` volume is reused whatever the folder is called.
+- `.github/workflows/ci.yml` now runs, because it sits at the repository root.
+- Still to do: install the Claude GitHub App on `Project_Twin` if cloud sessions should push there.
+- Because the repository is public: partner/NDA material, personal data and `.env` must never be committed (CLAUDE.md rules 5–6).
 
 ## 8. Done when
 - [ ] `make test` passes, and `make registry` prints the summary.

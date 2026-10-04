@@ -1,5 +1,7 @@
 # Local stack: PostGIS (port 5433, so it does not clash with a local PILAR-2b DB) + Jupyter/engine.
 # Usage:  cp .env.example .env  &&  docker compose up -d
+# Fixed project name: the pgdata volume stays "sp-biomethane-engine_pgdata" whatever the checkout folder is called.
+name: sp-biomethane-engine
 services:
   db:
     image: postgis/postgis:16-3.4

@@ -78,3 +78,52 @@ def test_build_without_layers_writes_page_and_json(tmp_path):
     assert data["modules"][1]["id"] == "supply" and data["modules"][1]["n_sources"] == 1
     assert len(saved["roadmap"]) == 2 and len(saved["adrs"]) == 2
     assert saved["layers"] == []
+
+
+def test_database_status_without_url_or_unreachable():
+    from engine.viz.build import database_status
+
+    assert database_status(None) == {"configured": False}
+    status = database_status("postgresql://u:p@127.0.0.1:1/nodb")  # nothing listens on port 1
+    assert status["configured"] is True and "error" in status
+
+
+def test_build_has_no_database_card_without_url(tmp_path, monkeypatch):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    repo = tmp_path / "repo"
+    (repo / "registry").mkdir(parents=True)
+    (repo / "registry" / "sources.yaml").write_text("sources: []\n", encoding="utf-8")
+    data = build(repo, tmp_path / "viewer", with_layers=False, with_prs=False)
+    assert data["database"] == {"configured": False}
+
+
+def test_serve_binds_requested_host(tmp_path, monkeypatch):
+    import http.server
+
+    from engine.viz import __main__ as cli
+
+    bound = {}
+
+    class FakeServer:
+        def __init__(self, addr, handler):
+            bound["addr"] = addr
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def serve_forever(self):
+            raise KeyboardInterrupt
+
+    monkeypatch.setattr(http.server, "ThreadingHTTPServer", FakeServer)
+    monkeypatch.setattr(
+        cli,
+        "build",
+        lambda *a, **k: {"sources": [], "layers": [], "commits": [], "layer_problems": []},
+    )
+    assert cli.main(["--serve", "--host", "0.0.0.0", "--out", str(tmp_path)]) == 0
+    assert bound["addr"] == ("0.0.0.0", 8765)
+    cli.main(["--serve", "--out", str(tmp_path)])
+    assert bound["addr"] == ("127.0.0.1", 8765)

@@ -168,7 +168,23 @@ function renderOverview() {
       <div class="card"><h3>Parameters by confidence</h3>${bars(d.parameters.by_confidence, d.parameters.n)}</div>
     </div>
     <p class="meta" style="color:var(--muted);font-size:12px;margin-top:14px">Confidence: V = primary document read · S = snippet/abstract · K = prior knowledge · D = derived. Only V values go into a paper without a caveat.</p>
-    ${d.layer_problems.length ? `<h2>Layer build problems</h2><div class="card"><ul>${d.layer_problems.map(p => `<li class="mono">${esc(p)}</li>`).join("")}</ul></div>` : ""}`;
+    ${d.layer_problems.length ? `<h2>Layer build problems</h2><div class="card"><ul>${d.layer_problems.map(p => `<li class="mono">${esc(p)}</li>`).join("")}</ul></div>` : ""}
+    ${renderDatabase(d.database)}`;
+}
+function renderDatabase(db) {
+  if (!db || !db.configured) return "";
+  if (db.error) return `<h2>Database</h2><div class="card"><span style="color:var(--muted)">PostGIS not reachable at build time:</span> <span class="mono">${esc(db.error)}</span></div>`;
+  const total = db.tables.reduce((a, t) => a + (t.n_rows || 0), 0);
+  const bySchema = {};
+  db.tables.forEach(t => { const s = t.table_name.split(".")[0]; bySchema[s] = (bySchema[s] || 0) + 1; });
+  const rows = db.tables.map(t => `<tr><td class="mono">${esc(t.table_name)}</td><td>${esc(t.source_id)}</td><td style="text-align:right">${(t.n_rows ?? 0).toLocaleString()}</td><td>${esc(t.crs || "")}</td><td>${esc(t.loaded_at_utc)}</td><td class="mono">${esc(t.engine_commit || "")}</td></tr>`).join("");
+  return `<h2>Database</h2>
+    <div class="grid">
+      <div class="card kpi"><div class="n">${db.tables.length}</div><div class="l">tables in engine.load_log · ${total.toLocaleString()} rows</div></div>
+      <div class="card"><h3>Schemas</h3><div class="mono">${db.schemas.map(esc).join(" · ")}</div>
+        <div style="margin-top:8px">${bars(bySchema, db.tables.length)}</div></div>
+    </div>
+    <div class="card" style="margin-top:12px"><div class="tablewrap"><table class="data"><thead><tr><th>table</th><th>source_id</th><th>rows</th><th>CRS</th><th>loaded</th><th>commit</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
 }
 
 /* ---------------- datasets ---------------- */

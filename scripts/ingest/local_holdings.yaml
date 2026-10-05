@@ -9,6 +9,7 @@
 roots:
   downloads: C:/Users/Lucas/Downloads
   a: A:/
+  docs: C:/Users/Lucas/Documents
 
 sources:
   # --- CP2B's own published dataset (CC BY 4.0, DOI 10.25824/redu/F36WP9) ---------------
@@ -83,3 +84,117 @@ sources:
     base: ILUC_NIPE/ENTREGA_PRODUTO_P1-20260621T122008Z-3-001/ENTREGA_PRODUTO_P1/01_Bases_de_dados_multifontes
     include:
       - "*_35??_classes_multifonte.xlsx"
+
+  # ===== Second survey (2026-10-05): folders under C:/Users/Lucas/Documents (docs/25 §5) =====
+  # --- costs/market: FIESP-led SP biomethane study, June 2025 (copy with a text layer) -------
+  - id: fiesp_sp_biomethane_2024
+    root: docs
+    base: 40_Pesquisa_Dados_e_Referencias/REFERENCIAS_PILAR2B/Organized_Papers
+    include: [O-Biometano-em-Sao-Paulo_Potencial-e-Medidas-para-alavancar-a-producao_2025.pdf]
+  - id: epe_panorama_biometano_2023
+    root: docs
+    base: Reposicionamento_Submissão_ESD/Benchmarks_Brasil
+    include: [Panorama de Biometano.pdf]
+  - id: abiogas_mapeamento_biometano_2032
+    root: docs
+    base: 40_Pesquisa_Dados_e_Referencias/REFERENCIAS_PILAR2B/Organized_Papers
+    include: [ABiogas-Nota_tecnica_MAPEAMENTO_DE_PLANTAS_DE_BIOMETANO_ATE_2032.pdf]
+
+  # --- supply: sanitation and municipal solid waste --------------------------------------------
+  - id: sinisa
+    root: docs
+    base: Reposicionamento_Submissão_ESD/00_Primary_Data_Sources_PILAR2b/03_SNIS_Series
+    include: ["*_SNIS_ConsolidadoMunicipio-*.csv", SNIS_ConsolidadoMunicipio_LATEST.csv]
+  - id: cetesb_datageo_waste_indices
+    root: docs
+    base: Reposicionamento_Submissão_ESD/DADOS_ESPACIAIS
+    include:
+      - "VWM_IQR_CETESB_202?_POL/*"
+      - "IGR202?/*"
+      - "VWM_IQC_CETESB_202?_POL/*"
+      - IQR_READ_ME.txt
+      - IGR_READ_ME.txt
+      - IQC_READ_ME.txt
+  - id: cetesb_ictem_2024
+    root: docs
+    base: Reposicionamento_Submissão_ESD/DADOS_ESPACIAIS
+    include:
+      - "VWM_ICTEM_CETESB_2024_POL/*"
+      - "ICTEM - Indicador de Coleta e Tratabilidade de Esgoto da População Urbana de Município em 2024.txt"
+
+  # --- supply: livestock herds (SIDRA) -----------------------------------------------------------
+  - id: ibge_ppm
+    root: docs
+    base: Reposicionamento_Submissão_ESD/00_Primary_Data_Sources_PILAR2b
+    include:
+      - 04_IBGE_Tabelas/TABELA_3939_PPM_2008A2024.xlsx
+      - 04_IBGE_Tabelas/TABELA_74_2008A2024.xlsx
+      - 04_IBGE_Tabelas/TABELA_3940_2008A2024.xlsx
+      - TABELA_94_VACAS_ORDENHADAS_PPM_2008_A2024.xlsx
+
+  # --- spatial: federal roads, EPE WebMap layers ------------------------------------------------
+  - id: dnit_snv
+    root: docs
+    base: CP2B/DNIT_MULTIMODAL/DNIT_Multimodal-20250821T171558Z-1-001/DNIT_Multimodal
+    include:
+      - "SNV_Bases_Geometricas_SHP/*"
+      - SNV_Planilhas_XLS/SNV_202507A.xls
+      - "SNV_Publicacoes_2025/03_Dados/Guia SNV_202507A.pdf"
+  - id: epe_webmap
+    root: docs
+    base: .
+    include: ["Mapa_Poster_*/Dados_Webmap_EPE/*/zipfolder/*"]
+
+  # --- calibration: CP2B potential v5.1 and the plant validation audit -------------------------
+  - id: cp2b_method_v5_1
+    root: docs
+    base: Reposicionamento_Submissão_ESD
+    include:
+      - "Metodo_CP2b/outputs_v5/*.csv"
+      - "Metodo_CP2b/outputs_v5/*.json"
+      - "Submissão ESD + Data in Brief/Pacote_CP2b_v5.1/LEIA-ME.md"
+      - "Submissão ESD + Data in Brief/Pacote_CP2b_v5.1/tabelas/*"
+  - id: cp2b_plant_validation_audit_2026_09
+    root: docs
+    base: CP2B/VALIDACAO_DE_USINAS_BIOGAS/auditoria_camada_validacao_20260916
+    include: ["*"]
+
+  # --- supply: industrial points of interest from public RAIS (pending validation) -------------
+  # The legacy Industrias_SP_pontos layer is blocked by this same audit (CNAE 01113 read as 11135).
+  - id: rais_industrial_coordinates_sp_2026_09
+    root: docs
+    base: Reposicionamento_Submissão_ESD/DADOS_ESPACIAIS
+    include:
+      - README.md
+      - README2.md
+      - catalogo_dados.csv
+      - problemas_qualidade.csv
+      - fontes_prioritarias.csv
+      - modelo_dados_pilar2b.md
+      - "coordenadas_*.csv"
+      - "dados_staging/*.csv"
+
+  # --- economy-wide: input-output matrix, energy balance ----------------------------------------
+  - id: ibge_io_matrix_2015
+    root: docs
+    base: Input_Output_Ideas
+    include: [Matriz_de_Insumo_Produto_2015_Nivel_67.xls]
+  - id: epe_ben_2025
+    root: docs
+    base: 40_Pesquisa_Dados_e_Referencias/Balanco_Energetico_BEN/_arquivos_da_raiz
+    include: ["Anexo IX - *.xlsx", "Anexo X - *.xlsx", "Matriz ab2024.xlsx"]
+
+  # --- verification sources --------------------------------------------------------------------
+  - id: atlas_bioenergia_sp_2020
+    root: docs
+    base: 40_Pesquisa_Dados_e_Referencias/Atlas_Bioenergia/PDFs_e_Figuras_Paper
+    include: [Atlas_Bioenergia_SP_2020_livro_DIGITAL_FinalV2_compressed.pdf]
+  - id: intl_de_dbfz_resources
+    root: docs
+    base: .
+    include:
+      - 40_Pesquisa_Dados_e_Referencias/REFERENCIAS_PILAR2B/Organized_Papers/DBFZ_BiomassMonitor_01122024_v6.3.csv
+      - Reposicionamento_Submissão_ESD/DBFZ_REFERENCES/BIOMASSEPOTENZIALE_BASISDATEN.xlsx
+      - Reposicionamento_Submissão_ESD/DBFZ_REFERENCES/BIOMASSEPOTENZIALE_BASISDATEN_readme.xlsx
+      - Reposicionamento_Submissão_ESD/DBFZ_REFERENCES/Metadata_Nutzungshinweise.pdf
+      - Reposicionamento_Submissão_ESD/DBFZ_REFERENCES/Data_regional_DE.csv

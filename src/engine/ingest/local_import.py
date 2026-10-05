@@ -47,6 +47,14 @@ DENY_SUBSTRINGS = (
     "05_parceiros_nda",  # partner material under NDA -> data/private only, by hand
     "data/private",
     "granjas_sui",  # farm registry with address/contact fields (LGPD)
+    "granjas_aves",  # same registry, poultry (LGPD)
+    "farms_for_gee",  # point layers derived from those registries (exact farm coordinates)
+    "sao_paulo_farms",
+    "sao_paulo_pig_farms",
+    "mapa_amasa_artigo_01",  # origin-destination interviews (LGPD), never opened
+    "produto_4_cepal",  # interview transcriptions, part not anonymised
+    "listaparticipante",  # participant lists
+    "serasa",  # credit-bureau folder, out of scope
     "empreendimento-geracao-distribuida",  # full ANEEL GD file: CPF/CNPJ + owner names
     "balanço zm",  # named-mill engineering balance, possibly NDA
     "harvex",  # HARVEX deliverables: discarded by the team (2026-10-04), never imported

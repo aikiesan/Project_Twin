@@ -57,6 +57,13 @@ def test_missing_pattern_is_reported(tmp_path):
         "D/empreendimento-geracao-distribuida.parquet",
         "A:/ILUC_NIPE/Indicadores_HARVEX.xlsx",
         "C:/Downloads/dados_Joel/matriz.csv",
+        r"C:\Docs\CP2B\Relatorio_granjas_aves_X.xlsx",
+        "C:/Docs/CP2B/_DATA_FILES/farms_for_gee.csv",
+        "C:/Docs/CP2B/x/sao_paulo_pig_farms.shp",
+        "C:/Docs/Mapa_Amasa_Artigo_01/a.csv",
+        "C:/Docs/40_Pesquisa/Produto_4_CEPAL/t.zip",
+        "C:/Docs/x/ListaParticipante_18-12-2025.xlsx",
+        "C:/Docs/ILUC/05_SERASA_CREDITO/a.csv",
     ],
 )
 def test_deny_list(path):

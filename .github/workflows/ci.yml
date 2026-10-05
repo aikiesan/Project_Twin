@@ -1,5 +1,3 @@
-# NOTE: GitHub only runs workflows from the repository root. This file becomes active
-# once this folder is moved to its own repository (see ACCESS_AT_HOME.md).
 name: ci
 on: [push, pull_request]
 jobs:
@@ -8,7 +6,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v3
-      - run: uv sync --extra dev --extra geo --extra stats
+      - run: uv sync --python 3.11 --extra dev --extra geo --extra stats   # 3.12 resolves arviz 1.x (DataTree), which capex_hier does not support yet
       - run: uv run ruff check src tests
       - run: uv run black --check src tests
       - run: uv run python -m engine.registry validate

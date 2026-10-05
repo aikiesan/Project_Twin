@@ -116,3 +116,23 @@ Open from this step:
 - **Repository:** the user created `aikiesan/Project_Twin` (public, empty) as the new home for this project. The move is pending a decision on layout and history.
 
 Next: steps 3–5 above (PostGIS check, DVC init + remote ADR, backlog).
+
+## 2026-10-04 (late night) — new repo, local clone, DVC, second import
+- **Repository.** The engine now lives in `aikiesan/Project_Twin`. It was split out with `git subtree split`, keeping its history. The clone on the project PC is `A:\Project_Twin\Project_Twin`; `data/` and `.env` were moved there. The old `aprenda_sobre_biometano/sp-biomethane-engine` copy is frozen. Work goes through PRs against `main`.
+- **PostGIS.** Healthy. `\dn` lists `engine` and `pilar2b`, and the PostGIS extension is 3.4.3. `docker-compose.yml` pins `name: sp-biomethane-engine`, so the volume is reused.
+- **DVC.** 3.67 is installed with `uv tool install dvc`. `dvc init` was run at the repo root, and `data/raw.dvc` tracks `data/raw`. The remote is still undecided (ADR-0003).
+- **Line endings.** The clone uses `core.autocrlf=false` (docs/04), so the `evidence/` hashes match.
+- **Survey of other local folders.** Read-only, done by three agents; written up in `docs/25_LOCAL_HOLDINGS_SURVEY.md`. It found that `materiais/` is empty, along with several personal-data and NDA risks, which are kept out.
+- **Second import.** `scripts/ingest/local_holdings.yaml` plus `engine.ingest.local_import` (manifest-driven, with a deny list, 9 tests) imported 9 folders, 69 files, 70 MB. `sources.yaml` now has 100 entries. The Pilar-2b-derived entries are GPL-3.0, per its LICENSE.
+
+User decisions pending:
+1. The DVC remote, both public-safe and private: Google Drive, a UNICAMP server or MinIO. Until one is chosen, `data/` exists only on this PC.
+2. Reuse rights for the ABIOVE/HARVEX ILUC matrices, and whether the named-mill balance file is under NDA.
+3. Whether to install the Claude GitHub App on `Project_Twin`, so cloud sessions can push there.
+4. Provenance of the CP2B GEE farm points and the Tmax grid.
+
+Next technical steps:
+- Compare `anp_biomethane_open_data_2026_04` with `anp_biomethane_plants` and log any conflict.
+- Move `FONTES.md` (Atlas SP 2020 factors) into `parameters.csv` as S rows, then verify against the pages.
+- Use the 30 m MapBiomas 2024 raster (1.16 GB, in `07_DADOS_GIS_BASE`) to replace the 90 m screening raster.
+- Registry validator: 0 errors since the fix in PR #1 (publishers filled).

@@ -1,0 +1,76 @@
+# Datasets already on the project PC, copied into data/raw/<id>/ by
+#   uv run python -m engine.ingest.local_import scripts/ingest/local_holdings.yaml [--dry-run]
+# Chosen from the 2026-10-04 survey of local folders (docs/24_LOCAL_HOLDINGS_SURVEY.md).
+# Only public or CP2B-own data is listed here. Personal data (LGPD), partner/NDA material and
+# ABIOVE/HARVEX deliverables are not, and the importer's deny list refuses them anyway.
+# Every id must have a registry/sources.yaml entry before code reads it (CLAUDE.md rule 3).
+# Roots can be overridden with env LOCAL_ROOT_<NAME>, e.g. LOCAL_ROOT_DOWNLOADS=D:/dl.
+
+roots:
+  downloads: C:/Users/Lucas/Downloads
+  a: A:/
+
+sources:
+  # --- CP2B's own published dataset (CC BY 4.0, DOI 10.25824/redu/F36WP9) ---------------
+  - id: cp2b_redu_v2
+    root: downloads
+    base: 07_DADOS_GIS_BASE/dataverse_files
+    include:
+      - 01_DATABASE-1/01_DATABASE/*
+      - 03_SUPPLEMENTARY-1/03_SUPPLEMENTARY/*
+      - 04_METADATA-1/04_METADATA/*
+      - data_dictionary.csv
+      - README-1.md
+      - CITATION-1.txt
+      - MANIFEST.TXT
+
+  # --- supply: sugar-energy mills ------------------------------------------------------------
+  - id: anp_mapa_ethanol_biodiesel_plants
+    root: downloads
+    base: 06_DADOS_ENERGIA_EPE
+    include: ["Plantas de etanol.csv", "Plantas de biodiesel.csv"]
+  - id: conab_mills_2025
+    root: downloads
+    base: 02_ABIOVE_ILUC/Dados_Projeto_ABIOVE_2026-20260510T113404Z-3-001/Dados_Projeto_ABIOVE_2026/Dados_CONAB
+    include: [UNIDADE_PRODUCAO_ETANOL_ACUCAR_BR_ATIVAS_2025.zip]
+  - id: conab_cane_series_costs
+    root: downloads
+    base: 02_ABIOVE_ILUC/Dados_Projeto_ABIOVE_2026-20260510T113404Z-3-001/Dados_Projeto_ABIOVE_2026/Dados_CONAB
+    include: [SerieHistoricaCana.txt, LevantamentoCana.txt, CustoProducao.txt]
+
+  # --- market: ANP biomethane open data (newer than the PILAR-2b copy) ------------------------
+  - id: anp_biomethane_open_data_2026_04
+    root: downloads
+    base: 06_DADOS_ENERGIA_EPE/biometano-dados-abertos
+    include: ["*.csv"]
+
+  # --- supply: sewage, population --------------------------------------------------------------
+  - id: cetesb_ictem_2023
+    root: downloads
+    base: 06_DADOS_ENERGIA_EPE/Mapeamento EPE/Recursos Energeticos
+    include: [VWM_ICTEM_CETESB_2023_POL.zip]
+  - id: ibge_censo_2022_pop_sp
+    root: a
+    base: CP2B_Maps
+    include: ["Censo 2022 - Território - São Paulo.csv"]
+
+  # --- siting: exclusions, grid areas, rail (GeoSEADE) -----------------------------------------
+  - id: seade_geo_ambiente_transporte
+    root: downloads
+    base: 06_DADOS_ENERGIA_EPE/Mapeamento EPE/SEADE/Infraestrutura e meio ambiente
+    include:
+      - metadados_geoseade_infraestrutura_e_meio_ambiente.xlsx
+      - ambiente_unid_conservacao_*.zip
+      - ambiente_terras_indigenas.zip
+      - ambiente_assentamentos_incra.zip
+      - ambiente_ugrhi.zip
+      - energia_distribuidoras.zip
+      - transporte_ferrovias.zip
+      - transporte_ferrovia_estacao.zip
+      - transporte_porto_seco.zip
+
+  # --- supply: pasture degradation (land for energy crops) -------------------------------------
+  - id: lapig_pasture_vigor_col9
+    root: a
+    base: ILUC_NIPE/ILUC_NIPE/03_Pasture_Vigor_LAPIG
+    include: ["brasil_pasture_vigor_col9_s100_year=*.csv"]

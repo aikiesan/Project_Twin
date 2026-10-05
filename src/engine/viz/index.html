@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project Twin Viewer</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root {
+  --bg: #f7f7f5; --panel: #ffffff; --ink: #1c1f23; --muted: #626a73; --line: #e3e3de;
+  --accent: #0f766e; --accent-soft: #ccfbf1; --warn: #b45309; --warn-soft: #fef3c7;
+  --bad: #b91c1c; --bad-soft: #fee2e2; --ok: #15803d; --ok-soft: #dcfce7;
+  --chip: #eef0f2; --shadow: 0 1px 2px rgba(0,0,0,.05), 0 2px 8px rgba(0,0,0,.04);
+  --c1: #fff7ec; --c2: #fdd49e; --c3: #fc8d59; --c4: #d7301f; --c5: #7f0000;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121416; --panel: #1b1e21; --ink: #e8e9ea; --muted: #9aa3ac; --line: #2c3035;
+    --accent: #2dd4bf; --accent-soft: #134e4a; --warn: #fbbf24; --warn-soft: #422006;
+    --bad: #f87171; --bad-soft: #450a0a; --ok: #4ade80; --ok-soft: #052e16;
+    --chip: #262a2e; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121416; --panel: #1b1e21; --ink: #e8e9ea; --muted: #9aa3ac; --line: #2c3035;
+  --accent: #2dd4bf; --accent-soft: #134e4a; --warn: #fbbf24; --warn-soft: #422006;
+  --bad: #f87171; --bad-soft: #450a0a; --ok: #4ade80; --ok-soft: #052e16;
+  --chip: #262a2e; --shadow: none;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { display: flex; align-items: center; gap: 16px; padding: 12px 16px;
+  border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 1000; flex-wrap: wrap; }
+header h1 { font-size: 16px; margin: 0; letter-spacing: .2px; }
+header .meta { color: var(--muted); font-size: 12px; }
+nav { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
+nav button { border: 1px solid transparent; background: none; color: var(--muted); padding: 6px 12px;
+  border-radius: 6px; cursor: pointer; font: inherit; }
+nav button:hover { color: var(--ink); background: var(--chip); }
+nav button.on { color: var(--accent); border-color: var(--line); background: var(--bg); font-weight: 600; }
+main { padding: 16px; max-width: 1400px; margin: 0 auto; }
+section.tab { display: none; } section.tab.on { display: block; }
+.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; box-shadow: var(--shadow); }
+.kpi .n { font-size: 26px; font-weight: 650; } .kpi .l { color: var(--muted); font-size: 12px; }
+h2 { font-size: 15px; margin: 22px 0 10px; } h2:first-child { margin-top: 0; }
+h3 { font-size: 13px; margin: 0 0 8px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+.bars .row { display: grid; grid-template-columns: 120px 1fr 40px; align-items: center; gap: 8px; margin: 4px 0; font-size: 12px; }
+.bar { height: 8px; background: var(--chip); border-radius: 4px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+.chip { display: inline-block; padding: 1px 7px; border-radius: 999px; background: var(--chip); font-size: 11px; color: var(--muted); white-space: nowrap; }
+.chip.V, .chip.have, .chip.Accepted { background: var(--ok-soft); color: var(--ok); }
+.chip.S, .chip.get, .chip.Proposed { background: var(--warn-soft); color: var(--warn); }
+.chip.K, .chip.restricted, .chip.private { background: var(--bad-soft); color: var(--bad); }
+.chip.D { background: var(--accent-soft); color: var(--accent); }
+/* map */
+#mapwrap { display: grid; grid-template-columns: 300px 1fr; gap: 12px; height: calc(100vh - 110px); min-height: 480px; }
+#map { border-radius: 10px; border: 1px solid var(--line); height: 100%; }
+#layerlist { overflow: auto; }
+#layerlist .grp { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin: 12px 0 4px; font-weight: 600; }
+#layerlist label { display: flex; gap: 8px; align-items: flex-start; padding: 4px 2px; cursor: pointer; font-size: 13px; }
+#layerlist .sw { width: 12px; height: 12px; border-radius: 3px; margin-top: 3px; flex: none; }
+#layerlist .sub { color: var(--muted); font-size: 11px; }
+.legend { background: var(--panel); color: var(--ink); padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); font-size: 12px; }
+.legend i { display: inline-block; width: 14px; height: 10px; margin-right: 6px; vertical-align: middle; }
+.leaflet-popup-content { font-size: 12px; } .leaflet-popup-content table td { padding: 1px 6px 1px 0; vertical-align: top; }
+/* table */
+.tools { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.tools input, .tools select { padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); font: inherit; }
+.tools input { flex: 1; min-width: 200px; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+table.data { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+table.data th { text-align: left; font-weight: 600; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--panel); cursor: pointer; white-space: nowrap; }
+table.data td { padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.data tr.src:hover td { background: var(--bg); cursor: pointer; }
+tr.detail td { background: var(--bg); color: var(--muted); font-size: 12px; }
+.mono { font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+a { color: var(--accent); }
+/* flow */
+.flow { display: flex; gap: 0; overflow-x: auto; padding-bottom: 6px; align-items: stretch; }
+.step { min-width: 200px; flex: 1; position: relative; }
+.step .card { height: 100%; margin-right: 22px; }
+.step:not(:last-child)::after { content: "→"; position: absolute; right: 2px; top: 40%; color: var(--muted); font-size: 18px; }
+.step ul { margin: 6px 0 0; padding-left: 16px; font-size: 12px; } .step li { margin: 1px 0; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+/* progress */
+.phase { margin-bottom: 12px; }
+.phase summary { cursor: pointer; display: flex; align-items: center; gap: 10px; list-style: none; }
+.phase summary::-webkit-details-marker { display: none; }
+.phase .title { font-weight: 600; flex: 1; }
+.phase .bar { width: 160px; }
+.items { margin: 10px 0 0; padding: 0; list-style: none; font-size: 13px; }
+.items li { padding: 3px 0 3px 24px; position: relative; }
+.items li::before { content: "○"; position: absolute; left: 4px; color: var(--muted); }
+.items li.done::before { content: "●"; color: var(--ok); }
+.timeline { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+.timeline li { padding: 6px 0; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 90px 1fr; gap: 10px; }
+.timeline .d { color: var(--muted); font-size: 12px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.warnbox { border-left: 3px solid var(--warn); padding: 8px 12px; background: var(--warn-soft); border-radius: 6px; font-size: 12.5px; margin-bottom: 12px; }
+@media (max-width: 800px) {
+  #mapwrap { grid-template-columns: 1fr; height: auto; } #map { height: 70vh; } #layerlist { max-height: 260px; }
+  .two { grid-template-columns: 1fr; } .phase .bar { width: 80px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Project Twin — SP biomethane engine</h1>
+  <span class="meta" id="meta">loading…</span>
+  <nav id="nav">
+    <button data-tab="overview" class="on">Overview</button>
+    <button data-tab="map">Map</button>
+    <button data-tab="datasets">Datasets</button>
+    <button data-tab="flow">Project flow</button>
+    <button data-tab="progress">Progress</button>
+  </nav>
+</header>
+<main>
+  <section class="tab on" id="overview"></section>
+  <section class="tab" id="map-tab"><div id="mapwrap"><div class="card" id="layerlist"></div><div id="map"></div></div></section>
+  <section class="tab" id="datasets"></section>
+  <section class="tab" id="flow"></section>
+  <section class="tab" id="progress"></section>
+</main>
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const fmtBytes = b => b > 1e9 ? (b / 1e9).toFixed(2) + " GB" : b > 1e6 ? (b / 1e6).toFixed(1) + " MB" : b > 1e3 ? (b / 1e3).toFixed(0) + " kB" : (b || 0) + " B";
+const fmtNum = v => Math.abs(v) >= 1e6 ? (v / 1e6).toFixed(1) + " M" : Math.abs(v) >= 1e3 ? (v / 1e3).toFixed(1) + " k" : (+v).toFixed(Number.isInteger(+v) ? 0 : 2);
+const chip = (v, cls = v) => v ? `<span class="chip ${esc(cls)}">${esc(v)}</span>` : "";
+const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
+const isUrl = u => /^https?:\/\//.test(u);
+let DATA, map, mapReady = false;
+
+function bars(obj, total) {
+  return `<div class="bars">${Object.entries(obj).map(([k, v]) =>
+    `<div class="row"><span>${esc(k)}</span><div class="bar"><i style="width:${pct(v, total)}%"></i></div><span>${v}</span></div>`).join("")}</div>`;
+}
+function roadmapTotals(rm) {
+  let done = 0, all = 0;
+  rm.forEach(p => p.sections.forEach(s => s.items.forEach(i => { all++; if (i.done) done++; })));
+  return {done, all};
+}
+
+/* ---------------- overview ---------------- */
+function renderOverview() {
+  const d = DATA, n = d.sources.length, rm = roadmapTotals(d.roadmap);
+  const onDisk = d.sources.filter(s => s.on_disk).length;
+  const merged = d.pull_requests.filter(p => p.state === "MERGED").length;
+  $("#overview").innerHTML = `
+    ${d.include_private ? `<div class="warnbox">This build includes <b>private</b> layers from <span class="mono">data/private/</span>. Keep it on this PC: never upload it or publish it.</div>` : ""}
+    <div class="grid">
+      <div class="card kpi"><div class="n">${n}</div><div class="l">registered sources</div></div>
+      <div class="card kpi"><div class="n">${onDisk}</div><div class="l">held on disk · ${fmtBytes(d.data_on_disk.size_bytes)} in ${d.data_on_disk.n_files} files</div></div>
+      <div class="card kpi"><div class="n">${d.parameters.n}</div><div class="l">parameters in registry/parameters.csv</div></div>
+      <div class="card kpi"><div class="n">${d.layers.length}</div><div class="l">map layers built</div></div>
+      <div class="card kpi"><div class="n">${rm.done}/${rm.all}</div><div class="l">roadmap items ticked (docs/19)</div></div>
+      <div class="card kpi"><div class="n">${merged}</div><div class="l">pull requests merged</div></div>
+    </div>
+    <h2>Registry at a glance</h2>
+    <div class="grid">
+      <div class="card"><h3>Sources by status</h3>${bars(d.source_counts.status, n)}</div>
+      <div class="card"><h3>Sources by confidence</h3>${bars(d.source_counts.confidence, n)}</div>
+      <div class="card"><h3>Sources by module</h3>${bars(d.source_counts.module, n)}</div>
+      <div class="card"><h3>Parameters by confidence</h3>${bars(d.parameters.by_confidence, d.parameters.n)}</div>
+    </div>
+    <p class="meta" style="color:var(--muted);font-size:12px;margin-top:14px">Confidence: V = primary document read · S = snippet/abstract · K = prior knowledge · D = derived. Only V values go into a paper without a caveat.</p>
+    ${d.layer_problems.length ? `<h2>Layer build problems</h2><div class="card"><ul>${d.layer_problems.map(p => `<li class="mono">${esc(p)}</li>`).join("")}</ul></div>` : ""}`;
+}
+
+/* ---------------- datasets ---------------- */
+let sortKey = "id", sortDir = 1;
+function renderDatasets() {
+  const opts = (k) => [...new Set(DATA.sources.map(s => s[k]).filter(Boolean))].sort().map(v => `<option>${esc(v)}</option>`).join("");
+  $("#datasets").innerHTML = `
+    <div class="tools">
+      <input id="q" placeholder="Search id, name, publisher, notes…">
+      <select id="fm"><option value="">all modules</option>${opts("module")}</select>
+      <select id="fs"><option value="">any status</option>${opts("status")}</select>
+      <select id="fc"><option value="">any confidence</option>${opts("confidence")}</select>
+      <select id="fd"><option value="">on disk or not</option><option value="1">on disk</option><option value="0">not on disk</option></select>
+    </div>
+    <div class="tablewrap"><table class="data"><thead><tr>
+      ${[["id", "id"], ["name", "name"], ["module", "module"], ["status", "status"], ["confidence", "conf."], ["access", "access"], ["size_bytes", "on disk"], ["accessed", "accessed"]]
+        .map(([k, l]) => `<th data-k="${k}">${l}</th>`).join("")}
+    </tr></thead><tbody id="rows"></tbody></table></div>
+    <p id="count" style="color:var(--muted);font-size:12px"></p>`;
+  ["q", "fm", "fs", "fc", "fd"].forEach(id => $("#" + id).addEventListener("input", fillRows));
+  document.querySelectorAll("#datasets th").forEach(th => th.addEventListener("click", () => {
+    const k = th.dataset.k; sortDir = sortKey === k ? -sortDir : 1; sortKey = k; fillRows();
+  }));
+  fillRows();
+}
+function fillRows() {
+  const q = $("#q").value.toLowerCase(), fm = $("#fm").value, fs = $("#fs").value, fc = $("#fc").value, fd = $("#fd").value;
+  const rows = DATA.sources.filter(s =>
+    (!q || [s.id, s.name, s.publisher, s.notes, s.local_path].join(" ").toLowerCase().includes(q)) &&
+    (!fm || s.module === fm) && (!fs || s.status === fs) && (!fc || s.confidence === fc) &&
+    (!fd || String(+s.on_disk) === fd)
+  ).sort((a, b) => (a[sortKey] > b[sortKey] ? 1 : a[sortKey] < b[sortKey] ? -1 : 0) * sortDir);
+  $("#rows").innerHTML = rows.map(s => `
+    <tr class="src" data-id="${esc(s.id)}">
+      <td class="mono">${esc(s.id)}</td><td>${esc(s.name)}</td><td>${esc(s.module)}</td>
+      <td>${chip(s.status)}</td><td>${chip(s.confidence)}</td>
+      <td>${chip(s.access)} ${s.private ? chip("private") : ""}</td>
+      <td>${s.on_disk ? fmtBytes(s.size_bytes) + ` <span style="color:var(--muted)">(${s.n_files})</span>` : "—"}</td>
+      <td>${esc(s.accessed)}</td>
+    </tr>`).join("");
+  $("#count").textContent = `${rows.length} of ${DATA.sources.length} sources · click a row for details`;
+  document.querySelectorAll("#rows tr.src").forEach(tr => tr.addEventListener("click", () => {
+    const next = tr.nextElementSibling;
+    if (next && next.classList.contains("detail")) { next.remove(); return; }
+    const s = DATA.sources.find(x => x.id === tr.dataset.id);
+    const d = document.createElement("tr"); d.className = "detail";
+    d.innerHTML = `<td colspan="8">
+      <div><b>Publisher:</b> ${esc(s.publisher)}</div>
+      <div><b>URL:</b> ${isUrl(s.url) ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.url)}</a>` : esc(s.url)}</div>
+      <div><b>License:</b> ${esc(s.license)} · <b>Format:</b> ${esc(s.format)}</div>
+      <div><b>Spatial:</b> ${esc(s.spatial)} · <b>Temporal:</b> ${esc(s.temporal)}</div>
+      <div><b>Local path:</b> <span class="mono">${esc(s.local_path)}</span></div>
+      ${s.notes ? `<div style="margin-top:6px">${esc(s.notes)}</div>` : ""}</td>`;
+    tr.after(d);
+  }));
+}
+
+/* ---------------- map ---------------- */
+const CHORO = ["var(--c1)", "var(--c2)", "var(--c3)", "var(--c4)", "var(--c5)"];
+const cssVar = v => getComputedStyle(document.documentElement).getPropertyValue(v.slice(4, -1)).trim();
+function choroColor(v, breaks) {
+  let i = 0; while (i < breaks.length && v > breaks[i]) i++;
+  return cssVar(CHORO[i]);
+}
+function popup(props) {
+  return `<table>${Object.entries(props).slice(0, 12).map(([k, v]) =>
+    `<tr><td style="color:var(--muted)">${esc(k)}</td><td>${esc(typeof v === "number" ? fmtNum(v) : v)}</td></tr>`).join("")}</table>`;
+}
+async function initMap() {
+  if (mapReady) { map.invalidateSize(); return; }
+  mapReady = true;
+  map = L.map("map", {preferCanvas: true}).setView([-22.3, -48.6], 7);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', maxZoom: 19
+  }).addTo(map);
+  try {
+    const sp = await (await fetch("layers/sp_boundary.geojson")).json();
+    const b = L.geoJSON(sp, {style: {color: "#0f766e", weight: 2, fill: false}, interactive: false}).addTo(map);
+    map.fitBounds(b.getBounds());
+  } catch (e) { /* boundary is optional */ }
+  const legend = L.control({position: "bottomright"});
+  legend.onAdd = () => { const div = L.DomUtil.create("div", "legend"); div.id = "legend"; div.style.display = "none"; return div; };
+  legend.addTo(map);
+
+  const groups = {};
+  DATA.layers.forEach(l => (groups[l.group] ??= []).push(l));
+  const list = $("#layerlist");
+  list.innerHTML = `<h3>Layers</h3><div class="sub" style="color:var(--muted);font-size:11px">Simplified for display: check the raw data before measuring anything.</div>` +
+    Object.entries(groups).map(([g, ls]) => `<div class="grp">${esc(g)}</div>` + ls.map(l => `
+      <label><input type="checkbox" data-id="${esc(l.id)}" ${l.style.visible ? "checked" : ""}>
+      <span class="sw" style="background:${l.kind === "polygon-value" ? "linear-gradient(90deg," + CHORO.map(cssVar).join(",") + ")" : esc(l.style.color || "#888")}"></span>
+      <span>${esc(l.title)} ${l.private ? chip("private") : ""}<br><span class="sub">${l.n_features.toLocaleString()} features · <span class="mono">${esc(l.source_id)}</span></span></span></label>`).join("")).join("");
+  const loaded = {};
+  async function toggle(id, on) {
+    const l = DATA.layers.find(x => x.id === id);
+    if (!on) { if (loaded[id]) map.removeLayer(loaded[id]); updateLegend(); return; }
+    if (!loaded[id]) {
+      const gj = await (await fetch(l.file)).json();
+      const st = l.style;
+      loaded[id] = L.geoJSON(gj, {
+        style: f => l.kind === "polygon-value"
+          ? {fillColor: choroColor(+f.properties[st.value], st.breaks), fillOpacity: .75, color: "#fff", weight: .4}
+          : {color: st.color || "#555", weight: st.weight || 1.2, fillOpacity: .25, fillColor: st.color || "#555"},
+        pointToLayer: (f, ll) => L.circleMarker(ll, {radius: l.n_features > 5000 ? 2.5 : 4.5, color: "#fff", weight: .8, fillColor: st.color || "#555", fillOpacity: .9}),
+        onEachFeature: (f, lyr) => lyr.bindPopup(`<b>${esc(l.title)}</b>${popup(f.properties)}`),
+      });
+      loaded[id].layerId = id;
+    }
+    loaded[id].addTo(map);
+    if (l.kind === "polygon-value") loaded[id].bringToBack();
+    updateLegend();
+  }
+  function updateLegend() {
+    const on = [...list.querySelectorAll("input:checked")].map(i => DATA.layers.find(x => x.id === i.dataset.id)).filter(l => l.kind === "polygon-value");
+    const el = $("#legend"); if (!el) return;
+    if (!on.length) { el.style.display = "none"; return; }
+    const l = on[on.length - 1], b = l.style.breaks, edges = [l.style.min, ...b, l.style.max];
+    el.style.display = "block";
+    el.innerHTML = `<b>${esc(l.title)}</b><br>` + CHORO.map((c, i) => `<i style="background:${cssVar(c)}"></i>${fmtNum(edges[i])} – ${fmtNum(edges[i + 1])}`).join("<br>") +
+      `<br><span style="color:var(--muted)">${esc(l.style.unit || "")} · quintiles</span>`;
+  }
+  list.querySelectorAll("input").forEach(i => {
+    i.addEventListener("change", () => toggle(i.dataset.id, i.checked));
+    if (i.checked) toggle(i.dataset.id, true);
+  });
+}
+
+/* ---------------- flow ---------------- */
+function renderFlow() {
+  const m = DATA.modules;
+  const dot = mod => mod.code.length && mod.tests.length ? "var(--ok)" : mod.code.length ? "var(--warn)" : "var(--bad)";
+  $("#flow").innerHTML = `
+    <p style="color:var(--muted);margin-top:0">The pipeline in order. Each card shows the code in <span class="mono">src/engine/&lt;module&gt;</span>, the tests that cover it, the method doc and how many registered sources feed it.
+    <span class="dot" style="background:var(--ok)"></span>code + tests <span class="dot" style="background:var(--warn);margin-left:10px"></span>code only <span class="dot" style="background:var(--bad);margin-left:10px"></span>no code yet</p>
+    <div class="flow">${m.map(mod => `
+      <div class="step"><div class="card">
+        <div style="font-weight:650"><span class="dot" style="background:${dot(mod)}"></span>${esc(mod.title)}</div>
+        <div style="color:var(--muted);font-size:12px;margin-top:4px">${mod.n_sources} sources · ${mod.n_have} held · ${mod.n_verified} V</div>
+        ${mod.doc ? `<div style="font-size:12px;margin-top:4px">doc: <span class="mono">docs/${esc(mod.doc)}</span></div>` : ""}
+        <h3 style="margin-top:10px">code</h3>${mod.code.length ? `<ul>${mod.code.map(c => `<li class="mono">${esc(c)}</li>`).join("")}</ul>` : `<div style="color:var(--muted);font-size:12px">—</div>`}
+        <h3 style="margin-top:8px">tests</h3>${mod.tests.length ? `<ul>${mod.tests.map(c => `<li class="mono">${esc(c)}</li>`).join("")}</ul>` : `<div style="color:var(--muted);font-size:12px">—</div>`}
+      </div></div>`).join("")}
+    </div>
+    <h2>Data flow</h2>
+    <div class="card" style="font-size:13px">
+      <div><b>Origin folders</b> (Pilar-2b, Downloads, A:\\) → <span class="mono">scripts/ingest/*</span> (read-only, deny list, logged) → <span class="mono">data/raw/</span> (immutable, DVC) and <span class="mono">data/private/</span> (farm, property and NDA data)</div>
+      <div style="margin-top:6px">→ registered in <span class="mono">registry/sources.yaml</span> (sha256, license, confidence) → <span class="mono">data/interim/</span> → <span class="mono">data/processed/</span> (H3 res 8, mill-year) → model modules → <span class="mono">exports/vX.Y.Z/</span> → PILAR-2b</div>
+      <div style="margin-top:6px;color:var(--muted)">Backup: dated zips of data/raw and data/private uploaded by hand to two private Google Drive folders (ADR-0009).</div>
+    </div>`;
+}
+
+/* ---------------- progress ---------------- */
+function renderProgress() {
+  const d = DATA, rm = roadmapTotals(d.roadmap);
+  const phases = d.roadmap.map(p => {
+    const items = p.sections.flatMap(s => s.items), done = items.filter(i => i.done).length;
+    return `<details class="card phase"><summary><span class="title">${esc(p.title)}</span>
+      <span style="color:var(--muted);font-size:12px">${done}/${items.length}</span>
+      <div class="bar"><i style="width:${pct(done, items.length)}%"></i></div></summary>
+      ${p.sections.map(s => `${s.title ? `<h3 style="margin-top:12px">${esc(s.title)}</h3>` : ""}
+        <ul class="items">${s.items.map(i => `<li class="${i.done ? "done" : ""}">${esc(i.text)}</li>`).join("")}</ul>`).join("")}
+    </details>`;
+  }).join("");
+  const prs = d.pull_requests.map(p => `<li><span class="d">${esc((p.mergedAt || p.createdAt || "").slice(0, 10))}</span>
+      <span>${chip(p.state, p.state === "MERGED" ? "have" : p.state === "OPEN" ? "get" : "")} <a href="${esc(p.url)}" target="_blank" rel="noopener">#${p.number}</a> ${esc(p.title)}</span></li>`).join("");
+  const commits = d.commits.map(c => `<li><span class="d">${esc(c.date)}</span><span><span class="mono" style="color:var(--muted)">${esc(c.hash)}</span> ${esc(c.subject)}</span></li>`).join("");
+  $("#progress").innerHTML = `
+    <h2>Roadmap — docs/19 (${rm.done}/${rm.all} ticked)</h2>${phases}
+    <h2>Decisions (ADRs)</h2>
+    <div class="tablewrap"><table class="data"><thead><tr><th>ADR</th><th>Title</th><th>Status</th></tr></thead><tbody>
+      ${d.adrs.map(a => `<tr><td class="mono">${esc(a.num)}</td><td>${esc(a.title)}</td><td>${chip(a.status, a.status.split(" ")[0])}</td></tr>`).join("")}
+    </tbody></table></div>
+    <div class="two" style="margin-top:12px">
+      <div><h2>Pull requests</h2><div class="card">${prs ? `<ul class="timeline">${prs}</ul>` : `<span style="color:var(--muted)">gh CLI not available, or no PRs</span>`}</div></div>
+      <div><h2>Commits on ${esc(d.git.branch)}</h2><div class="card"><ul class="timeline">${commits}</ul></div></div>
+    </div>`;
+}
+
+/* ---------------- boot ---------------- */
+document.querySelectorAll("#nav button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("#nav button").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll("section.tab").forEach(s => s.classList.remove("on"));
+  const id = b.dataset.tab === "map" ? "map-tab" : b.dataset.tab;
+  $("#" + id).classList.add("on");
+  try { localStorage.setItem("viewer-tab", b.dataset.tab); } catch (e) {}
+  if (b.dataset.tab === "map") initMap();
+}));
+fetch("data.json").then(r => r.json()).then(d => {
+  DATA = d;
+  $("#meta").textContent = `built ${d.generated_at} · ${d.git.branch} @ ${d.git.commit}`;
+  renderOverview(); renderDatasets(); renderFlow(); renderProgress();
+  let t = null; try { t = localStorage.getItem("viewer-tab"); } catch (e) {}
+  if (t) { const b = $(`#nav button[data-tab="${t}"]`); if (b) b.click(); }
+}).catch(e => { $("#overview").innerHTML = `<div class="card">Could not load data.json (${esc(e)}). Serve this folder over http: <span class="mono">uv run python -m engine.viz --serve</span></div>`; });
+</script>
+</body>
+</html>

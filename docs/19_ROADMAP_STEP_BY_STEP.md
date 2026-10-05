@@ -7,14 +7,14 @@ Tick boxes as you go. Each phase ends with a **gate** — don't move on until it
 ## PHASE 0 — Foundation & verification (weeks 1–3)
 
 ### Week 1 — Environment & repo
-- [ ] Create private repo; copy this seed (`04_DEV_ENVIRONMENT_SETUP.md` §1)
-- [ ] WSL2 + Docker Desktop configured (12–16 GB RAM); repo inside WSL, **not OneDrive**
-- [ ] `uv` project, `pyproject.toml`, pre-commit (ruff, black, nbstripout)
-- [ ] DVC initialized; choose remote(s) — public-safe + private
-- [ ] `docker-compose.yml` with PostGIS (port 5433) + Jupyter
-- [ ] Restore PILAR-2b dump into schema `pilar2b`; create schema `engine`
-- [ ] Copy `feedstocks.yaml`, ANP `05c`/`05e` into `data/raw/pilar2b/`
-- [ ] Register all **already-held** CP2B datasets in `registry/sources.yaml` (`status: have`, provenance)
+- [x] Create private repo; copy this seed (`04_DEV_ENVIRONMENT_SETUP.md` §1) — done 2026-10-04 as the **public** repo `aikiesan/Project_Twin`
+- [x] WSL2 + Docker Desktop configured (12–16 GB RAM); repo inside WSL, **not OneDrive** — native Windows route used instead (docs/04 §0b), repo on `A:\`
+- [x] `uv` project, `pyproject.toml`, pre-commit (ruff, black, nbstripout)
+- [x] DVC initialized; choose remote(s) — public-safe + private — manual Drive zips for now (ADR-0009)
+- [x] `docker-compose.yml` with PostGIS (port 5433) + Jupyter
+- [ ] Restore PILAR-2b dump into schema `pilar2b`; create schema `engine` — schemas exist (2026-10-04), both still empty: dump not restored
+- [x] Copy `feedstocks.yaml`, ANP `05c`/`05e` into `data/raw/pilar2b/` — as `pilar2b_canonical_parameters/` and `anp_biomethane_plants/`
+- [x] Register all **already-held** CP2B datasets in `registry/sources.yaml` (`status: have`, provenance) — 101 sources (2026-10-04); see docs/25
 
 ### Week 1 — Requests that take time (do on day 1!)
 - [ ] File LAI R1–R6, R8 (`07_LAI_REQUESTS.md`); start R7 agreement (LUPA)

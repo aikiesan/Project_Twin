@@ -1379,3 +1379,26 @@ sources:
     sha256: ae27855684d2fe24e06cafd189082d8cebedd59fd40f3f209d5de44030a6e3b9   # 1 file, 0.4 MB
     accessed: '2026-10-05'
     notes: Copied from Documents/40_Pesquisa_Dados_e_Referencias. Planned-plant pipeline to 2032; an industry association's projection, not observed capacity.
+  - id: pilar2b_platform_db
+    name: PILAR-2b platform database (NewLook), research tables only, restored into schema pilar2b
+    publisher: CP2B / NIPE-UNICAMP (PILAR-2b platform, cp2b-workspace/NewLook)
+    url: local
+    module: supply
+    provides: [municipality_timeseries, cp2b_v5_1_potential_by_level, residue_streams_sp2023, cp2b_parameters, infrastructure_features, references, ibge_io_matrix_67, validation_plants, technology_cards]
+    spatial: municipality (645 SP; the municipalities table holds 5,571 for Brazil)
+    temporal: municipality_timeseries 2008-2024
+    format: PostgreSQL 15 custom dump (pg_dump -Fc of schema public), restored into PostGIS schema pilar2b
+    access: internal
+    license: none stated for the database (CP2B internal; the Pilar-2b repository is GPL-3.0)
+    status: have
+    confidence: K
+    local_path: postgres schema pilar2b (dump kept outside the repo in ../backups/pilar2b/)
+    sha256: 586e1065edc2e7a958e0db56214f96b2571ae9423b3c9b987f4dbc5392996815   # pilar2b_public_2026-10-05.dump, 409 MB
+    accessed: '2026-10-05'
+    notes: >-
+      Read-only copy of the local NewLook docker database (container cp2b-db-dev, database
+      cp2b_maps) by python -m engine.ingest.restore_pilar2b (docs/27 §PILAR-2b). Personal and
+      account data is never copied: schemas auth/storage/realtime, the audit log, users, leads,
+      subscribers, analytics, any table with a personal-looking column, backup tables and the
+      views that read them. Functions, triggers and RLS policies are not restored. Never write
+      back to the source.

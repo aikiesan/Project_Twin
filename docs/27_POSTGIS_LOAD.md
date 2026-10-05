@@ -76,3 +76,40 @@ select table_name, n_rows, crs, loaded_at_utc from engine.load_log order by 1;
 - the real config's plan.
 
 The live load-and-skip test runs only when `DATABASE_URL` is set. It writes two throw-away `pytest_*` tables and drops them afterwards.
+
+## PILAR-2b platform copy (schema `pilar2b`)
+
+`engine.ingest.restore_pilar2b` copies the research tables of the PILAR-2b platform into schema `pilar2b`. It reads the local NewLook database: container `cp2b-db-dev`, database `cp2b_maps`, from the `Pilar2b/cp2b-workspace/NewLook` compose stack. The registry id is `pilar2b_platform_db`.
+
+```bash
+docker start cp2b-db-dev                                   # if the NewLook db is stopped
+uv run python -m engine.ingest.restore_pilar2b --dry-run   # what is copied and what is left out, with reasons
+uv run python -m engine.ingest.restore_pilar2b --replace   # refresh the copy
+```
+
+**What is never copied:**
+- **Other schemas:** `auth`, `storage`, `realtime`, `staging`, `tiger` and `topology` are never dumped.
+- **Listed tables:** accounts, leads, subscribers, analytics, the audit log, migrations and lookup scratch.
+- **Personal columns:** any table with a personal-looking column (e-mail, phone, CPF, address, user, IP, token…).
+- **Backup tables.**
+- **Dependent objects:** views that read an excluded relation or call a function, and the sequences of excluded tables.
+
+**What is never restored:**
+- functions, triggers, RLS policies and publications;
+- foreign keys to relations that are not copied.
+
+**How it runs:**
+1. `pg_dump -Fc` reads the source and writes the dump outside the repo, to `../backups/pilar2b/`.
+2. The dump is restored into the target's `public` schema in one transaction. That schema must hold no relations of its own.
+3. Every restored relation is moved to `pilar2b`. That schema must be empty unless `--replace` is given.
+4. One row per table goes to `engine.load_log`, with the dump's sha256.
+
+**First copy (2026-10-05):**
+- 44 tables and 12 views, 2,386,459 rows; the dump is 409 MB, with sha256 `586e1065…96815`.
+- The largest table is `municipality_timeseries`: 2,238,069 rows, 103 variables, 2008–2024, from IBGE Census 2022, PPM, PAM 1612/1613 and SNIS.
+- Other tables include `municipality_cp2b_potential` (32,895, CP2b v5.1 levels), `infrastructure_features` (50,564), `cp2b_spatial_fl` (18,216), `residue_streams_sp2023`, `cp2b_parameters` (150), references and the IBGE input–output matrix.
+
+**Caveats:**
+- **CRS.** Geometries are in EPSG:4326, as PILAR-2b stores them. The EPSG:4674 rule applies to the engine's own tables; reproject on use.
+- **`created_by`.** In `technology_cards` and `validation_plants` this column is an opaque id. Its foreign key to the users table is dropped, and the column is empty in this copy.
+- **Source.** This copy mirrors the NewLook stack, not a released PILAR-2b version. Cite `pilar2b_platform_db`, and never write back to the source.

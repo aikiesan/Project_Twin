@@ -10,7 +10,7 @@ id,project,location,uf,feedstock,capacity_value,capacity_unit,capacity_basis,inv
 9,BP Bioenergy Tropical,Edéia,GO,vinasse,67000,Nm3/d,unclear,275.8,244.9,2026,construction (2027),jornalcana; cnnbrasil; novacana,S,
 10,Bioo Paraná,Toledo,PR,agro-industrial residues,11000000,m3/yr,annual,196,148.5,2026,construction,cenarioenergia; canaonline,S,Includes food-grade CO2 + fertilizer
 11,Geo bio gas&carbon Tamboara (expansion),Tamboara,PR,sugarcane residues,1500,Nm3/h,nominal,41,37.6,2024,expansion,dgabc; agenciagov; eixos,S,Expansion only
-12,Solví São Leopoldo,São Leopoldo,RS,landfill gas,36700,m3/d,nominal,95.4,76.4,2026,operating (Aug 2026),cenarioenergia; agenciainfra,S/D,Total derived from 80.1% share
+12,Solví São Leopoldo,São Leopoldo,RS,landfill gas,36700,m3/d,nominal,95.4,76.4,2026,operating (Aug 2026),cenarioenergia; agenciainfra,D,Total derived from 80.1% share; inputs are S-level (flag was S/D)
 13,Gás Verde Ecoparque Pernambuco,Igarassu,PE,landfill gas,45600,m3/d,nominal,90.2,72.2,2026,construction,movimentoeconomico.com.br,S,
 14,Atvos,Nova Alvorada do Sul,MS,vinasse + filter cake,28300000,m3/yr,annual,350,,2025-2026,construction,novacana; correiodoestado; semadesc.ms.gov.br,S,
 15,Adecoagro Ivinhema (expansion),Ivinhema,MS,vinasse,30000,Nm3/d,unclear (new vs total),225.7,,2027,planned,canalrural; biosulms,S,

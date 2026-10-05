@@ -1,5 +1,7 @@
-# data (tracked by DVC, never git)
-/data/
+# data (tracked by DVC, never git) - only the small .dvc pointer files are committed
+/data/**
+!/data/*.dvc
+!/data/.gitignore
 /runs/
 /exports/*/
 !/exports/.gitkeep

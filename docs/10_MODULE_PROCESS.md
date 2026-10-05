@@ -57,3 +57,32 @@ Digester volume V = max over months of (OLR-limited, HRT-limited) requirement �
 
 ## 6. Parameters
 All in `registry/parameters.csv` (module = process). Most are **S/K** — verify before results.
+
+## 7. Implementation status (v0, 2026-10-05)
+
+Module: `engine.process.mass_balance`. It is the process step of the walking skeleton (ADR-0010). Tests: `tests/test_process_mass_balance.py`.
+
+**Implemented (§2.1–2.4)**
+- `Substrate` on a VS basis (BMP × full-scale factor × first-order completion) or a COD basis (vinasse).
+- `simulate()`, month by month: CH₄ → biogas → biomethane. Output is capped at the upgrading nameplate; the excess is reported as `biomethane_curtailed_nm3`. Capacity factor is reported per month.
+- Monthly checks with three states (True, False, or None = not evaluable): OLR, HRT, feed TS, COD/SO₄ and potassium. `feasible` is true when every evaluable check passes.
+- `size_digester()`: the volume that meets OLR and HRT in the worst month.
+- `substrates_from_registry()` and `limits_from_registry()` build vinasse, filter cake and the limits from central values. Each substrate records the parameter ids it used.
+
+**v0 assumptions, stated in code**
+- **Density:** fresh-matter density is 1.0 t/m³ for every substrate. The registry has no density row; it is an explicit argument of `substrates_from_registry()`.
+- **Minimum HRT:** the low end of `hrt_cstr` (20 d) is the minimum, and the central value (30 d) is treated as typical.
+- **TS check:** it uses feed TS against 12 %, the upper end of §2.3. This is conservative, because digestion lowers TS.
+- **Biogas CH₄ fraction:** `x_ch4` is a required input of `PlantDesign`. There is no registry row yet; §2.2 gives 0.55–0.65.
+- **Mixed feeds:** COD/SO₄ and K are not evaluable when any fed substrate lacks those values, for example filter cake alongside vinasse.
+
+**Not yet implemented:** the heat balance, electricity use, digestate N/P/K, H₂S load, filter-cake storage losses (φ_store, which waits on E1) and the ammonia check (no TAN content per substrate). Strategies S0–S5 are Phase 2.
+
+**Registry gaps** (`REGISTRY_GAPS` in the module) block straw and manure:
+- **Straw:** the VS fraction of recovered straw is missing (`straw_gen` is in kg DM per t cane).
+- **Manure:** TS and VS per tonne of fresh manure are missing, per species (`b0_*` is per kg VS).
+- **Gas and checks:** `x_ch4`, density and TAN content per substrate.
+
+**Volpi et al. 2021:** `test_volpi_2021_consistency` only checks the two values recorded in §5 (maximum OLR 4.8 g VS/L·d, about 230 NmL CH₄/g VS). A full reproduction needs the paper's feed composition and HRT, so the paper is now on the verification list.
+
+**Internal registry conflict found while building v0 (docs/21 C12):** filter cake TS 28 % × VS 74 % × BMP 220 NL/kg VS gives 45.6 Nm³ CH₄ per t FM. That is below the registry's own `fc_ch4_fm` range of 50–58 (central 54). Off-season strategy S1 depends on this value; resolve it during verification, never by tuning.

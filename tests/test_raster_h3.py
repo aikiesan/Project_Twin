@@ -44,11 +44,15 @@ def test_row_area_matches_hand_formula():
     assert a == pytest.approx(12_364.7, rel=1e-3)  # ≈ (111.2 m)²
 
 
-def test_sphere_vs_ellipsoid_close_at_sp_latitude():
+def test_sphere_overstates_pixel_area_at_sp_latitude():
     sph = row_areas_geographic_m2(-21.0, 0.00025, 0.00025, 10)
     ell = row_areas_geographic_m2(-21.0, 0.00025, 0.00025, 10, geodesic=True)
-    # authalic sphere vs GRS80 at ~21°S: differences well under 1 %
-    assert np.allclose(sph, ell, rtol=1e-2)
+    # The authalic sphere keeps Earth's total area, not local pixel area: at 21°S it overstates
+    # by ~0.28 % (0.20-0.30 % across SP). On the 2024 SP clip this made cane area +0.27 % vs the
+    # MapBiomas Col. 10 statistics, and --geodesic matched them to +0.000 %. The pipeline uses
+    # --geodesic (dvc.yaml cane_area_h3); this test pins the size of the bias.
+    ratio = sph / ell
+    assert np.all((ratio > 1.0025) & (ratio < 1.0030))
 
 
 def test_geographic_total_area_conserved(tmp_path):

@@ -25,7 +25,7 @@ stages:
     foreach: ${years}
     do:
       cmd: python -m engine.supply.raster_h3 data/raw/mapbiomas_col10_coverage_sp/mapbiomas_sp_${item}.tif
-        --year ${item} --res 8 ${mapbiomas.cane_code_args}
+        --year ${item} --res 8 --geodesic ${mapbiomas.cane_code_args}
         --out data/interim/cane_area_h3/cane_area_h3_${item}.parquet
       deps:
         - data/raw/mapbiomas_col10_coverage_sp/mapbiomas_sp_${item}.tif

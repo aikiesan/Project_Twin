@@ -22,8 +22,8 @@ WITH_SECOND_CROP=1 bash scripts/ingest/import_local_sources.sh /a/Pilar-2b   # +
 | `mapbiomas_infra/` | `…/backend/data/shapefiles/mapbiomas_infra/` | gas distribution, state highways |
 | `cp2b_project_map/` | `…/backend/data/shapefiles/project_map_source/data/` | CP2B `project_map` layers: SP 2024 municipalities, gas pipelines, urban areas, … |
 | `ibge_pam_seade/` | `…/00_Fontes_Primarias/PAM_1612_1613/`, `…/Agro_PAM_CONAB/` | IBGE PAM tables (sub-folders kept) |
-| `cp2b_results_sicar/` | `00_Fontes_Primarias-…/CP2B_Results-*/CP2B_Results/` | CP2B internal results |
-| `cp2b_gee_exports/` | `00_Fontes_Primarias-…/GEE_Exports-*/GEE_Exports/` | every export part is copied (there are two); provenance to be documented |
+| `cp2b_results_sicar/` → `data/private/` | `00_Fontes_Primarias-…/CP2B_Results-*/CP2B_Results/` | CP2B internal results |
+| `cp2b_gee_exports/` → `data/private/` | `00_Fontes_Primarias-…/GEE_Exports-*/GEE_Exports/` | every export part is copied (there are two); provenance in registry notes |
 | `pilar2b_fde/` | `fde_residue_availability.csv`, `…/backend/data/FDE_Disponibilidade_Residuos_CP2B.xlsx` | FDE availability factors |
 | `pilar2b_canonical_parameters/` | `cp2b-workspace/NewLook/data/canonical_parameters/` | `feedstocks.yaml`, BMP corpus, SP totals |
 | `pilar2b_residue_streams_sp/` | `analysis/data/00–04` (SP files only) | municipal residue streams 2023 |

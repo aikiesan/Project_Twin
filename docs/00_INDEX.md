@@ -48,6 +48,7 @@
 | 23 | [References](23_REFERENCES.md) |
 | 24 | [Four-month plan — two drafts to merge](plan_drafts/README.md) (5 Oct 2026 – 5 Feb 2027) |
 | 25 | [Survey of data held on the project PC](25_LOCAL_HOLDINGS_SURVEY.md) (what was imported, what stays out and why) |
+| 26 | [Project viewer](26_PROJECT_VIEWER.md) (local web page: datasets, map, project flow, progress) |
 | 99 | [Session notes — how we got here](99_SESSION_NOTES.md) |
 
 ## G. Raw material

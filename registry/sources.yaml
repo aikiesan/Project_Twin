@@ -834,7 +834,7 @@ sources:
     license: none stated (CP2B internal)
     status: have
     confidence: K
-    local_path: data/raw/cp2b_results_sicar/
+    local_path: data/private/cp2b_results_sicar/
     sha256: a582d56b7461990c4edda4382107f41511315ddbad39acc3c40bd717ccaa2620   # 17 files, 111 MB
     accessed: '2026-10-04'
     notes: >-
@@ -854,14 +854,20 @@ sources:
     license: none stated (CP2B internal)
     status: have
     confidence: K
-    local_path: data/raw/cp2b_gee_exports/
+    local_path: data/private/cp2b_gee_exports/
     sha256: 0df9001e35dfae51a0394815e3d4a7750de4e957bb1fd67cf8960da4ed95f20e   # 23 files, 15.7 MB
     accessed: '2026-10-04'
     notes: >-
       From the two Drive export parts GEE_Exports-…121724Z (pig farms) and …121725Z (poultry,
-      complete farms, web GeoJSON, Tmax CSVs). How the farm points were made, and the source of
-      the Tmax grid, are not documented: ask the author before use. Farm-level locations: aggregate
-      before export.
+      complete farms, web GeoJSON, Tmax CSVs). Provenance traced 2026-10-04: the farm table
+      (farm_id, lat/lon, municipio, plantel, potencial_mwh, tipo_animal, regiao) was prepared by
+      Lucas (CP2B) in a local notebook ("farms_for_gee.csv") from two registry reports of pig and
+      poultry farms delivered to UNICAMP (issuing agency not recorded; possibly CDA-SP/GEDAVE), then
+      uploaded to Earth Engine and exported (DBF date 2025-09-22). The Earth Engine script itself
+      was not found (probably only in the Code Editor). The upstream reports hold addresses and
+      contacts, so this folder is kept in data/private/ (ADR-0009). The Tmax CSVs are empty
+      (header only): no Tmax grid exists. potencial_ is potencial_mwh truncated by the shapefile
+      format; its method is not documented. Aggregate before any export.
   - id: pilar2b_canonical_parameters
     name: PILAR-2b canonical parameters — feedstocks.yaml, BMP corpus, references, SP totals
     publisher: CP2B / NIPE-UNICAMP (PILAR-2b)
@@ -923,7 +929,7 @@ sources:
   # ---------------- HELD LOCALLY — other local folders, imported 2026-10-04 ----------------
   # Copied by `python -m engine.ingest.local_import scripts/ingest/local_holdings.yaml`; origin
   # paths, bytes and per-file sha256 in data/interim/import_local_holdings_log.tsv. sha256 below is
-  # the folder digest (engine.ingest.inventory.sha256_tree). Survey: docs/24_LOCAL_HOLDINGS_SURVEY.md.
+  # the folder digest (engine.ingest.inventory.sha256_tree). Survey: docs/25_LOCAL_HOLDINGS_SURVEY.md.
   - id: cp2b_redu_v2
     name: CP2B / PILAR-2b São Paulo dataset v2.0 — residue BMP/TS/VS, availability factors, CH4 by municipality and stream, provenance
     publisher: CP2B / NIPE-UNICAMP (Cerejo, Lamparelli, Moraes, Aguiar 2026), deposited in REDU (Unicamp Dataverse)
@@ -1102,3 +1108,28 @@ sources:
       From A:/ILUC_NIPE (public LAPIG tables used in the ABIOVE ILUC work). URL from
       README_DICIONARIO_PIPELINE.md there. Classes Ausente / Intermediário / Severo. geocod_mun is
       a float (e.g. 5100201.0): cast to int.
+  - id: abiove_lulc_area_series_sp_rgint
+    name: Land-use area series 2008-2024 per SP intermediate region (11 RGINT), 15 LULC classes, all public sources side by side
+    publisher: NIPE-UNICAMP, ABIOVE Biocombustíveis 2026 project (compiling MapBiomas col. 10, LAPIG, PAM/IBGE, Conab, TerraClass)
+    url: local
+    module: supply
+    provides: [area_ha_by_lulc_class_15, mapbiomas_col10_level2_area_ha, pam_area_ha, lapig_pasture_vigour_ha, conab_uf_area_ha]
+    spatial: IBGE intermediate geographic region (RGINT 2017), SP 3501-3511
+    temporal: 2008-2024 (MapBiomas 15-class harmonised series 2008-2023)
+    format: XLSX (sheet tidy_todas_fontes is long format; one sheet per source)
+    access: restricted
+    license: none stated; team confirmed reuse 2026-10-04 (underlying series are public)
+    status: have
+    confidence: D
+    local_path: data/raw/abiove_lulc_area_series_sp_rgint/
+    sha256: 6339dbab7418c9a903bd265039c6e5956d6713e96802757a2387ff37179482f0   # 11 files, 1.0 MB
+    accessed: '2026-10-04'
+    notes: >-
+      From A:/ILUC_NIPE ENTREGA_PRODUTO_P1/01_Bases_de_dados_multifontes (*_35??_classes_multifonte.xlsx).
+      Team decision 2026-10-04: the MapBiomas-based ABIOVE tables are reusable; the HARVEX-branded
+      transition matrices (03_Matrizes_Transicao_FINAL) and any HARVEX/JOEL indicator are discarded
+      and not imported. Caveats from each file's NOTAS sheet: the harmonised 15-class series
+      (is_canonica=1) under-estimates pasture (classes 7-9) and the soy split (2/3); CONAB rows are
+      UF scale and must not be summed with RGINT rows; PAM maize is 1st+2nd crop combined; no
+      TerraClass for São Paulo and São José dos Campos. Units ha. Use for land-use context and
+      cross-checks, not as a primary MapBiomas source (cite MapBiomas col. 10 directly).

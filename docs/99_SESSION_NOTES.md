@@ -136,3 +136,25 @@ Next technical steps:
 - Move `FONTES.md` (Atlas SP 2020 factors) into `parameters.csv` as S rows, then verify against the pages.
 - Use the 30 m MapBiomas 2024 raster (1.16 GB, in `07_DADOS_GIS_BASE`) to replace the 90 m screening raster.
 - Registry validator: 0 errors since the fix in PR #1 (publishers filled).
+
+## 2026-10-05 — decisions answered, private data split, project viewer
+User decisions:
+1. **Backup.** Manual dated zips go into two private Google Drive folders: `Project_Twin_DVC` and `Project_Twin_DVC_private`. No DVC remote is configured (ADR-0009). The first zips are in `A:\Project_Twin\backups\`, with their sha256 values in `SHA256SUMS.txt`.
+2. **ABIOVE is reusable; HARVEX and JOEL are discarded.**
+   - Imported `abiove_lulc_area_series_sp_rgint`: MapBiomas-based area series for the 11 SP RGINTs, 2008–2024.
+   - The HARVEX-branded matrices were not imported.
+   - `joel` was added to the importer's deny list.
+3. **GEE farm points.** The data was built by Lucas in `A:\Validacao_de_Dados_Cp2b\Dados_Suinocultura_Avicultura.ipynb`, from registry reports with addresses and contacts. The Earth Engine script itself was not found. The Tmax CSVs are empty.
+   - `cp2b_gee_exports` and `cp2b_results_sicar` now live in `data/private/`, tracked by `data/private.dvc`.
+4. **GitHub App.** Install it later. For now, work locally.
+
+Other changes:
+- **CI.** CI is pinned to Python 3.11, because Python 3.12 resolves arviz 1.x and `test_capex_hier` breaks.
+  - PR #2 merged into `chore/local-setup`, because it was stacked on PR #1. PR #3 brings it into `main`.
+  - Lesson: don't stack PRs, or retarget them to `main` before merging.
+- **Project viewer.** `uv run python -m engine.viz --serve` serves it at http://127.0.0.1:8765 (docs/26). It shows the datasets, a map of 20 layers, the project flow and progress. Roadmap boxes that are actually done are now ticked in docs/19.
+
+Next:
+- A GitHub Pages catalogue (registry only) once the user wants it public.
+- Restore the PILAR-2b dump. The schemas exist but are empty.
+- The ANP comparison, `FONTES.md` factors and the 30 m MapBiomas raster, as listed above.

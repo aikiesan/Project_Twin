@@ -2,7 +2,7 @@
 
 | File | Content | Key |
 |---|---|---|
-| `sources.yaml` | 100 datasets/documents: URL, granularity, access, status (`have/get/lai/paid/build`), confidence | `id` |
+| `sources.yaml` | 101 datasets/documents: URL, granularity, access, status (`have/get/lai/paid/build`), confidence | `id` |
 | `parameters.csv` | 60 model parameters: central, low, high, unit, source, confidence, notes | `id` |
 | `projects_capex.csv` | 20 Brazilian biomethane projects: capacity (+ basis), investment, BNDES, year, status | `id` |
 

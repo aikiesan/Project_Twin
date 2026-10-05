@@ -1,0 +1,194 @@
+# Map layers for the local viewer (python -m engine.viz). Paths are relative to the repo root.
+# Every layer names its registry source_id (CLAUDE.md rule 3). Layers under data/private/ are
+# marked private: true and are dropped by --no-private (never publish those).
+#
+# kind: vector   any OGR-readable file (zips via /vsizip/); optional clip_sp, simplify (degrees)
+# kind: points   CSV with lat/lon columns; optional filter {column: value}
+# kind: choropleth  municipal polygons (geometry) joined to a CSV/attribute value
+#
+# Colours are only display choices.
+
+sp_boundary: data/raw/cp2b_project_map/shapefile/Limite_SP.shp
+
+layers:
+  # ---------------- supply ----------------
+  - id: ch4_real_municipality
+    title: "CH₄ potential, real (m³/yr) — CP2B REDU v2"
+    group: Supply
+    source_id: cp2b_redu_v2
+    kind: choropleth
+    geometry: data/raw/ibge_malha_municipal_sp_2025/SP_Municipios_2025.shp
+    geometry_key: CD_MUN
+    table: data/raw/cp2b_redu_v2/01_DATABASE-1/01_DATABASE/municipalities.csv
+    table_key: ibge_code
+    value: ch4_real_m3_year
+    label: municipality_name
+    unit: m³ CH₄/yr
+    simplify: 0.002
+    visible: true
+  - id: conab_mills_2025
+    title: Sugar/ethanol mills, active 2025 — Conab
+    group: Supply
+    source_id: conab_mills_2025
+    kind: vector
+    path: /vsizip/data/raw/conab_mills_2025/UNIDADE_PRODUCAO_ETANOL_ACUCAR_BR_ATIVAS_2025.zip
+    clip_sp: true
+    color: "#c2410c"
+    visible: true
+  - id: ethanol_plants_epe
+    title: Ethanol plants with capacities — EPE WebMap
+    group: Supply
+    source_id: anp_mapa_ethanol_biodiesel_plants
+    kind: points
+    path: data/raw/anp_mapa_ethanol_biodiesel_plants/Plantas de etanol.csv
+    sep: ";"
+    lat: Latitude
+    lon: Longitude
+    filter: {UF: SP}
+    color: "#ea580c"
+  - id: biogas_plants_sp
+    title: Biogas plants (CP2B project map)
+    group: Supply
+    source_id: cp2b_project_map
+    kind: vector
+    path: data/raw/cp2b_project_map/shapefile/Plantas_Biogas_SP.shp
+    color: "#16a34a"
+  - id: etes_2019
+    title: Sewage treatment plants 2019 (ANA)
+    group: Supply
+    source_id: cp2b_project_map
+    kind: vector
+    path: data/raw/cp2b_project_map/shapefile/ETEs_2019_SP.shp
+    color: "#0891b2"
+  - id: slaughterhouses
+    title: Slaughterhouses (SIF) — MapBiomas infra
+    group: Supply
+    source_id: mapbiomas_infra
+    kind: vector
+    path: data/raw/mapbiomas_infra/structure_slaughterhouse/frigorificos.shp
+    clip_sp: true
+    color: "#9f1239"
+  - id: ictem_2023
+    title: "Sewage index ICTEM 2023 — CETESB"
+    group: Supply
+    source_id: cetesb_ictem_2023
+    kind: choropleth
+    geometry: /vsizip/data/raw/cetesb_ictem_2023/VWM_ICTEM_CETESB_2023_POL.zip
+    value: Ictem
+    label: Nome
+    unit: ICTEM (0–10)
+    simplify: 0.002
+  - id: farms_gee
+    title: Pig & poultry farm points (CP2B, private)
+    group: Supply
+    source_id: cp2b_gee_exports
+    kind: vector
+    path: data/private/cp2b_gee_exports/sao_paulo_farms_complete.shp
+    encoding: latin1
+    color: "#a16207"
+    private: true
+
+  # ---------------- gas & power infrastructure ----------------
+  - id: gas_transport
+    title: Gas transport pipelines
+    group: Infrastructure
+    source_id: cp2b_project_map
+    kind: vector
+    path: data/raw/cp2b_project_map/shapefile/Gasodutos_Transporte_SP.shp
+    simplify: 0.0005
+    color: "#7c3aed"
+    weight: 3
+    visible: true
+  - id: gas_distribution
+    title: Gas distribution network
+    group: Infrastructure
+    source_id: cp2b_project_map
+    kind: vector
+    path: data/raw/cp2b_project_map/shapefile/Gasodutos_Distribuicao_SP.shp
+    simplify: 0.0005
+    color: "#a78bfa"
+    weight: 1.5
+  - id: city_gates
+    title: Gas delivery points (city gates)
+    group: Infrastructure
+    source_id: mapbiomas_infra
+    kind: vector
+    path: data/raw/mapbiomas_infra/structure_gas_delivery_point/PONTOS_ENTREGA.shp
+    clip_sp: true
+    color: "#6d28d9"
+  - id: compression_stations
+    title: Gas compression stations
+    group: Infrastructure
+    source_id: mapbiomas_infra
+    kind: vector
+    path: data/raw/mapbiomas_infra/structure_compression_station/estacao_compressao.shp
+    clip_sp: true
+    color: "#4c1d95"
+  - id: substations
+    title: Power substations
+    group: Infrastructure
+    source_id: cp2b_project_map
+    kind: vector
+    path: data/raw/cp2b_project_map/shapefile/Subestacoes_Energia.shp
+    color: "#ca8a04"
+  - id: transmission_lines
+    title: Power transmission lines
+    group: Infrastructure
+    source_id: cp2b_project_map
+    kind: vector
+    path: data/raw/cp2b_project_map/shapefile/Linhas_De_Transmissao_Energia.shp
+    simplify: 0.0005
+    color: "#eab308"
+    weight: 1.5
+  - id: state_highways
+    title: State highways
+    group: Infrastructure
+    source_id: cp2b_project_map
+    kind: vector
+    path: data/raw/cp2b_project_map/shapefile/Rodovias_Estaduais_SP.shp
+    simplify: 0.001
+    color: "#64748b"
+    weight: 1
+  - id: railways
+    title: Railways — GeoSEADE
+    group: Infrastructure
+    source_id: seade_geo_ambiente_transporte
+    kind: vector
+    path: /vsizip/data/raw/seade_geo_ambiente_transporte/transporte_ferrovias.zip
+    simplify: 0.0005
+    color: "#334155"
+    weight: 1.5
+
+  # ---------------- constraints ----------------
+  - id: indigenous_lands
+    title: Indigenous lands — GeoSEADE (Funai)
+    group: Constraints
+    source_id: seade_geo_ambiente_transporte
+    kind: vector
+    path: /vsizip/data/raw/seade_geo_ambiente_transporte/ambiente_terras_indigenas.zip
+    simplify: 0.0005
+    color: "#b91c1c"
+  - id: protected_state_pi
+    title: State protected areas, strict (PI) — GeoSEADE
+    group: Constraints
+    source_id: seade_geo_ambiente_transporte
+    kind: vector
+    path: /vsizip/data/raw/seade_geo_ambiente_transporte/ambiente_unid_conservacao_estadual_pi.zip
+    simplify: 0.0005
+    color: "#15803d"
+  - id: protected_federal_pi
+    title: Federal protected areas, strict (PI) — GeoSEADE
+    group: Constraints
+    source_id: seade_geo_ambiente_transporte
+    kind: vector
+    path: /vsizip/data/raw/seade_geo_ambiente_transporte/ambiente_unid_conservacao_federal_pi.zip
+    simplify: 0.0005
+    color: "#166534"
+  - id: urban_areas
+    title: Urban areas
+    group: Constraints
+    source_id: cp2b_project_map
+    kind: vector
+    path: data/raw/cp2b_project_map/shapefile/Areas_Urbanas_SP.shp
+    simplify: 0.002
+    color: "#78716c"

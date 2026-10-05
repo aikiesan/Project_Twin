@@ -29,5 +29,26 @@ services:
     working_dir: /work
     depends_on:
       db: { condition: service_healthy }
+  # Project viewer (docs/26): builds exports/viewer/ from the read-only repo + data/ and serves it.
+  # Bound to 127.0.0.1 only: the default build includes data/private layers (CLAUDE.md rule 6).
+  viewer:
+    build: .
+    command: >
+      /opt/venv/bin/python -m engine.viz --serve --host 0.0.0.0 --port 8765 --no-prs
+    ports: ["127.0.0.1:8765:8765"]
+    environment:
+      DATABASE_URL: postgresql://engine:${PGPASSWORD:-change-me}@db:5432/engine
+      PYTHONDONTWRITEBYTECODE: "1"
+      # the bind-mounted checkout is owned by another user; let git read it
+      GIT_CONFIG_COUNT: "1"
+      GIT_CONFIG_KEY_0: safe.directory
+      GIT_CONFIG_VALUE_0: /work
+    volumes:
+      - .:/work:ro
+      - ./data:/work/data:ro
+      - ./exports/viewer:/work/exports/viewer
+    working_dir: /work
+    depends_on:
+      db: { condition: service_healthy, required: false }
 volumes:
   pgdata: {}

@@ -1,0 +1,13 @@
+# The image only needs pyproject.toml, uv.lock, README.md and src/ (see Dockerfile).
+# Keep data, credentials and host environments out of the build context.
+.git
+.env
+*.env
+.venv
+.dvc/cache
+.dvc/tmp
+data
+exports
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache

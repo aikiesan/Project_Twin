@@ -5,6 +5,7 @@
 # kind: vector   any OGR-readable file (zips via /vsizip/); optional clip_sp, simplify (degrees)
 # kind: points   CSV with lat/lon columns; optional filter {column: value}
 # kind: choropleth  municipal polygons (geometry) joined to a CSV/attribute value
+# db_layer: optional table-name part for engine.ingest.load_postgis (default: the file stem)
 #
 # Colours are only display choices.
 
@@ -32,6 +33,7 @@ layers:
     source_id: conab_mills_2025
     kind: vector
     path: /vsizip/data/raw/conab_mills_2025/UNIDADE_PRODUCAO_ETANOL_ACUCAR_BR_ATIVAS_2025.zip
+    db_layer: unidades_etanol_acucar_ativas_2025
     clip_sp: true
     color: "#c2410c"
     visible: true
@@ -174,6 +176,7 @@ layers:
     source_id: seade_geo_ambiente_transporte
     kind: vector
     path: /vsizip/data/raw/seade_geo_ambiente_transporte/ambiente_unid_conservacao_estadual_pi.zip
+    db_layer: ambiente_uc_estadual_pi
     simplify: 0.0005
     color: "#15803d"
   - id: protected_federal_pi
@@ -182,6 +185,7 @@ layers:
     source_id: seade_geo_ambiente_transporte
     kind: vector
     path: /vsizip/data/raw/seade_geo_ambiente_transporte/ambiente_unid_conservacao_federal_pi.zip
+    db_layer: ambiente_uc_federal_pi
     simplify: 0.0005
     color: "#166534"
   - id: urban_areas

@@ -158,3 +158,52 @@ Next:
 - A GitHub Pages catalogue (registry only) once the user wants it public.
 - Restore the PILAR-2b dump. The schemas exist but are empty.
 - The ANP comparison, `FONTES.md` factors and the 30 m MapBiomas raster, as listed above.
+
+## 2026-10-05 (day) — UNICAMP desktop set up, held data loaded into PostGIS, viewer in Docker
+Machine: the UNICAMP desktop (Windows 11 Pro, 20 CPUs, 32 GB RAM for Docker Desktop 28.4), following `docs/handoffs/2026-10-05_unicamp_desktop_setup.md` (PR #5).
+- **Paths.** The repository is at `C:\Users\Lucas\Documents\Project_Twin\Project_Twin`, outside OneDrive. The Drive backup zips sit next to it, in `C:\Users\Lucas\Documents\Project_Twin\drive-download-20261005T112909Z-1-001\`.
+- **Tools.** Git 2.53 and Docker Desktop were already installed. uv 0.12 was installed with winget, and DVC with `uv tool install dvc`. gh is not installed: git commands are run by hand.
+- **Checks.** All tests pass on Python 3.11, and the registry validator reports 0 errors.
+
+### Data restored from the backup zips
+- Both zips match the sizes and sha256 values in ADR-0009 and `SHA256SUMS.txt`. The `raw.dvc` and `private.dvc` files in the zips are identical to the ones in git.
+- Extracted into `data/`:
+  - `data/raw`: 370 files, 478 MB;
+  - `data/private`: 40 files, 127 MB.
+- After `dvc commit -f`, `git diff` is empty and `dvc status` reports "up to date". `data/interim`, `data/processed` and `data/routing` were created.
+- **Pitfall:** Git Bash's `unzip` mangled 3 accented file names (`Território`, `São Paulo`, `Termelétricas`). The sizes stayed the same, but the DVC hash of `data/raw` changed. Re-extracting with Python's `zipfile` fixed it. Never use `unzip` for these backups.
+
+### PostGIS
+- `.env` was created with a new local `PGPASSWORD` and `DATABASE_URL` (not committed).
+- `docker compose up -d db` is healthy on port 5433, with PostGIS 3.4.
+- A separate `cp2b-db-dev` container (database `cp2b_maps`, port 5432, stopped) exists on this PC. It is not PILAR-2b and was not opened.
+
+### New in this change: `engine.ingest.load_postgis`
+- The loader, its config (`postgis_tables.yaml`), 18 tests and docs/27 are new.
+- **Loaded:** 41 tables, 184,551 rows, 0 failures, each with a row in `engine.load_log`.
+  - **`engine`:** 39 tables, 31 of them with geometry (EPSG:4674, GiST).
+  - **`private`:** 2 tables, the farm points (29,773 rows) and the ABIOVE series (7,943 rows). ABIOVE is `access: restricted`. The schema is revoked from PUBLIC.
+  - The largest are LAPIG SP (40,273), urban areas (36,916), MapBiomas state highways (32,910) and the farm points.
+- **Fixed during the first run:** geoalchemy2's automatic index names went over 63 bytes for long table names. Tables are now written to a short staging name and renamed.
+- **Idempotency checked:** a rerun skips all 41 tables.
+- **`layers.yaml`:** 3 `db_layer` overrides keep the table names readable.
+
+### Viewer in Docker
+- **CLI:** `python -m engine.viz` has a `--host` option. The default stays `127.0.0.1`.
+- **Overview tab:** a new Database card (schemas, tables and row counts from `engine.load_log`). If the database is unreachable, the card shows the error and the page still builds.
+- **Compose:** a new `viewer` service.
+  - The repository and `data/` are mounted read-only, and only `exports/viewer/` is writable.
+  - It is published on **127.0.0.1:8765 only**, because the build includes private layers.
+- **Dockerfile:** the venv moved to `/opt/venv`, so the bind-mounted checkout does not hide it, and the `db` extra was added. A `.dockerignore` keeps `data/`, `.env`, `.venv` and `.git` out of the build context.
+- **Checked:** `docker compose up -d db viewer` builds all 20 layers with no problems. All five tabs render, and several map layers were turned on.
+
+### Not done
+- **PILAR-2b dump (Step 6):** skipped by the user's choice. `pilar2b` is empty.
+- **Load-log commit stamps:** the 41 tables were loaded before the commit, so `engine_commit` reads `d653c50+dirty`. Rerun with `--force` after merging to stamp the merged commit.
+
+Next:
+1. Restore the PILAR-2b dump into `pilar2b` (docs/19 Phase 0).
+2. Views with unit-suffixed columns on top of the raw tables (for example ANP capacity in Nm³/d, after the reference-condition check).
+3. The earlier backlog: the ANP comparison, `FONTES.md` factors and the 30 m MapBiomas raster.
+4. A new backup zip is needed only after a PR that changes `data/*.dvc`. This one does not.
+5. On the project PC, run `uv self update` before `uv sync`: uv 0.12 rewrote `uv.lock` in lock revision 5, and older uv releases may not read it.

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -246,6 +247,47 @@ def parameters_summary(repo: Path) -> dict:
     }
 
 
+def database_status(url: str | None, *, include_private: bool = True) -> dict:
+    """Schemas and loaded tables from ``engine.load_log`` (docs/27).
+
+    Returns ``{"configured": False}`` without a URL and ``{"configured": True, "error": ...}``
+    when the database cannot be read: the viewer must still build. Tables in schema ``private``
+    are left out when ``include_private`` is false.
+    """
+    if not url:
+        return {"configured": False}
+    try:
+        from sqlalchemy import create_engine, text
+
+        db = create_engine(url, connect_args={"connect_timeout": 3})
+        with db.connect() as conn:
+            schemas = [
+                r[0]
+                for r in conn.execute(
+                    text(
+                        "SELECT nspname FROM pg_namespace "
+                        "WHERE nspname NOT LIKE 'pg!_%' ESCAPE '!' "
+                        "AND nspname <> 'information_schema' ORDER BY 1"
+                    )
+                )
+            ]
+            rows = conn.execute(
+                text(
+                    "SELECT table_name, source_id, n_rows, crs, loaded_at_utc, engine_commit "
+                    "FROM engine.load_log ORDER BY table_name"
+                )
+            ).mappings()
+            tables = [
+                {**r, "loaded_at_utc": r["loaded_at_utc"].strftime("%Y-%m-%d %H:%M UTC")}
+                for r in rows
+                if include_private or not r["table_name"].startswith("private.")
+            ]
+        db.dispose()
+    except Exception as exc:  # noqa: BLE001 - unreachable DB, missing driver or no load_log
+        return {"configured": True, "error": f"{type(exc).__name__}: {str(exc).splitlines()[0]}"}
+    return {"configured": True, "schemas": schemas, "tables": tables}
+
+
 # --------------------------------------------------------------------------------------
 # map layers (geopandas imported lazily: the rest of the viewer works without the geo extra)
 # --------------------------------------------------------------------------------------
@@ -392,8 +434,12 @@ def build(
     include_private: bool = True,
     with_layers: bool = True,
     with_prs: bool = True,
+    database_url: str | None = None,
 ) -> dict:
-    """Write ``index.html``, ``data.json`` and ``layers/`` to ``out``; returns the data dict."""
+    """Write ``index.html``, ``data.json`` and ``layers/`` to ``out``; returns the data dict.
+
+    ``database_url`` defaults to ``$DATABASE_URL``; without one the Database card is omitted.
+    """
     repo = repo.resolve()
     out.mkdir(parents=True, exist_ok=True)
     entries = yaml.safe_load((repo / "registry" / "sources.yaml").read_text(encoding="utf-8"))
@@ -445,6 +491,9 @@ def build(
         "pull_requests": pull_requests(repo) if with_prs else [],
         "layers": [layer.__dict__ for layer in layers],
         "layer_problems": problems,
+        "database": database_status(
+            database_url or os.environ.get("DATABASE_URL"), include_private=include_private
+        ),
     }
     (out / "data.json").write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
     shutil.copyfile(PACKAGE_DIR / "index.html", out / "index.html")

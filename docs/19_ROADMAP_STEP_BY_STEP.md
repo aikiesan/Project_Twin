@@ -12,8 +12,9 @@ Tick boxes as you go. Each phase ends with a **gate** — don't move on until it
 - [x] `uv` project, `pyproject.toml`, pre-commit (ruff, black, nbstripout)
 - [x] DVC initialized; choose remote(s) — public-safe + private — manual Drive zips for now (ADR-0009)
 - [x] `docker-compose.yml` with PostGIS (port 5433) + Jupyter
-- [ ] Restore PILAR-2b dump into schema `pilar2b`; create schema `engine` — schemas exist (2026-10-04), both still empty: dump not restored
+- [ ] Restore PILAR-2b dump into schema `pilar2b`; create schema `engine` — schemas exist (2026-10-04); `engine` holds the raw tables since 2026-10-05, `pilar2b` is still empty: dump not restored
 - [x] Copy `feedstocks.yaml`, ANP `05c`/`05e` into `data/raw/pilar2b/` — as `pilar2b_canonical_parameters/` and `anp_biomethane_plants/`
+- [x] Load the held datasets into PostGIS (`python -m engine.ingest.load_postgis`, docs/27) — 41 tables, 184,551 rows, private data in schema `private` (2026-10-05)
 - [x] Register all **already-held** CP2B datasets in `registry/sources.yaml` (`status: have`, provenance) — 101 sources (2026-10-04); see docs/25
 
 ### Week 1 — Requests that take time (do on day 1!)

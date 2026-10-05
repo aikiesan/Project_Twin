@@ -5,6 +5,7 @@ Examples::
     uv run python -m engine.viz --serve            # build exports/viewer/ and serve :8765
     uv run python -m engine.viz --no-layers        # quick rebuild of tables only
     uv run python -m engine.viz --no-private --out exports/viewer_public  # no data/private
+    python -m engine.viz --serve --host 0.0.0.0   # inside the Docker "viewer" service
 
 The viewer needs a web server (browsers block ``fetch`` from ``file://``).
 """
@@ -30,6 +31,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     ap.add_argument("--no-prs", action="store_true", help="do not call the gh CLI")
     ap.add_argument("--serve", action="store_true", help="serve the folder after building")
     ap.add_argument("--port", type=int, default=8765)
+    ap.add_argument(
+        "--host", default="127.0.0.1", help="bind address (0.0.0.0 only inside a container)"
+    )
     args = ap.parse_args(argv)
 
     data = build(
@@ -47,8 +51,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"  layer problem: {problem}")
     if args.serve:
         handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(args.out))
-        with http.server.ThreadingHTTPServer(("127.0.0.1", args.port), handler) as httpd:
-            print(f"serving http://127.0.0.1:{args.port}/  (Ctrl+C to stop)")
+        with http.server.ThreadingHTTPServer((args.host, args.port), handler) as httpd:
+            print(f"serving http://{args.host}:{args.port}/  (Ctrl+C to stop)", flush=True)
             try:
                 httpd.serve_forever()
             except KeyboardInterrupt:

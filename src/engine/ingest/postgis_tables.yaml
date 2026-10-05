@@ -1,0 +1,74 @@
+# Key tables for `python -m engine.ingest.load_postgis` (docs/27). Every map layer in
+# src/engine/viz/layers.yaml is loaded as well; a file listed in both is loaded once.
+#
+# Each table is named engine.raw_<source_id>__<layer>. The source_id is the
+# data/raw/<source_id>/ (or data/private/<source_id>/) folder and must be in registry/sources.yaml.
+# layer defaults to the file stem, lower-cased and ASCII-folded; set it when that name is too long
+# (PostgreSQL identifiers stop at 63 bytes) or several files are concatenated.
+#
+# kind: vector  any OGR-readable file (zips via /vsizip/); reprojected to EPSG:4674
+#       points  CSV with lat/lon columns (WGS 84) -> point geometry in EPSG:4674
+#       csv     plain table; decimal_comma converts "1.234,5" text columns to numbers
+#       xlsx    one sheet of a workbook
+# paths: one or more paths/globs from the repo root. Several files are concatenated and get a
+#        _source_file column. Loader-added columns start with "_"; source columns keep their names.
+
+tables:
+  # ---------------- CP2B REDU v2 ----------------
+  - kind: csv
+    paths: [data/raw/cp2b_redu_v2/01_DATABASE-1/01_DATABASE/municipalities.csv]
+  - kind: csv
+    paths: [data/raw/cp2b_redu_v2/01_DATABASE-1/01_DATABASE/ch4_real_by_municipality_by_stream.csv]
+
+  # ---------------- ANP biomethane ----------------
+  - kind: csv
+    layer: 05c_plants_latest
+    paths: [data/raw/anp_biomethane_plants/05c_anp_biometano_plants_latest.csv]
+    text_columns: [cnpj]
+  - kind: csv
+    layer: 05e_plant_volume_monthly
+    paths: [data/raw/anp_biomethane_plants/05e_anp_biometano_plant_volume_monthly.csv]
+    text_columns: [cnpj]
+  - kind: csv
+    layer: capacidade
+    paths: [data/raw/anp_biomethane_open_data_2026_04/Biometano_DadosAbertos_CSV_Capacidade.csv]
+    decimal_comma: true
+    text_columns: [CNPJ]
+  - kind: csv
+    layer: producao
+    paths: [data/raw/anp_biomethane_open_data_2026_04/Biometano_DadosAbertos_CSV_Producao.csv]
+    decimal_comma: true
+    text_columns: [CNPJ]
+
+  # ---------------- IBGE ----------------
+  - kind: csv
+    layer: censo_2022_pop_sp
+    paths: ["data/raw/ibge_censo_2022_pop_sp/Censo 2022 - Território - São Paulo.csv"]
+    decimal_comma: true
+  - kind: vector
+    paths: [data/raw/ibge_malha_municipal_sp_2025/SP_Municipios_2025.shp]
+
+  # ---------------- CETESB ----------------
+  - kind: vector
+    paths: [/vsizip/data/raw/cetesb_ictem_2023/VWM_ICTEM_CETESB_2023_POL.zip]
+
+  # ---------------- LAPIG pasture vigour (SP rows only) ----------------
+  - kind: csv
+    layer: pasture_vigor_sp
+    paths: ["data/raw/lapig_pasture_vigor_col9/brasil_pasture_vigor_col9_s100_year=*.csv"]
+    drop_columns: ["Unnamed: 0"]   # pandas row index written by the exporter, not a source field
+    filter: {uf: SP}
+    int_columns: [geocod_mun]      # stored as float (5100201.0) in the source
+
+  # ---------------- MapBiomas infrastructure (every structure_* folder) ----------------
+  - kind: vector
+    paths: [data/raw/mapbiomas_infra/structure_*/*.shp]
+
+  # ---------------- ABIOVE SP land-use series ----------------
+  # Each workbook holds one RGINT; CONAB (UF) rows are state totals repeated in every file.
+  # Never sum escala = UF rows with escala = RGINT rows.
+  - kind: xlsx
+    layer: tidy_todas_fontes
+    paths: [data/raw/abiove_lulc_area_series_sp_rgint/*_classes_multifonte.xlsx]
+    sheet: tidy_todas_fontes
+    filename_column: {name: _rgint_code, pattern: '_(\d{4})_classes_multifonte'}

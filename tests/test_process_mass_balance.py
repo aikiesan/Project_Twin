@@ -7,6 +7,7 @@ import pytest
 
 from engine.process.mass_balance import (
     K_PER_K2O,
+    VS_SUBSTRATE_ROWS,
     OperatingLimits,
     PlantDesign,
     Substrate,
@@ -189,3 +190,63 @@ def test_registry_vinasse_yield_sits_inside_registry_volume_range():
     params = load_parameters()
     per_m3 = substrates_from_registry(params)["vinasse"].ch4_nm3(1.0, 30, 1.0)
     assert params["vin_ch4_vol"].low <= per_m3 <= params["vin_ch4_vol"].high
+
+
+@pytest.mark.parametrize("name", list(VS_SUBSTRATE_ROWS))
+def test_vs_builders_use_the_four_registry_rows(name):
+    params = load_parameters()
+    prefix, bmp_id = VS_SUBSTRATE_ROWS[name]
+    s = substrates_from_registry(params)[name]
+    assert s.basis == "vs"
+    assert s.ts_frac_fm == pytest.approx(params[f"{prefix}_ts"].central / 100)
+    assert s.vs_frac_ts == pytest.approx(params[f"{prefix}_vs_ts"].central / 100)
+    assert s.bmp_nm3_ch4_per_t_vs == params[bmp_id].central
+    assert s.ch4_frac_biogas == pytest.approx(params[f"{prefix}_ch4_pct"].central / 100)
+    assert s.param_ids == (f"{prefix}_ts", f"{prefix}_vs_ts", bmp_id, f"{prefix}_ch4_pct")
+
+
+def test_straw_values_match_feedstocks_yaml_central():
+    straw = substrates_from_registry()["straw"]
+    # feedstocks.yaml PALHA: TS 30 %, VS/TS 82 %, BMP 175 NL/kg VS, ch4_pct 55
+    assert straw.vs_t_per_t_fm == pytest.approx(0.30 * 0.82)
+    assert straw.ch4_nm3(1.0, hrt_d=30, bmp_fullscale=1.0) == pytest.approx(0.30 * 0.82 * 175)
+
+
+def test_mixed_feed_biogas_uses_each_substrate_fraction():
+    a = Substrate(**{**CAKE.__dict__, "name": "a", "ch4_frac_biogas": 0.5})
+    b = Substrate(**{**CAKE.__dict__, "name": "b", "ch4_frac_biogas": 0.6})
+    feed = _feed([("2024-06", "a", 100), ("2024-06", "b", 300)])
+    design = PlantDesign(
+        digester_volume_m3=10_000, upgrading_capacity_nm3_d=1e9, x_ch4=None, ch4_recovery_frac=1
+    )
+    row = simulate(feed, {"a": a, "b": b}, design, LIMITS).iloc[0]
+    ch4_a = a.ch4_nm3(100, 30, LIMITS.bmp_fullscale)
+    ch4_b = b.ch4_nm3(300, 30, LIMITS.bmp_fullscale)
+    assert row["ch4_nm3"] == pytest.approx(ch4_a + ch4_b)
+    assert row["biogas_nm3"] == pytest.approx(ch4_a / 0.5 + ch4_b / 0.6)
+    assert row["x_ch4_mix"] == pytest.approx((ch4_a + ch4_b) / (ch4_a / 0.5 + ch4_b / 0.6))
+
+
+def test_missing_ch4_fraction_is_refused_not_guessed():
+    design = PlantDesign(
+        digester_volume_m3=30_000, upgrading_capacity_nm3_d=1e9, x_ch4=None, ch4_recovery_frac=1
+    )
+    with pytest.raises(ValueError, match="no ch4_frac_biogas"):
+        simulate(_feed([("2024-06", "vinasse", 1000)]), {"vinasse": VINASSE}, design, LIMITS)
+    # an unfed substrate without a fraction does not block the month
+    out = simulate(
+        _feed([("2024-06", "vinasse", 0), ("2024-06", "filter_cake", 10)]),
+        {"vinasse": VINASSE, "filter_cake": Substrate(**{**CAKE.__dict__, "ch4_frac_biogas": 0.6})},
+        design,
+        LIMITS,
+    )
+    assert out.iloc[0]["biogas_nm3"] > 0
+
+
+def test_design_and_substrate_fractions_are_validated():
+    with pytest.raises(ValueError):
+        PlantDesign(
+            digester_volume_m3=1, upgrading_capacity_nm3_d=1, x_ch4=1.2, ch4_recovery_frac=1
+        )
+    with pytest.raises(ValueError):
+        Substrate(**{**CAKE.__dict__, "ch4_frac_biogas": 0})

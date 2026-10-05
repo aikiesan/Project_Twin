@@ -3,7 +3,7 @@
 **Working title:** *Where and at what cost can São Paulo produce biomethane year-round? A calibrated spatial techno-economic model of CSTR co-digestion.*
 **Host:** CP2B — Centro Paulista de Estudos em Biogás e Bioprodutos · NIPE-UNICAMP
 **Related platform:** PILAR-2b (cp2b.unicamp.br/pilar2b)
-**Status:** Phase 0 (foundation & verification) · v0.1 · 2026-10-03
+**Status:** Phase 0 (foundation, requests, walking skeleton) · v0.1 · 2026-10-03 · re-planned 2026-10-05 (ADR-0010)
 
 ---
 
@@ -66,12 +66,13 @@ Public data (MapBiomas, IBGE/SEADE, ANP, RenovaBio certification reports, UNICA,
 
 | Phase | Weeks | Output |
 |---|---|---|
-| 0 Foundation & verification | 1–3 | Repo, environment, verified registry, LAI requests filed |
-| 1 Supply panel | 4–8 | Mill-year & monthly residue panel; facilities registry |
-| 2 Process + LCOB v0 | 9–12 | Calibrated to ANP curves |
-| 3 Economics full | 13–16 | Bayesian CAPEX, Monte Carlo, Sobol |
-| 4 Siting & supply curve | 17–22 | MILP, maps, supply curve |
-| 5 Integration & papers | 23–30 | PILAR-2b release, manuscripts |
+| 0 Foundation, requests, walking skeleton | 1–6 | Repo, environment, LAI requests filed; end-to-end v0 on Costa Pinto and Narandiba; Morris ranking; top parameters verified |
+| 1 Supply panel (cane + manure) | 7–11 | Mill-year & monthly residue panel; facilities registry |
+| 1b Other substrates | alongside 2 | Sewage sludge, OFMSW, slaughterhouses, dairies |
+| 2 Process + LCOB v0 | 12–15 | Calibrated to ANP curves |
+| 3 Economics full | 16–19 | Bayesian CAPEX, Monte Carlo, Sobol |
+| 4 Siting & supply curve | 20–25 | MILP, maps, supply curve |
+| 5 Integration & papers | 26–33 | PILAR-2b release, manuscripts |
 
 ## 8. Success criteria
 

@@ -207,6 +207,8 @@ Lei 14.993/2024 (Combustível do Futuro) · Decreto 12.614/2025 · CNPE Res. 4/2
 
 ## 7. Step-by-step start (Phase 0 → 1)
 
+> **Superseded in part by ADR-0010 (2026-10-05):** Phase 0 now ends with a walking skeleton on Costa Pinto and Narandiba, and verification follows its sensitivity ranking. The working checklist is docs/19.
+
 **Phase 0 — Verification sprint (2–3 weeks, local machine, no modeling yet)**
 1. Create the engine repo; commit `registry/` (this catalog, `sources.yaml`, `parameters.csv`, `projects_capex.csv`).
 2. Download & checksum the "Get" items with highest value: BNDES CSV, ANP ethanol + biomethane open data, RenovaBio panel list, EPE NT 2025-08 / 2023-07, ARSESP Del. 1.765, ANP Res. 995/996/1.006, CNPE Res. 4/2026, IEPUC bulletins.

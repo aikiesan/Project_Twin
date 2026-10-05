@@ -14,3 +14,4 @@ Status values: Proposed · Accepted · Superseded by ADR-XXXX.
 | [0007](ADR-0007-pymc-for-bayesian-calibration.md) | PyMC as primary Bayesian engine; Stan/brms as cross-check | Proposed |
 | [0008](ADR-0008-lab-data-templates.md) | Tidy CSV templates as the lab ↔ engine contract | Proposed |
 | [0009](ADR-0009-dvc-remote-google-drive.md) | Data backup: manual zips on Google Drive | Accepted |
+| [0010](ADR-0010-walking-skeleton-and-sensitivity-led-verification.md) | Walking skeleton first; verification led by sensitivity; Phase 1 limited to cane and manure | Accepted |

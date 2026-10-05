@@ -176,7 +176,7 @@ Machine: the UNICAMP desktop (Windows 11 Pro, 20 CPUs, 32 GB RAM for Docker Desk
 ### PostGIS
 - `.env` was created with a new local `PGPASSWORD` and `DATABASE_URL` (not committed).
 - `docker compose up -d db` is healthy on port 5433, with PostGIS 3.4.
-- A separate `cp2b-db-dev` container (database `cp2b_maps`, port 5432, stopped) exists on this PC. It is not PILAR-2b and was not opened.
+- A separate `cp2b-db-dev` container (database `cp2b_maps`, port 5432, stopped) exists on this PC. *Correction (later the same day): it is the `db` service of the PILAR-2b NewLook stack, and it is the source of the `pilar2b` copy below.*
 
 ### New in this change: `engine.ingest.load_postgis`
 - The loader, its config (`postgis_tables.yaml`), 18 tests and docs/27 are new.
@@ -207,3 +207,25 @@ Next:
 3. The earlier backlog: the ANP comparison, `FONTES.md` factors and the 30 m MapBiomas raster.
 4. A new backup zip is needed only after a PR that changes `data/*.dvc`. This one does not.
 5. On the project PC, run `uv self update` before `uv sync`: uv 0.12 rewrote `uv.lock` in lock revision 5, and older uv releases may not read it.
+
+## 2026-10-05 (afternoon) — PILAR-2b research tables copied into schema `pilar2b`
+- **Source.** The NewLook stack (`Pilar2b/cp2b-workspace/NewLook`) runs frontend :3006 and backend :8000. Its database `cp2b-db-dev` had stopped (exit 255); it was started with the user's approval and recovered cleanly.
+  - Inventory: 8 schemas.
+  - `public` has 63 tables (13 GB, of which `audit_log` is 12 GB) and 16 views.
+- **Excluded:**
+  - Supabase-style `auth`, `storage` and `realtime`.
+  - From `public`: the audit log (user e-mail and IP addresses), users, leads, subscribers, analytics, backups, and the views and sequences that depend on them.
+  - Personal data is described by category only (CLAUDE.md, docs/25).
+- **New:** `engine.ingest.restore_pilar2b` with 7 tests, the registry entry `pilar2b_platform_db`, and docs/27 §PILAR-2b.
+- **Result:**
+  - 44 tables, 12 views, 2,386,459 rows in `pilar2b`.
+  - 0 personal-looking columns, and no functions or triggers.
+  - The dump (409 MB) is in `Project_Twin/backups/pilar2b/`, outside the repo. It is not part of the Drive zips; rebuild it with `--replace` when needed.
+- **Two restores failed and rolled back cleanly before the rules were complete:**
+  - a materialized view calling `normalize_doi`;
+  - a foreign key from `technology_cards.created_by` to `auth_users`.
+- **Ticked:** docs/19 Phase 5 "Restore the PILAR-2b dump" and docs/04 §6.
+
+Next:
+- Compare `pilar2b.municipality_cp2b_potential` (v5.1) with `cp2b_redu_v2` (v2.0) and log the differences in docs/21 §Conflicts.
+- Consider `pilar2b.municipality_timeseries` (PPM herds, PAM) as the source for the manure base-load v0, instead of the `ibge_ppm` "get".

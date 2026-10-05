@@ -123,7 +123,7 @@ Tick boxes as you go. Each phase ends with a **gate** — don't move on until it
 
 ## PHASE 5 — Integration, papers, shadow (weeks 26–33)
 
-- [ ] Restore the PILAR-2b dump into schema `pilar2b` (moved from Phase 0)
+- [x] Restore the PILAR-2b dump into schema `pilar2b` (moved from Phase 0) — done 2026-10-05 from the local NewLook database: 44 research tables, 2.39 M rows, no personal data (`python -m engine.ingest.restore_pilar2b`, docs/27)
 - [ ] PILAR-2b: `engine_release` ingest, tables, API, pages
 - [ ] Manuscripts (see `20_PUBLICATIONS_PLAN.md`)
 - [ ] Monthly ANP ingestion + predicted-vs-observed dashboard (system-level shadow)

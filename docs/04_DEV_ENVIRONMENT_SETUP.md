@@ -98,7 +98,7 @@ wsl --install -d Ubuntu
 # Ubuntu (WSL)
 sudo apt update && sudo apt install -y git make curl poppler-utils gdal-bin osmium-tool
 curl -LsSf https://astral.sh/uv/install.sh | sh && exec "$SHELL"   # uv (Python manager)
-uv tool install "dvc[gdrive]"                                       # data versioning CLI
+uv tool install dvc                                                 # data versioning CLI
 git config --global user.name "Lucas ..." && git config --global user.email lucasnc@unicamp.br
 docker run --rm hello-world                                         # Docker reachable from WSL
 ```
@@ -128,12 +128,11 @@ To pick up later work: `git pull` on `main`; new work goes on a branch and is me
 mkdir -p data/{raw,interim,processed,routing,private}
 dvc init                               # done 2026-10-04 (repo root); cache.type = hardlink,copy
 dvc add data/raw                       # done: data/raw.dvc is the only file under data/ that git tracks
-dvc remote add -d storage gdrive://1oGBLyrlycLHNmLIFJDxXoMwCOBqB3QCm     # done 2026-10-04 (public-safe data)
-dvc remote add private gdrive://1XTE0MRE7HmZmQwGcizezBa0mHw3rfHDJ       # done (partner / NDA data, data/private/)
+# Backup: manual dated zips uploaded to Google Drive (ADR-0009); no DVC remote configured yet.
 git add .dvc .dvcignore && git commit -m "Init DVC"
 ```
 - `dvc.yaml` and `params.yaml` are added once their stages run end to end. `cane_area_h3` needs the MapBiomas sugarcane class code to be verified first, and `renovabio_extract` needs the batch extractor.
-- Remote: Google Drive, two private folders (ADR-0009). The first `dvc push` / `dvc pull` opens a browser for Google sign-in.
+- Backup: zip `data/raw` and `data/private` into `A:/Project_Twin/backups/` and upload them to the two private Drive folders (ADR-0009). After restoring, `dvc status` checks the files against `data/*.dvc`.
 
 ## 5. Services (Docker)
 

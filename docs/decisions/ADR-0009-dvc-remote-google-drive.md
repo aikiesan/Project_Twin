@@ -1,23 +1,21 @@
-# ADR-0009 — DVC remotes on Google Drive
+# ADR-0009 — Data backup: manual zips on Google Drive
 
 - **Status:** Accepted (2026-10-04, team decision)
-- **Context:** ADR-0003 left the DVC remote open (Google Drive, UNICAMP server or MinIO). Until a remote exists, `data/raw` (≈ 605 MB) lives only on the project PC.
-- **Decision:** Two Google Drive folders, both private, owned by the project account:
-  - `storage` (default): `gdrive://1oGBLyrlycLHNmLIFJDxXoMwCOBqB3QCm`, folder `Project_Twin_DVC`. Holds everything tracked by `data/raw.dvc`.
-  - `private`: `gdrive://1XTE0MRE7HmZmQwGcizezBa0mHw3rfHDJ`, folder `Project_Twin_DVC_private`. Holds `data/private/` (partner/NDA data, CLAUDE.md rule 6), pushed with `dvc push -r private`.
-  - Folder IDs are not secrets: they live in `.dvc/config` (in git). Access is controlled by Drive sharing. OAuth tokens and any custom client secret go to `.dvc/config.local` (gitignored) and never to git.
-- **Consequences:** + no server to run; the team already uses Drive. − Drive has API rate limits and slow transfers for many small files; the first `dvc push` needs a browser sign-in. If Google blocks DVC's built-in OAuth app, create an OAuth client (desktop app) in a Google Cloud project and set `gdrive_client_id` / `gdrive_client_secret` with `dvc remote modify --local`.
-- **Alternatives:** UNICAMP server (no admin access yet); MinIO (would need hosting). Revisit if the data passes the Drive quota or transfers become a bottleneck.
-
-## Setup on another machine
-
-```bash
-uv tool install "dvc[gdrive]"
-dvc pull            # opens a browser for Google sign-in the first time
-```
+- **Context:** ADR-0003 left the DVC remote open (Google Drive, UNICAMP server or MinIO). Until a backup exists, `data/` (≈ 605 MB) lives only on the project PC.
+- **Decision:** Back up to Google Drive **by hand**. The team uploads dated zips to two private Drive folders owned by the project account. No DVC remote is configured for now.
+  - `Project_Twin_DVC` (https://drive.google.com/drive/folders/1oGBLyrlycLHNmLIFJDxXoMwCOBqB3QCm) holds `Project_Twin_data_raw_<date>.zip`: `data/raw/` plus `raw.dvc`.
+  - `Project_Twin_DVC_private` (https://drive.google.com/drive/folders/1XTE0MRE7HmZmQwGcizezBa0mHw3rfHDJ) holds `Project_Twin_data_private_<date>.zip`: `data/private/` (partner/NDA and farm/property-level data, CLAUDE.md rule 6) plus `private.dvc`.
+  - The zips are built in `A:\Project_Twin\backups\` (outside the repository). `SHA256SUMS.txt` sits next to them.
+- **Integrity:** `data/raw.dvc` and `data/private.dvc` (in git) record the md5 of every tracked file. After restoring a zip into `data/`, `dvc status` shows whether the files match the committed state.
+- **Consequences:**
+  - \+ No OAuth setup, and nothing runs against the Drive API.
+  - − Backups depend on someone remembering to upload them. Make a new zip after every import PR that changes `data/*.dvc`.
+- **Alternatives:**
+  - DVC `gdrive://` remotes. They need a browser OAuth sign-in and possibly a custom Google Cloud OAuth client. Switch to them if manual uploads become a burden; the folders above can be reused with a fresh, empty sub-folder.
+  - UNICAMP server or MinIO.
 
 ## Private data
-- Done 2026-10-04: farm-level points (`cp2b_gee_exports`) and CAR property data (`cp2b_results_sicar`) moved from `data/raw/` to `data/private/`. They are tracked by `data/private.dvc` and pushed only with `dvc push -r private`.
+- Done 2026-10-04: farm-level points (`cp2b_gee_exports`) and CAR property data (`cp2b_results_sicar`) moved from `data/raw/` to `data/private/`, tracked by `data/private.dvc`.
   - The farm points derive from a registry extract with addresses and contacts.
   - `scripts/ingest/import_local_sources.sh` now writes these two ids to `data/private/`.
-- Never share the `private` Drive folder outside the project team.
+- Never share the `Project_Twin_DVC_private` folder outside the project team.

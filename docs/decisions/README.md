@@ -13,4 +13,4 @@ Status values: Proposed · Accepted · Superseded by ADR-XXXX.
 | [0006](ADR-0006-osrm-car-profile-v0-routing.md) | OSRM (car profile) for v0 road-network distances | Proposed |
 | [0007](ADR-0007-pymc-for-bayesian-calibration.md) | PyMC as primary Bayesian engine; Stan/brms as cross-check | Proposed |
 | [0008](ADR-0008-lab-data-templates.md) | Tidy CSV templates as the lab ↔ engine contract | Proposed |
-| [0009](ADR-0009-dvc-remote-google-drive.md) | DVC remotes on Google Drive (storage + private) | Accepted |
+| [0009](ADR-0009-dvc-remote-google-drive.md) | Data backup: manual zips on Google Drive | Accepted |

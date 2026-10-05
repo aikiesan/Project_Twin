@@ -1,8 +1,2 @@
 [cache]
     type = "hardlink,copy"
-[core]
-    remote = storage
-['remote "storage"']
-    url = gdrive://1oGBLyrlycLHNmLIFJDxXoMwCOBqB3QCm
-['remote "private"']
-    url = gdrive://1XTE0MRE7HmZmQwGcizezBa0mHw3rfHDJ

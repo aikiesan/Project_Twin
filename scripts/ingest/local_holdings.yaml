@@ -1,8 +1,8 @@
 # Datasets already on the project PC, copied into data/raw/<id>/ by
 #   uv run python -m engine.ingest.local_import scripts/ingest/local_holdings.yaml [--dry-run]
-# Chosen from the 2026-10-04 survey of local folders (docs/24_LOCAL_HOLDINGS_SURVEY.md).
+# Chosen from the 2026-10-04 survey of local folders (docs/25_LOCAL_HOLDINGS_SURVEY.md).
 # Only public or CP2B-own data is listed here. Personal data (LGPD), partner/NDA material and
-# ABIOVE/HARVEX deliverables are not, and the importer's deny list refuses them anyway.
+# HARVEX/JOEL material is not (discarded by the team, 2026-10-04); the deny list refuses it.
 # Every id must have a registry/sources.yaml entry before code reads it (CLAUDE.md rule 3).
 # Roots can be overridden with env LOCAL_ROOT_<NAME>, e.g. LOCAL_ROOT_DOWNLOADS=D:/dl.
 
@@ -74,3 +74,12 @@ sources:
     root: a
     base: ILUC_NIPE/ILUC_NIPE/03_Pasture_Vigor_LAPIG
     include: ["brasil_pasture_vigor_col9_s100_year=*.csv"]
+
+  # --- land use: ABIOVE ILUC work, public-source area series per SP intermediate region --------
+  # Team decision 2026-10-04: the MapBiomas-based ABIOVE tables are reusable; the HARVEX-branded
+  # transition matrices (03_Matrizes_Transicao_FINAL) and any HARVEX/JOEL indicator are not.
+  - id: abiove_lulc_area_series_sp_rgint
+    root: a
+    base: ILUC_NIPE/ENTREGA_PRODUTO_P1-20260621T122008Z-3-001/ENTREGA_PRODUTO_P1/01_Bases_de_dados_multifontes
+    include:
+      - "*_35??_classes_multifonte.xlsx"

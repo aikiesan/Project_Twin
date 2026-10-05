@@ -55,6 +55,8 @@ def test_missing_pattern_is_reported(tmp_path):
         "A:/Project_Twin/materiais/05_parceiros_NDA/a.pdf",
         r"A:\Validacao\Relatorio_granjas_sui.csv",
         "D/empreendimento-geracao-distribuida.parquet",
+        "A:/ILUC_NIPE/Indicadores_HARVEX.xlsx",
+        "C:/Downloads/dados_Joel/matriz.csv",
     ],
 )
 def test_deny_list(path):

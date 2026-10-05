@@ -128,12 +128,12 @@ To pick up later work: `git pull` on `main`; new work goes on a branch and is me
 mkdir -p data/{raw,interim,processed,routing,private}
 dvc init                               # done 2026-10-04 (repo root); cache.type = hardlink,copy
 dvc add data/raw                       # done: data/raw.dvc is the only file under data/ that git tracks
-dvc remote add -d storage gdrive://<FOLDER_ID>            # public-safe data
-dvc remote add private gdrive://<PRIVATE_FOLDER_ID>       # partner / NDA data (data/private/)
+dvc remote add -d storage gdrive://1oGBLyrlycLHNmLIFJDxXoMwCOBqB3QCm     # done 2026-10-04 (public-safe data)
+dvc remote add private gdrive://1XTE0MRE7HmZmQwGcizezBa0mHw3rfHDJ       # done (partner / NDA data, data/private/)
 git add .dvc .dvcignore && git commit -m "Init DVC"
 ```
 - `dvc.yaml` and `params.yaml` are added once their stages run end to end. `cane_area_h3` needs the MapBiomas sugarcane class code to be verified first, and `renovabio_extract` needs the batch extractor.
-- Remote choice (Google Drive, a UNICAMP server or MinIO) is an open decision. Record it as an ADR.
+- Remote: Google Drive, two private folders (ADR-0009). The first `dvc push` / `dvc pull` opens a browser for Google sign-in.
 
 ## 5. Services (Docker)
 

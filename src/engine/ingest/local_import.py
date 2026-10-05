@@ -49,7 +49,8 @@ DENY_SUBSTRINGS = (
     "granjas_sui",  # farm registry with address/contact fields (LGPD)
     "empreendimento-geracao-distribuida",  # full ANEEL GD file: CPF/CNPJ + owner names
     "balanço zm",  # named-mill engineering balance, possibly NDA
-    "harvex",  # ABIOVE/HARVEX partner deliverables
+    "harvex",  # HARVEX deliverables: discarded by the team (2026-10-04), never imported
+    "joel",  # JOEL indicators: discarded by the team (2026-10-04)
 )
 
 #: Files never worth copying.

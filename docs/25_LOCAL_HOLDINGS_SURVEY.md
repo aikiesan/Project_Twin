@@ -26,7 +26,7 @@ The first group came from `A:\Pilar-2b` (13 folders), using `scripts/ingest/impo
 | Farm registry with addresses and contacts | `A:\Validacao_de_Dados_Cp2b` | Personal data. If ever needed, only a municipal aggregate goes in `data/private/` |
 | Full ANEEL distributed-generation registry | `Downloads\06_DADOS_ENERGIA_EPE` | Holds CPF/CNPJ and owner names. The biogas subset is already held (`aneel_biogas_gd`) |
 | Engineering balance of a named mill | `Downloads\06_DADOS_ENERGIA_EPE` | Possibly under NDA. Ask the owner before any use |
-| ABIOVE/HARVEX deliverables (ILUC matrices, partner data) | `A:\ILUC_NIPE`, `Downloads\02_ABIOVE_ILUC` | Partner work. The reuse rights must be cleared first |
+| HARVEX/JOEL material: HARVEX-branded ILUC transition matrices and any HARVEX/JOEL indicator | `A:\ILUC_NIPE`, `Downloads\02_ABIOVE_ILUC` | Discarded by the team on 2026-10-04 and on the deny list. The MapBiomas-based ABIOVE area series for SP were imported as `abiove_lulc_area_series_sp_rgint` |
 | Personal and administrative documents (invoices, declarations, CVs, photos, notes) | several | Not research data |
 | Duplicates of held layers (pipelines, lines, substations, municipal meshes, MapBiomas 90 m) | `A:\CP2B_Maps`, `A:\Newlook`, `Downloads\07_DADOS_GIS_BASE` | Already in `data/raw/` |
 | `A:\Project_Twin\materiais\*` | — | All six sub-folders were empty on 2026-10-04 |

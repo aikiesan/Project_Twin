@@ -22,6 +22,9 @@ fi
 SRC="$(cd "$SRC" && pwd)"
 ENGINE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 RAW="${RAW_DIR:-$ENGINE_DIR/data/raw}"
+# Farm-level / property-level sources go to data/private/ (private DVC remote, ADR-0009).
+PRIVATE="${PRIVATE_DIR:-$ENGINE_DIR/data/private}"
+PRIVATE_IDS=" cp2b_results_sicar cp2b_gee_exports "
 LOG="${LOG_FILE:-$ENGINE_DIR/data/interim/import_local_sources_log.tsv}"
 DRY_RUN="${DRY_RUN:-0}"
 WITH_SECOND_CROP="${WITH_SECOND_CROP:-0}"
@@ -48,6 +51,7 @@ fi
 copy_file() {
   local id="$1" src="$2" rel="${3:-$(basename "$2")}"
   local dest="$RAW/$id/$rel"
+  case "$PRIVATE_IDS" in *" $id "*) dest="$PRIVATE/$id/$rel" ;; esac
   if [ ! -f "$src" ]; then
     echo "MISSING   $src"; missing=$((missing + 1)); return 0
   fi

@@ -137,3 +137,27 @@ Still open:
 - Extract FIESP values with page and verbatim quote.
 - Not copied yet, by choice: the SIGA file (owner column), the MapBiomas annual rasters, the literature library and the OSM shapefiles.
 - `data/raw/` changed, so `dvc add data/raw` and a new backup zip are needed.
+
+### 5.6 Second import, calibration and validation (2026-10-05)
+
+A second pass looked for plant validation and calibration data in `Pilar2b`, `Reposicionamento_Submissão_ESD`, `ILUC_NIPE`, `PILAR-2b Design System`, the poster folder and a CNPq proposal folder under `20_Financiamento_Editais_Administrativo`.
+
+| Registry id | Files | Size | What it adds |
+|---|---|---|---|
+| `anp_biomethane_open_data_2026_08` | 2 | 0.1 MB | ANP per-plant monthly biogas processed and capacity, 01/2020–08/2026: the skeleton's calibration target |
+| `cp2b_method_v5_1_spatial` | 60 | 129.6 MB | Spatial logistic factor, hub selection, 1 km supply grid, road vs straight-line detour ratios, a straw haul radius calibrated on mills (median 19.5 km by road), siting validation on 130 plants with leave-one-out, and the team's CH₄/biogas/biomethane convention note |
+| `pilar2b_biogas_plants_brazil` | 4 | < 0.1 MB | 28 real plants (17 in SP) with status, start year, Nm³/d and sources |
+| `mapbiomas_col10_coverage_sp` | 20 | 557.7 MB | Collection 10 land cover 2008–2024, clipped to SP from the 13 GB national mosaics in `ILUC_NIPE` (ADR-0011), plus the official legend |
+
+**Checks**
+- **Clip against official statistics:** the clipped sugarcane area (class 20) matches MapBiomas' published Collection 10 statistics for SP to within 3 ha out of 5–6 Mha in 2008, 2016 and 2024.
+- **Legend:** the legend PDF confirms sugarcane = 20, now set in `params.yaml` as V.
+
+**Registry changes from this pass**
+- `parameters.csv` gained 20 rows from PILAR-2b's `feedstocks.yaml` (straw and four manures).
+- docs/21 gained conflicts C13 (vinasse) and C14 (a DOI mismatch), and C12 (filter cake) became three-way.
+
+**Not imported**
+- **The CNPq proposal folder:** CNPq proposal figures, mostly MG, built from an older copy of the PILAR-2b analysis; it also holds a personal audio message.
+- **Design-system presentations and the poster's own data.**
+- **ILUC's UNICA tables:** annual state totals only, not the biweekly series the harvest profile needs.

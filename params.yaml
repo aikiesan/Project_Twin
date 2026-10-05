@@ -1,8 +1,8 @@
 # Pipeline parameters (versioned; part of the run hash). No modelling numbers here —
 # model parameters live in registry/parameters.csv.
 mapbiomas:
-  # REQUIRED before running cane_area_h3: legend code(s) for sugarcane in the MapBiomas
-  # collection you downloaded, as CLI args, e.g. "--class-code <code>". Check the legend.
-  # PILAR-2b's backend/data/mapbiomas/mapbiomas_metadata.json lists 20 = "Cana-de-açúcar"
-  # (secondary source, S); confirm it in the official legend of the collection you use.
-  cane_code_args: "--class-code TODO"
+  # Legend code(s) for sugarcane, as CLI args for cane_area_h3. Collection 10 legend
+  # ("Códigos das classes da legenda da Coleção 10", p. 1, in data/raw/mapbiomas_col10_coverage_sp/):
+  # "3.2.1.2. Cana / 3.2.1.2. Sugar cane / 20" [V, read 2026-10-05]. The rasters' attribution to
+  # Collection 10 rests on the ABIOVE pipeline README [S]. Re-check the code if the collection changes.
+  cane_code_args: "--class-code 20"

@@ -129,6 +129,10 @@ sources:
     spatial: 30 m
     temporal: annual 2008-2025
     status: have
+    notes: >-
+      2026-10-05: no file under data/raw backs this entry (no local_path, no sha256). The SP sugarcane
+      class is now served by mapbiomas_col10_coverage_sp (class 20, 2008-2024). Retire or repoint this
+      entry in a registry clean-up.
   - id: cetesb_pav
     name: CETESB P4.231 Vinasse Application Plans (PAV)
     publisher: CETESB
@@ -949,7 +953,11 @@ sources:
     local_path: data/raw/pilar2b_canonical_parameters/
     sha256: 3abbfbbe3fb90579432d4ef4e239744d19a82f36520c135d4d458232f08a7782   # 14 files
     accessed: '2026-10-04'
-    notes: cp2b-workspace/NewLook/data/canonical_parameters, all 14 files git-tracked at 1d24ada5.
+    notes: >-
+      cp2b-workspace/NewLook/data/canonical_parameters, all 14 files git-tracked at 1d24ada5. The held
+      SP_master_residue_streams_2023_FINAL.csv (sha256 2ab1d03d…) is the Windows CRLF working-tree copy; the
+      git blob is 7d0fb051… with LF endings, same content (PILAR-2b docs/data/VALIDACAO_CADEIA_NUMERICA_2026-08-01.md
+      §4.2). feedstocks.yaml TS/VS/BMP/CH4 for straw and four manures copied into parameters.csv on 2026-10-05.
   - id: pilar2b_residue_streams_sp
     name: PILAR-2b municipal residue streams and biogas potential, SP 2023
     publisher: CP2B / NIPE-UNICAMP (PILAR-2b), from IBGE PAM 2023, IBGE PPM 2023 and the CP2B DB
@@ -1379,3 +1387,96 @@ sources:
     sha256: ae27855684d2fe24e06cafd189082d8cebedd59fd40f3f209d5de44030a6e3b9   # 1 file, 0.4 MB
     accessed: '2026-10-05'
     notes: Copied from Documents/40_Pesquisa_Dados_e_Referencias. Planned-plant pipeline to 2032; an industry association's projection, not observed capacity.
+
+  # ---------------- Second Documents import: calibration and validation (2026-10-05; docs/25 §5.6) ----------------
+  - id: anp_biomethane_open_data_2026_08
+    name: ANP biomethane open data — authorized capacity, biogas processed per plant (monthly) and production per UF, 01/2020-08/2026
+    publisher: ANP
+    url: TODO ANP dataset URL (not recorded with the files; see anp_biomethane_open_data_2026_04)
+    module: market
+    provides: [capacity_biomethane_m3_d_by_plant, biogas_processed_m3_d_by_plant, utilization_pct_by_plant, production_m3_by_uf_month]
+    spatial: plant (CNPJ, municipality) / UF
+    temporal: monthly 01/2020-08/2026
+    format: CSV (comma-separated, decimal comma in quotes)
+    access: open
+    license: TODO verify ANP open-data terms
+    status: have
+    confidence: V
+    local_path: data/raw/anp_biomethane_open_data_2026_08/
+    sha256: a7b5dc502047f4b48615a32cf00d518d3735f5a78d6b049b2480e5d729897c67   # 2 files, 0.1 MB
+    accessed: '2026-10-05'
+    notes: >-
+      Downloaded 2026-10-02 (file timestamps), copied from Documents/Reposicionamento_Submissão_ESD/biometano-dados-abertos.
+      Four months newer than anp_biomethane_open_data_2026_04; keep both (rule 4). The skeleton's calibration
+      target for Costa Pinto and Narandiba (ADR-0010). Volumes are m³ with no stated reference conditions:
+      LAI R2 asks ANP for the basis. Biomethane production is published per UF only, not per plant.
+  - id: cp2b_method_v5_1_spatial
+    name: CP2B method v5.1 spatial outputs — logistic factor (FL) by municipality × substrate, hub selection (MCLP), 1 km supply grid, road/straight-line detour ratios, straw haul radius calibrated on mills, siting validation on 130 real plants with leave-one-out, ESD review tables, CH4/biogas/biomethane convention
+    publisher: CP2B / NIPE-UNICAMP (own work, unpublished)
+    url: local
+    module: siting
+    provides: [fl_by_municipality_substrate, hub_selection, supply_grid_1km, detour_ratio, straw_haul_radius_km, siting_validation_hit_rate, loo_validation]
+    spatial: municipality (645, SP); 1 km grid; plant points (EPSG:5880)
+    temporal: run of 2026-09-24; ESD review tables 2026-10-01
+    format: CSV + GeoPackage + JSON + Markdown
+    access: restricted
+    license: none stated (team's own work)
+    status: have
+    confidence: D
+    local_path: data/raw/cp2b_method_v5_1_spatial/
+    sha256: d1e4d6ed84150cf1946f59c06f7a3b3852fd3f887d4a088b9ad5f76e2fca3917   # 60 files, 129.6 MB
+    accessed: '2026-10-05'
+    notes: >-
+      Copied from Documents/Reposicionamento_Submissão_ESD/Metodo_CP2b (fl_espacial/outputs, outputs_v5/revisao_ESD,
+      Convencao_CH4_biogas_biometano.md); figures, caches and the local venv were not copied. Companion of
+      cp2b_method_v5_1. Straw haul radius on the road network: P25 12.9 km, P50 19.5 km, P75 27.2 km
+      (palha_usinas_calibracao.csv). The validation tables test siting (does a selected hub fall near a real
+      plant), not plant output. The convention note states that all CP2B potentials are Nm³ CH4 and gives
+      biomethane-eq = CH4 x 0.99 / 0.96; it flags that the CH4 minimum of ANP Res. 1.006/2026 was not confirmed.
+  - id: pilar2b_biogas_plants_brazil
+    name: PILAR-2b curated table of real biogas/biomethane plants in Brazil (SP-first) — status, start year, biogas or biomethane Nm³/d, ANP utilization, sources
+    publisher: CP2B / NIPE-UNICAMP (PILAR-2b), compiling ANP, ANEEL and company sources
+    url: https://github.com/aikiesan/Pilar-2b
+    module: supply
+    provides: [plant_status, year_online, biomethane_nm3_day, biogas_nm3_day, utilization_pct_latest, source_url]
+    spatial: plant (28 plants, 17 in SP)
+    temporal: snapshot 2026
+    format: CSV + XLSX + Markdown schema
+    access: internal
+    license: GPL-3.0 (Pilar-2b repository LICENSE)
+    status: have
+    confidence: D
+    local_path: data/raw/pilar2b_biogas_plants_brazil/
+    sha256: 2cfadfcdd7fbf44e2c5fba287c1c495cd0320c475cda7c91381f44f7d2984bbe   # 4 files
+    accessed: '2026-10-05'
+    notes: >-
+      Copied from Documents/Pilar2b (analysis/data and the NewLook schema doc). Operators are companies
+      (CNPJ); no personal data. Tags Cocal Narandiba as vinasse + filter cake + manure, which matters for the
+      strategy it is calibrated against (S1 vs S2); confirm against cp2b_plant_validation_audit_2026_09.
+  - id: mapbiomas_col10_coverage_sp
+    name: MapBiomas Collection 10 land cover and use, 30 m, annual 2008-2024, clipped to São Paulo (+ official legend)
+    publisher: MapBiomas Project
+    url: https://mapbiomas.org
+    doi: 10.58053/MapBiomas/JNJGVT
+    module: supply
+    provides: [land_cover_class_30m, sugarcane_class_20]
+    spatial: SP (645 municipalities, IBGE 2025 mesh), 30 m (0.000269495°), EPSG:4326
+    temporal: annual 2008-2024
+    format: GeoTIFF (uint8, deflate, 512 tiles; nodata 0) + CLIP_MANIFEST.tsv + legend PDFs
+    access: open
+    license: TODO confirm MapBiomas terms (believed CC BY 4.0, K)
+    status: have
+    confidence: V
+    local_path: data/raw/mapbiomas_col10_coverage_sp/
+    sha256: 4f6b3a006d289cd868b1c9223b4dc89071120b4beb3d26d9657df28e34151f5b   # 20 files, 557.7 MB
+    accessed: '2026-10-05'
+    notes: >-
+      Clipped on import from the national mosaics brazil_coverage_<year>.tif held in
+      Documents/ILUC_NIPE (ABIOVE project) with engine.ingest.clip_raster (ADR-0011): pixels whose centre
+      lies in the union of ibge_malha_municipal_sp_2025, cropped to SP's bounding box; outside = 0, the
+      producer's background (checked on the national raster; 0 is not a legend class). CLIP_MANIFEST.tsv
+      holds each origin path, size and sha256. Collection confirmed by data, not only by the ABIOVE README:
+      class-20 area in the clips equals MapBiomas' published Col. 10 SP statistics (mapbiomas_col10_municipal)
+      to within 3 ha out of 5.0-6.1 Mha in 2008, 2016 and 2024; all classes within 0.01 %. Legend PDF p. 1:
+      "3.2.1.2. Cana / Sugar cane / 20" (params.yaml mapbiomas.cane_code_args). DOI from the ABIOVE pipeline
+      README (S); the URL is the project home page, not the file URL.

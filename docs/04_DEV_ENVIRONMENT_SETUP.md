@@ -146,7 +146,7 @@ make down
 - The routing setup is described in `scripts/routing/README.md` and ADR-0006.
 
 ## 6. Bring PILAR-2b data in (read-only)
-- [ ] `pg_dump -Fc -n public $PILAR2B_DATABASE_URL > pilar2b.dump`, then `pg_restore` into localhost:5433 and rename the schema to `pilar2b`.
+- [x] Copy the PILAR-2b research tables into schema `pilar2b` with `uv run python -m engine.ingest.restore_pilar2b` (docs/27 §PILAR-2b). It reads the local NewLook database (container `cp2b-db-dev`) and leaves out personal data.
 - [ ] Copy the PILAR-2b files into `data/raw/` with `bash scripts/ingest/import_local_sources.sh <PILAR-2b folder>`. On the project PC the folder is `/a/Pilar-2b`.
   - It brings in `feedstocks.yaml`, the ANP and ANEEL CSVs, the FDE factors, the municipal mesh, the MapBiomas tables and rasters, and the infrastructure layers.
   - It is read-only on the source and never overwrites. See `scripts/ingest/README.md`.

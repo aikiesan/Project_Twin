@@ -184,9 +184,19 @@ sources:
     url: https://sidra.ibge.gov.br/pesquisa/ppm/tabelas
     module: supply
     spatial: municipality
-    temporal: annual 1974-2024
-    status: get
+    temporal: annual 1974-2024 (held 2008-2024)
+    format: XLSX (SIDRA exports 3939 herds, 74 animal products, 3940 aquaculture, 94 milked cows)
+    access: open
+    license: TODO verify IBGE terms
+    status: have
     confidence: S
+    local_path: data/raw/ibge_ppm/
+    sha256: db8f99cc7bfc4b50c5642cbe833617e8fcbb7f82fd326eb7d2b5ecb4524f3ea6   # 4 files, 17.7 MB
+    accessed: '2026-10-05'
+    notes: >-
+      SIDRA exports dated 2026-07-16 to 2026-09-23 (file timestamps), copied from
+      Documents/Reposicionamento_Submissão_ESD/00_Primary_Data_Sources_PILAR2b. Herds are annual stocks:
+      do not sum years (the team audit flagged a legacy table whose Total_* fields did).
   - id: lupa_2016_17
     name: LUPA farm-unit census 2016/17 (CATI/IEA)
     publisher: CATI / IEA-SP
@@ -226,15 +236,27 @@ sources:
     url: https://www.gov.br/cidades/pt-br/acesso-a-informacao/acoes-e-programas/saneamento/sinisa
     module: supply
     spatial: municipality / provider
-    status: get
+    temporal: 2008-2022 (SNIS ConsolidadoMunicipio, one file per year)
+    format: CSV, Brazil
+    access: open
+    license: TODO verify Ministério das Cidades terms
+    status: have
     confidence: S
+    local_path: data/raw/sinisa/
+    sha256: 76663ea58923138f04c7d364db114e75b069cce1cb91462c38f71972d5977349   # 16 files, 316.7 MB
+    accessed: '2026-10-05'
+    notes: >-
+      Holds the SNIS series that SINISA replaced (2022 is the last SNIS year), exported on 2026-07-16
+      (file-name stamp) and kept in Documents/Reposicionamento_Submissão_ESD/00_Primary_Data_Sources_PILAR2b.
+      The SINISA editions after 2022 are still to get. A team audit (rais_industrial_coordinates_sp_2026_09,
+      README.md) found 28 SP municipalities without a provider match in SNIS 2022.
   - id: cetesb_rsu_inventory
     name: CETESB Inventário Estadual de Resíduos Sólidos Urbanos (+ IQR layer)
     publisher: CETESB
     url: https://cetesb.sp.gov.br/residuossolidos/wp-content/uploads/sites/26/2024/05/Inventario-Estadual-de-Residuos-Solidos-Urbanos-no-Estado-de-Sao-Paulo-2023.pdf
     module: supply
     spatial: municipality / landfill
-    status: get
+    status: get   # the inventory PDF; the DataGeo IQR/IGR/IQC layers are held as cetesb_datageo_waste_indices
     confidence: S
   - id: pilar2b_fde
     name: PILAR-2b FDE competing-use and availability factors
@@ -287,12 +309,25 @@ sources:
     status: get
     confidence: S
   - id: fiesp_sp_biomethane_2024
-    name: FIESP-led consortium study — biomethane competitiveness in SP (2024)
-    publisher: FIESP-led consortium (original report not yet located)
+    name: "FIESP-led study — O biometano em São Paulo: potencial e medidas para alavancar a produção (June 2025, 180 p.)"
+    publisher: FIESP (project lead); prepared by the Instituto 17, PSR and Amplum Biogás consortium
     url: https://brasilenergia.com.br/petroleoegas/competitividade-do-biogas-e-biometano-nos-mercados-de-gas
     module: costs
-    status: get   # locate original report
+    format: PDF (text layer)
+    access: open
+    license: non-commercial reproduction and distribution allowed with FIESP cited as source (report p. 6)
+    status: have
     confidence: S
+    local_path: data/raw/fiesp_sp_biomethane_2024/
+    sha256: ec3c335c36467747ff4409a384c11fdaab8d1bb4b0e83a64960f961fdd54addb   # 1 file, 43.9 MB
+    accessed: '2026-10-05'
+    notes: >-
+      The original report, found on the project PC (Documents/40_Pesquisa_Dados_e_Referencias); the id
+      keeps "2024" for stability but the report is dated June 2025. Sponsors listed on p. 5 include
+      ABiogás, UNICA, FIESP and Scania. The URL is the press article that first cited the study; the
+      report's own download URL is not recorded. Values extracted from it stay S until page and
+      verbatim quote are recorded (rule 2). A second 180-page copy without a text layer exists in
+      Documents/CP2B/Validacao_dados/02_LITERATURA.
   - id: iea_biogas_outlook_2020
     name: IEA Outlook for Biogas and Biomethane (2020)
     publisher: IEA
@@ -503,8 +538,19 @@ sources:
     publisher: DNIT
     url: https://servicos.dnit.gov.br/dadosabertos/
     module: spatial
-    status: get
+    temporal: SNV version 202507A
+    format: ESRI Shapefile + XLS + PDF guide
+    access: open
+    license: TODO verify DNIT terms
+    status: have
     confidence: S
+    local_path: data/raw/dnit_snv/
+    sha256: 34331a3d40e0547281d0bb1a73bbae4d7780ca96cb5016a9441cb506ca5169fe   # 9 files, 133.6 MB
+    accessed: '2026-10-05'
+    notes: >-
+      Downloaded 2025-08-21 (folder stamp), copied from Documents/CP2B/DNIT_MULTIMODAL. Brazil-wide;
+      clip to SP. The KML copy, the route layer (r202507A) and the 202504A→202507A diff files were not
+      copied.
   - id: osm_sudeste
     name: OpenStreetMap Sudeste extract (routing)
     publisher: OpenStreetMap contributors (Geofabrik extract)
@@ -559,8 +605,19 @@ sources:
     publisher: EPE
     url: https://gisepeprd2.epe.gov.br/WebMapEPE/
     module: spatial
-    status: get
+    provides: [biomethane_plants, ethanol_plants, biodiesel_plants, lpg_bases, transmission_lines, substations, sin_subsystems]
+    format: ESRI Shapefile (ArcGIS "_ags_Download Dados Webmap EPE" exports)
+    access: open
+    license: TODO verify EPE terms
+    status: have
     confidence: S
+    local_path: data/raw/epe_webmap/
+    sha256: 9895b897def739dcd0d5f1532e3a18a1a6463a0885c145d24f2b3819d1679b27   # 56 files, 10.6 MB
+    accessed: '2026-10-05'
+    notes: >-
+      Exports saved around 2026-06/07 (file timestamps 2026-07-30), copied from a poster project
+      folder under Documents. Gas pipelines are not in these exports (held in mapbiomas_infra and
+      cp2b_project_map). Compare plant layers with anp_biomethane_plants before use.
   - id: aneel_sigel
     name: ANEEL SIGEL
     publisher: ANEEL
@@ -587,8 +644,18 @@ sources:
     url: https://biogas.fnr.de/service/forschung-live/projekte/dbfz-ressourcendatenbank-potenzial-von-abfaellen-und-reststoffen-nutzen
     module: intl_benchmark
     use: method template for theoretical→technical→mobilisable potential (compare with PILAR-2b FDE)
-    status: get
+    format: CSV (Biomass Monitor v6.3, 2024-12-01) + XLSX basis data with readme + PDF usage notes
+    access: open
+    license: CC BY 4.0 (as recorded for the resource database; confirm in Metadata_Nutzungshinweise.pdf)
+    status: have
     confidence: S
+    local_path: data/raw/intl_de_dbfz_resources/
+    sha256: da184990b9bef3b9219eea7ee97d81864baa5b4ec330e366d1f7fc7f2e840b4e   # 5 files, 7.7 MB
+    accessed: '2026-10-05'
+    notes: >-
+      Copied from Documents/40_Pesquisa_Dados_e_Referencias and Documents/Reposicionamento_Submissão_ESD/DBFZ_REFERENCES.
+      The readme cites http://webapp.dbfz.de/resources for per-biomass flowcharts. German data:
+      priors only, not SP inputs.
   - id: intl_de_dbfz_operator_survey
     name: DBFZ annual operator survey (Betreiberbefragung) & Anlagenbestand reports
     publisher: DBFZ
@@ -1133,3 +1200,182 @@ sources:
       UF scale and must not be summed with RGINT rows; PAM maize is 1st+2nd crop combined; no
       TerraClass for São Paulo and São José dos Campos. Units ha. Use for land-use context and
       cross-checks, not as a primary MapBiomas source (cite MapBiomas col. 10 directly).
+
+  # ---------------- Second local survey, Documents folders (2026-10-05; docs/25 §5) ----------------
+  - id: cetesb_datageo_waste_indices
+    name: CETESB/SEMIL municipal waste indices on DataGeo — IQR 2022-2024 (landfill quality, with destination), IGR 2023-2025 (waste management), IQC 2022-2024 (composting plants)
+    publisher: CETESB / SEMIL-SP (via DataGeo)
+    url: https://datageo.ambiente.sp.gov.br/geoserver/datageo/VWM_IQR_CETESB_2024_POL/wfs?version=1.0.0&request=GetFeature&outputFormat=SHAPE-ZIP&typeName=VWM_IQR_CETESB_2024_POL
+    module: supply
+    provides: [iqr, msw_disposal_municipality, igr, iqc]
+    spatial: municipality (645, SP)
+    temporal: IQR 2022-2024; IGR 2023-2025 (IGR 2025 = base year 2024); IQC 2022-2024
+    format: ESRI Shapefile (one folder per layer, each with wfsrequest.txt) + DataGeo metadata text
+    access: open
+    license: TODO verify DataGeo terms
+    status: have
+    confidence: V
+    local_path: data/raw/cetesb_datageo_waste_indices/
+    sha256: af7baaa30d7ce8c34c6a45cf92b92bdca3f15b481170591528cf2f7529c428f7   # 57 files, 222.4 MB
+    accessed: '2026-10-05'
+    notes: >-
+      Downloaded 2026-09-24 (file timestamps), copied from Documents/Reposicionamento_Submissão_ESD/DADOS_ESPACIAIS.
+      Each layer's exact WFS URL is in its wfsrequest.txt (the url above is the IQR 2024 one).
+      IQR fields: Codigo, Nome, IQR, Dispoe_em (municipality where the waste is disposed: the MSW flow
+      to landfills). Municipal polygons, not landfill points. Complements cetesb_rsu_inventory.
+  - id: cetesb_ictem_2024
+    name: CETESB ICTEM 2024 — municipal sewage collection and treatment index (polygons)
+    publisher: CETESB (via DataGeo / SEMIL-SP)
+    url: https://datageo.ambiente.sp.gov.br/geoserver/datageo/VWM_ICTEM_CETESB_2024_POL/wfs?version=1.0.0&request=GetFeature&outputFormat=SHAPE-ZIP&typeName=VWM_ICTEM_CETESB_2024_POL
+    module: supply
+    provides: [ictem, sewage_collection_pct, sewage_treatment_pct]
+    spatial: municipality (SP)
+    temporal: 2024
+    format: ESRI Shapefile + DataGeo metadata text
+    access: open
+    license: TODO verify DataGeo terms
+    status: have
+    confidence: V
+    local_path: data/raw/cetesb_ictem_2024/
+    sha256: 6a12a2eacad1c8f77d431595ff285058727386bc4da0d00de35806b5dd2218e8   # 7 files, 27.7 MB
+    accessed: '2026-10-05'
+    notes: URL from wfsrequest.txt. One year newer than cetesb_ictem_2023; keep both (rule 4) and use 2024.
+  - id: cp2b_method_v5_1
+    name: CP2B method v5.1 results — biogas/CH4 potential per municipality × substrate at levels L1-L4, state levels, mill allocation, v4→v5 reconciliation, article tables
+    publisher: CP2B / NIPE-UNICAMP (own work, unpublished)
+    url: local
+    module: supply
+    provides: [ch4_potential_levels_l1_l4_by_municipality_substrate, biomethane_eq_by_level, mill_allocation_weights, state_levels_bi_nm3_ch4]
+    spatial: municipality (645, SP); intermediate region
+    temporal: run of 2026-09-24
+    format: CSV + JSON + Markdown
+    access: restricted
+    license: none stated (team's own work)
+    status: have
+    confidence: D
+    local_path: data/raw/cp2b_method_v5_1/
+    sha256: e9113926fd353e6dff4cc63c6d4d1bb25ee022cf709b1597a52c6098a9a3d083   # 64 files, 57.9 MB
+    accessed: '2026-10-05'
+    notes: >-
+      Copied from Documents/Reposicionamento_Submissão_ESD (Metodo_CP2b/outputs_v5 top level and the
+      Pacote_CP2b_v5.1 tables, whose LEIA-ME explains each table). Newer than cp2b_redu_v2: record
+      differences in docs/21 §Conflicts, do not average (rule 7). Check the CH4 volume basis (Nm³ at
+      0 °C?) before comparing. A platform copy sits in Pilar2b NewLook backend/data/raw/cp2b_potential/2026.
+  - id: cp2b_plant_validation_audit_2026_09
+    name: CP2B biogas/biomethane plant validation audit (2026-09-16) — 31 reconciled plants with CNPJ, coordinate precision, ANP monthly production observations and source URLs
+    publisher: CP2B / NIPE-UNICAMP (own work, compiling ANP, ANEEL, MapBiomas and company sources)
+    url: local
+    module: supply
+    provides: [plant_cnpj, plant_coords, coord_precision_km, biomethane_nm3_day, obs_2025_m3, source_url]
+    spatial: point (plant)
+    temporal: observations to 2025
+    format: CSV + Markdown audit notes
+    access: restricted
+    license: none stated (team's own work)
+    status: have
+    confidence: D
+    local_path: data/raw/cp2b_plant_validation_audit_2026_09/
+    sha256: d32e4bd7a6885a8beabdb54029a2ce5d4b9d40c2684c2d9c65a0413412fca75d   # 11 files, 0.2 MB
+    accessed: '2026-10-05'
+    notes: >-
+      Copied from Documents/CP2B/VALIDACAO_DE_USINAS_BIOGAS. CNPJ here identifies companies, not
+      people. Calibration targets for capacity factor (rule 10: nameplate vs actual). Columns ending
+      _ESTIMATIVA are estimates, not observations.
+  - id: rais_industrial_coordinates_sp_2026_09
+    name: Industrial points of interest from the public RAIS establishment file (dairy, ice cream; cereal farms kept apart) and the team's data-quality audit (2026-09-24)
+    publisher: CP2B / NIPE-UNICAMP audit, from RAIS (MTE) public anonymous establishment microdata
+    url: local
+    module: supply
+    provides: [industrial_poi_coords_by_cnae, rais_active_links, coord_status]
+    spatial: point (postcode-level geocoding) and municipality
+    temporal: RAIS year not identified in the source file
+    format: CSV + Markdown
+    access: restricted
+    license: none stated (derived from public RAIS)
+    status: have
+    confidence: D
+    local_path: data/raw/rais_industrial_coordinates_sp_2026_09/
+    sha256: cfaf45e8b026ff65b3df0542cc283798b198a19bfdd45aa65fe0ab0772846964   # 12 files, 12.2 MB
+    accessed: '2026-10-05'
+    notes: >-
+      Copied from Documents/Reposicionamento_Submissão_ESD/DADOS_ESPACIAIS. All coordinates are
+      coord_status_publicacao = pendente_validacao (postcode centroids): screening only, never a plant
+      location. No names or CNPJ. The same audit (README.md) blocks the legacy
+      Industrias_SP_pontos layer (4,781 points): CNAE 01113 (cereals) was read as 11135 (beer), so
+      3,568 points were mislabelled and their biogas/energy fields are invalid. Not imported.
+  - id: ibge_io_matrix_2015
+    name: IBGE input-output matrix 2015, level 67 activities
+    publisher: IBGE
+    url: TODO IBGE download URL (not recorded with the file)
+    module: market
+    format: XLS
+    access: open
+    license: TODO verify IBGE terms
+    status: have
+    confidence: S
+    local_path: data/raw/ibge_io_matrix_2015/
+    sha256: e6ed5997dcea5a3d7a32acaaf2d682782157918c53ef0b8212c0799d13528eae   # 1 file, 1.3 MB
+    accessed: '2026-10-05'
+    notes: >-
+      Copied from Documents/Input_Output_Ideas. Replaces the broken 5.9 KB copy noted in docs/25 §2.
+      Publisher taken from the file name only (S).
+  - id: epe_ben_2025
+    name: EPE Balanço Energético Nacional — Annex IX consolidated balances (tep) and Annex X open/commercial matrix, 1970-2024; open matrix 2024
+    publisher: EPE
+    url: TODO BEN download URL (not recorded with the files)
+    module: market
+    temporal: 1970-2024
+    format: XLSX
+    access: open
+    license: TODO verify EPE terms
+    status: have
+    confidence: S
+    local_path: data/raw/epe_ben_2025/
+    sha256: f0da56554c846a137b15bc805d2741f8d1238b7c2b85a9d14a8d1991b46efea3   # 3 files, 56.3 MB
+    accessed: '2026-10-05'
+    notes: Copied from Documents/40_Pesquisa_Dados_e_Referencias/Balanco_Energetico_BEN (files dated 2026-09-01). Edition inferred from the 1970-2024 span (S).
+  - id: atlas_bioenergia_sp_2020
+    name: Atlas de Bioenergia do Estado de São Paulo (2020), digital book (compressed copy)
+    publisher: TODO (as printed in the book)
+    url: TODO
+    module: supply
+    format: PDF
+    access: open
+    license: TODO
+    status: have
+    confidence: S
+    local_path: data/raw/atlas_bioenergia_sp_2020/
+    sha256: 916dd37d9669fcecda7cee6b9bee4edee6548d0694cd0d0c3410009be1c446e1   # 1 file, 8.7 MB
+    accessed: '2026-10-05'
+    notes: >-
+      Copied from Documents/40_Pesquisa_Dados_e_Referencias/Atlas_Bioenergia (a 208 MB full-resolution
+      copy stays there). Use to verify the page-cited factors in FONTES.md (docs/25 §4) from S to V;
+      fill publisher and URL from the imprint page.
+  - id: epe_panorama_biometano_2023
+    name: EPE/MME Panorama do Biometano — Setor Sucroenergético (Dec 2023, 41 p.)
+    publisher: EPE / MME
+    url: TODO EPE publication URL (not recorded with the file)
+    module: market
+    format: PDF
+    access: open
+    license: TODO
+    status: have
+    confidence: S
+    local_path: data/raw/epe_panorama_biometano_2023/
+    sha256: 81523d56d5e9d891401c2b832ab3c11b41b657ddcf23f97570568b8d0a93cc95   # 1 file, 1.0 MB
+    accessed: '2026-10-05'
+    notes: Copied from Documents/Reposicionamento_Submissão_ESD/Benchmarks_Brasil. Benchmark for sugar-energy biomethane.
+  - id: abiogas_mapeamento_biometano_2032
+    name: ABiogás technical note — Mapeamento de plantas de biometano até 2032 (version of 2024-12-02)
+    publisher: ABiogás
+    url: TODO ABiogás URL (not recorded with the file)
+    module: market
+    format: PDF (6 p.)
+    access: open
+    license: TODO
+    status: have
+    confidence: S
+    local_path: data/raw/abiogas_mapeamento_biometano_2032/
+    sha256: ae27855684d2fe24e06cafd189082d8cebedd59fd40f3f209d5de44030a6e3b9   # 1 file, 0.4 MB
+    accessed: '2026-10-05'
+    notes: Copied from Documents/40_Pesquisa_Dados_e_Referencias. Planned-plant pipeline to 2032; an industry association's projection, not observed capacity.

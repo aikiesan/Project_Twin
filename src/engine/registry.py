@@ -1,4 +1,5 @@
-"""Access to the in-git registry: ``parameters.csv``, ``sources.yaml``, ``projects_capex.csv``.
+"""Access to the in-git registry: ``parameters.csv``, ``sources.yaml``, ``projects_capex.csv``,
+``references.csv``.
 
 This module is the **single entry point** other modules use to read model parameters, so every
 number used in a run can be traced to a registry row (id, source, confidence flag).
@@ -16,7 +17,10 @@ keep the raw text in :attr:`Param.raw_central` and have ``central = None``.
 Quality tooling (added 2026-10, does not change the loaders):
 
 - :func:`validate_parameters`, :func:`validate_sources`, :func:`validate_projects_capex`,
-  :func:`validate_all` -> ``list[Issue]`` (``level`` = ``"error"`` | ``"warning"``)
+  :func:`validate_references`, :func:`validate_all` -> ``list[Issue]``
+  (``level`` = ``"error"`` | ``"warning"``)
+- :func:`load_references` -> ``list[dict]`` (scientific references, what each supports and the
+  result of its double-check; docs/08 §8)
 - :func:`summary_markdown` -> counts by module / confidence / status / feedstock
 - :func:`param_hash` -> short SHA-256 of ``parameters.csv`` or of an overrides dict
 - CLI: ``python -m engine.registry validate|summary|hash`` (:func:`main`)
@@ -45,6 +49,7 @@ from engine import REGISTRY_DIR
 PARAMETERS_CSV = REGISTRY_DIR / "parameters.csv"
 SOURCES_YAML = REGISTRY_DIR / "sources.yaml"
 PROJECTS_CAPEX_CSV = REGISTRY_DIR / "projects_capex.csv"
+REFERENCES_CSV = REGISTRY_DIR / "references.csv"
 
 CONFIDENCE_FLAGS = ("V", "S", "K", "D")
 
@@ -234,7 +239,44 @@ PROJECTS_REQUIRED_COLUMNS = (
 #: Monetary columns of ``projects_capex.csv`` (million BRL, nominal) that must be numeric.
 PROJECTS_INVESTMENT_COLUMNS = ("investment_total_R$M", "bndes_R$M")
 
+#: Columns ``references.csv`` must have (docs/08 §8).
+REFERENCE_COLUMNS = (
+    "ref_id",
+    "kind",
+    "authors",
+    "year",
+    "title",
+    "container",
+    "volume",
+    "issue",
+    "pages",
+    "doi",
+    "url",
+    "used_for",
+    "ref_check",
+    "checked_on",
+    "check_evidence",
+    "value_check",
+    "notes",
+)
+
+#: Kinds of reference in ``references.csv``.
+REFERENCE_KINDS = ("article", "preprint", "report", "book", "standard", "software", "grey")
+
+#: Outcome of the identity double-check of a reference (docs/08 §8):
+#: ``two_sources`` = DOI/title/first author/year/container confirmed by two independent sources;
+#: ``one_source`` = confirmed by one source only; ``corrected`` is not a status (fix the row and
+#: re-check); ``unconfirmed`` = searched but not established; ``unidentified`` = the citation is
+#: too vague to name one work; ``pending`` = not checked yet.
+REF_CHECK_STATUSES = ("two_sources", "one_source", "unconfirmed", "unidentified", "pending")
+
+#: Status of a value the project attributes to a reference (``value_check`` column).
+VALUE_CHECK_STATUSES = ("page_quote", "seen_in_abstract", "not_seen", "contradicted")
+
 _SNAKE_CASE_RE = re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
+_DOI_RE = re.compile(r"^10\.\d{4,9}/\S+$")
+_DOI_IN_TEXT_RE = re.compile(r"10\.\d{4,9}/[^\s;,)]+")
+_ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _HTTP_URL_RE = re.compile(r"^https?://\S+$")
 # Gas volume per time: (N)m3 per hour / day / year / month. Group 1 = volume basis.
 _GAS_FLOW_UNIT_RE = re.compile(r"^(n?m3)/(h|hr|d|day|yr|y|year|a|month|mo)$")
@@ -689,14 +731,170 @@ def validate_projects_capex(path: Path | str = PROJECTS_CAPEX_CSV) -> list[Issue
     return sink.issues
 
 
+def load_references(path: Path | str = REFERENCES_CSV) -> list[dict[str, str]]:
+    """Rows of ``references.csv`` as dicts of stripped strings."""
+    with open(path, newline="", encoding="utf-8") as fh:
+        return [{k: (v or "").strip() for k, v in row.items()} for row in csv.DictReader(fh)]
+
+
+def _read_param_sources(path: Path) -> dict[str, tuple[str, str]]:
+    """``{id: (source, confidence)}`` read fresh from ``parameters.csv`` (no cache: validators
+    must see the file as it is now). Empty when the file cannot be read."""
+    try:
+        with open(path, newline="", encoding="utf-8-sig") as fh:
+            return {
+                (r.get("id") or "").strip(): (
+                    (r.get("source") or "").strip(),
+                    (r.get("confidence") or "").strip(),
+                )
+                for r in csv.DictReader(fh)
+                if (r.get("id") or "").strip()
+            }
+    except (OSError, csv.Error):
+        return {}
+
+
+def _split_list(text: str) -> list[str]:
+    return [x.strip() for x in text.split(";") if x.strip()]
+
+
+def _url_domain(url: str) -> str:
+    host = url.split("://", 1)[-1].split("/", 1)[0].lower()
+    return host[4:] if host.startswith("www.") else host
+
+
+def validate_references(
+    path: Path | str = REFERENCES_CSV, parameters_path: Path | str | None = None
+) -> list[Issue]:
+    """Validate ``references.csv`` and its links to ``parameters.csv`` (docs/08 §8).
+
+    Rules (error unless stated):
+
+    - header has :data:`REFERENCE_COLUMNS`; every row has the header's fields;
+    - ``ref_id`` non-empty, snake_case and unique; ``kind`` in :data:`REFERENCE_KINDS`;
+    - ``year`` empty or four digits; ``doi`` empty or ``10.<registrant>/<suffix>`` (no
+      ``https://doi.org/`` prefix); ``url`` empty or http(s);
+    - ``used_for`` non-empty (a reference must say what in the project it supports); every
+      ``parameters.csv:<id>`` item names an existing parameter;
+    - ``ref_check`` in :data:`REF_CHECK_STATUSES`; ``two_sources`` needs at least two http(s)
+      URLs from two different domains in ``check_evidence``, ``one_source`` at least one;
+      every status but ``pending`` needs ``checked_on`` (YYYY-MM-DD);
+    - ``value_check`` items are ``<parameter id>=<status>`` with a status from
+      :data:`VALUE_CHECK_STATUSES` and an existing parameter id;
+    - warning: a reference that is not ``two_sources``;
+    - warning: a parameter whose ``source`` names a DOI or "et al." but that no reference row
+      lists in ``used_for``;
+    - warning: a parameter flagged ``V`` whose linked references are not ``two_sources``.
+
+    Args:
+        path: CSV file to check.
+        parameters_path: ``parameters.csv`` for the cross-checks (default: next to ``path``).
+    """
+    path = Path(path)
+    sink = _IssueSink(path.name)
+    text = _read_registry_text(path, sink)
+    if text is None:
+        return sink.issues
+    params_path = Path(parameters_path) if parameters_path else path.with_name(PARAMETERS_CSV.name)
+    params = _read_param_sources(params_path)
+    reader = csv.DictReader(io.StringIO(text, newline=""), restkey=_EXTRA_FIELDS_KEY)
+    if not _check_header(reader.fieldnames, REFERENCE_COLUMNS, sink):
+        return sink.issues
+    seen: dict[str, int] = {}
+    linked: dict[str, list[str]] = {}
+    for row in reader:
+        line = reader.line_num
+        rid = (row.get("ref_id") or "").strip()
+        if not _check_field_count(row, line, rid, sink):
+            continue
+        if not rid:
+            sink.error("empty ref_id", line)
+        elif rid in seen:
+            sink.error(f"duplicate ref_id (first defined on line {seen[rid]})", line, rid)
+        elif not _SNAKE_CASE_RE.fullmatch(rid):
+            sink.error(f"ref_id {rid!r} is not snake_case", line, rid)
+        else:
+            seen[rid] = line
+        get = {k: (row.get(k) or "").strip() for k in REFERENCE_COLUMNS}
+        if get["kind"] not in REFERENCE_KINDS:
+            sink.error(
+                f"kind {get['kind']!r} is not one of {', '.join(REFERENCE_KINDS)}", line, rid
+            )
+        if get["year"] and not re.fullmatch(r"\d{4}", get["year"]):
+            sink.error(f"year {get['year']!r} is not four digits", line, rid)
+        if get["doi"] and not _DOI_RE.fullmatch(get["doi"]):
+            sink.error(f"doi {get['doi']!r} is not of the form 10.xxxx/suffix", line, rid)
+        if get["url"] and not _HTTP_URL_RE.fullmatch(get["url"]):
+            sink.error(f"url {get['url']!r} is not http(s)", line, rid)
+
+        used = _split_list(get["used_for"])
+        if not used:
+            sink.error(
+                "used_for is empty: say which values, data or methods it supports", line, rid
+            )
+        for item in used:
+            if item.startswith("parameters.csv:"):
+                pid = item.split(":", 1)[1]
+                if params and pid not in params:
+                    sink.error(f"used_for names unknown parameter {pid!r}", line, rid)
+                linked.setdefault(pid, []).append(get["ref_check"])
+
+        status = get["ref_check"]
+        urls = [u for u in _split_list(get["check_evidence"]) if _HTTP_URL_RE.fullmatch(u)]
+        if status not in REF_CHECK_STATUSES:
+            sink.error(
+                f"ref_check {status!r} is not one of {', '.join(REF_CHECK_STATUSES)}", line, rid
+            )
+        elif status == "two_sources" and len({_url_domain(u) for u in urls}) < 2:
+            sink.error("two_sources needs evidence URLs from two different domains", line, rid)
+        elif status == "one_source" and not urls:
+            sink.error("one_source needs an evidence URL", line, rid)
+        if status in REF_CHECK_STATUSES and status != "two_sources":
+            sink.warning(f"reference not double-checked (ref_check={status})", line, rid)
+        if status != "pending" and not _ISO_DATE_RE.fullmatch(get["checked_on"]):
+            sink.error("checked_on must be YYYY-MM-DD once a check was made", line, rid)
+
+        for item in _split_list(get["value_check"]):
+            pid, _, vstatus = item.partition("=")
+            pid, vstatus = pid.strip(), vstatus.strip()
+            if vstatus not in VALUE_CHECK_STATUSES:
+                sink.error(
+                    f"value_check {item!r}: status must be one of "
+                    + ", ".join(VALUE_CHECK_STATUSES),
+                    line,
+                    rid,
+                )
+            if params and pid not in params:
+                sink.error(f"value_check names unknown parameter {pid!r}", line, rid)
+
+    for pid, (source, confidence) in params.items():
+        cites_paper = bool(_DOI_IN_TEXT_RE.search(source)) or "et al" in source
+        if cites_paper and pid not in linked:
+            sink.warning(
+                f"parameter {pid!r} cites a paper that no references.csv row links to "
+                "(add the reference with used_for parameters.csv:" + pid + ")",
+                ident=pid,
+            )
+        if confidence == "V" and pid in linked and "two_sources" not in linked[pid]:
+            sink.warning(
+                f"parameter {pid!r} is flagged V but none of its references is double-checked",
+                ident=pid,
+            )
+    return sink.issues
+
+
 def validate_all(registry_dir: Path | str = REGISTRY_DIR) -> list[Issue]:
-    """Run all three validators on ``registry_dir`` (parameters, sources, projects_capex)."""
+    """Run the validators on ``registry_dir``: parameters, sources, projects_capex and, when the
+    file exists, references."""
     registry_dir = Path(registry_dir)
-    return (
+    issues = (
         validate_parameters(registry_dir / PARAMETERS_CSV.name)
         + validate_sources(registry_dir / SOURCES_YAML.name)
         + validate_projects_capex(registry_dir / PROJECTS_CAPEX_CSV.name)
     )
+    if (registry_dir / REFERENCES_CSV.name).exists():
+        issues += validate_references(registry_dir / REFERENCES_CSV.name)
+    return issues
 
 
 # ---------------------------------------------------------------------------------------------
@@ -795,6 +993,21 @@ def summary_markdown(registry_dir: Path | str = REGISTRY_DIR) -> str:
         ]
     except (OSError, csv.Error) as exc:
         out += ["## Projects CAPEX", "", f"Could not be read: {exc}", ""]
+
+    refs_path = registry_dir / REFERENCES_CSV.name
+    if refs_path.exists():
+        try:
+            refs = load_references(refs_path)
+            out += [
+                f"## References ({len(refs)})",
+                "",
+                "By double-check status (docs/08 §8):",
+                "",
+                _count_markdown([r.get("ref_check") or _MISSING for r in refs], "ref_check"),
+                "",
+            ]
+        except (OSError, csv.Error) as exc:
+            out += ["## References", "", f"Could not be read: {exc}", ""]
 
     issues = validate_all(registry_dir)
     n_err = sum(i.level == "error" for i in issues)

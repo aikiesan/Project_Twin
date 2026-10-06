@@ -25,6 +25,7 @@ It is **not** a real-time digital twin. See `docs/01_CONTEXT_AND_MOTIVATION.md` 
 8. **Units are explicit everywhere.** Column names carry units (`capex_brl_2025`, `ch4_nm3_d`, `cane_t`). Monetary values carry currency *and* price year.
 9. **Distinguish generated vs applied vs available** for every residue (e.g. vinasse generated ≠ vinasse applied in fertirrigation ≠ vinasse available for AD).
 10. **Distinguish biogas vs CH₄ vs biomethane**, and nameplate capacity vs actual production (capacity factor).
+11. **Every scientific reference is tied to the project and double-checked.** A paper or report enters the docs or the registry only with a row in `registry/references.csv`. The row says what the reference supports (`used_for`: parameter ids, datasets, methods, docs sections). It also records a two-source check of its identity: DOI, title, first author, year and journal, confirmed by two independent sources (`ref_check: two_sources`). A value taken from a reference stays `S` until its page and a verbatim quote are recorded (`V`). A reference that cannot be double-checked is labelled as such, never cited as settled. See `docs/08_VERIFICATION_PROTOCOL.md` §8.
 
 ## 3. Conventions
 
@@ -84,6 +85,7 @@ ruff check . && black --check .
 - Start every session by reading `docs/19_ROADMAP_STEP_BY_STEP.md` to find the current phase and the next unchecked box.
 - Before modeling, check the parameter's flag in `registry/parameters.csv`. If `S`/`K`, propose verifying first.
 - When extracting data from PDFs with an LLM, always store `source_id`, `page`, and the **verbatim quote** per value (schema: `templates/extraction_schema_mill_year.json`).
+- When citing a paper anywhere (docs, registry, code comments, digests), first add or update its `registry/references.csv` row, with `used_for` and the double-check. Run `python -m engine.registry validate` before committing.
 - When adding a method, write/update its doc in `docs/` **in the same change** as the code.
 - When a decision is made (tool, resolution, method), add an ADR in `docs/decisions/`.
 - Prefer small, verifiable steps; show intermediate tables/maps before scaling up.

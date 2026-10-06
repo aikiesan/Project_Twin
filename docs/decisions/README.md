@@ -17,3 +17,4 @@ Status values: Proposed · Accepted · Superseded by ADR-XXXX.
 | [0010](ADR-0010-walking-skeleton-and-sensitivity-led-verification.md) | Walking skeleton first; verification led by sensitivity; Phase 1 limited to cane and manure | Accepted |
 | [0011](ADR-0011-clip-oversized-rasters-on-import.md) | Clip oversized rasters to SP on import, with a provenance manifest | Accepted |
 | [0012](ADR-0012-daily-digest-intake.md) | Intake of the daily digests: a triage note per day and a verification queue | Accepted |
+| [0013](ADR-0013-references-registry-and-double-check.md) | References registry: every paper tied to project values, every source double-checked | Accepted |

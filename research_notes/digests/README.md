@@ -9,12 +9,12 @@ Procedure: `docs/decisions/ADR-0012-daily-digest-intake.md`. One note per digest
 
 | Kind | Destination | Rule |
 |---|---|---|
-| `parameter` | queue → `parameters.csv` after reading the primary source | Never straight into `parameters.csv`. A digest `[V]` is our `S` |
+| `parameter` | queue → `parameters.csv` after reading the primary source | Never straight into `parameters.csv`. A digest `[V]` is our `S`. If the source is a paper, it needs its `references.csv` row first |
 | `project` | queue → `projects_capex.csv` after reading the source | Capacity with its basis (feed t/d, biogas or biomethane, harvest or annual); investment total separate from financing |
 | `source` | stub in `sources.yaml` (`status: get`, `confidence: S`), or a note on the existing entry | No download link → LAI request in `docs/07` |
 | `regulation` | watch list in `docs/16` §6 | Date, body, what it changes in the engine |
 | `market_price` | snapshot in `docs/16` §3 | Keep the basis: retail, distribution, excluding taxes, FOB |
-| `method` | `docs/23`, and the module doc that will use it | Confirm the DOI before citing |
+| `method` | `registry/references.csv` first (ADR-0013), then `docs/23` and the module doc that will use it | Two-source check of DOI, title, first author, year and journal; `used_for` names what it supports |
 | `context` | this note; `docs/21` if it raises a question or a conflict | — |
 
 4. Two sources disagree → `docs/21` §1, never an average.

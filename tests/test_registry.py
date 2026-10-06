@@ -476,3 +476,77 @@ def test_real_registry_has_no_validation_errors(validator) -> None:
     if errors:
         pytest.xfail(f"{len(errors)} registry error(s):\n" + "\n".join(map(str, errors)))
     assert errors == []
+
+
+# ---------------------------------------------------------------------------------------------
+# references.csv (docs/08 §8) — SYNTHETIC rows, made-up DOIs on example domains
+# ---------------------------------------------------------------------------------------------
+
+REF_HEADER = (
+    "ref_id,kind,authors,year,title,container,volume,issue,pages,doi,url,used_for,ref_check,"
+    "checked_on,check_evidence,value_check,notes\n"
+)
+REF_ROW_OK = (
+    "syn_ref,article,Doe J,2020,Synthetic title,Synthetic Journal,1,2,3-4,10.9999/syn.1,,"
+    "parameters.csv:syn_a; docs/23,two_sources,2026-10-06,"
+    "https://example.org/a; https://example.net/b,syn_a=seen_in_abstract,\n"
+)
+
+
+def _refs(tmp_path: Path, rows: str, params: str = PARAM_ROWS_OK) -> list[Issue]:
+    _write(tmp_path / "parameters.csv", PARAM_HEADER + params)
+    return reg.validate_references(_write(tmp_path / "references.csv", REF_HEADER + rows))
+
+
+def test_references_clean_file_has_no_issues(tmp_path: Path) -> None:
+    assert _refs(tmp_path, REF_ROW_OK) == []
+
+
+@pytest.mark.parametrize(
+    "old, new, message",
+    [
+        ("syn_ref,article", "syn_ref,blog", "kind"),
+        ("10.9999/syn.1", "https://doi.org/10.9999/syn.1", "doi"),
+        (",2020,", ",20,", "year"),
+        ("parameters.csv:syn_a; docs/23", "", "used_for is empty"),
+        ("parameters.csv:syn_a; docs/23", "parameters.csv:syn_zz", "unknown parameter"),
+        ("https://example.org/a; https://example.net/b", "https://example.org/a", "two different"),
+        ("2026-10-06", "", "checked_on"),
+        ("syn_a=seen_in_abstract", "syn_a=looks_right", "value_check"),
+        ("two_sources", "verified", "ref_check"),
+    ],
+)
+def test_references_errors(tmp_path: Path, old: str, new: str, message: str) -> None:
+    errors, _ = _levels(_refs(tmp_path, REF_ROW_OK.replace(old, new)))
+    assert any(message in e.message for e in errors), errors
+
+
+def test_references_duplicate_ids(tmp_path: Path) -> None:
+    errors, _ = _levels(_refs(tmp_path, REF_ROW_OK + REF_ROW_OK))
+    assert any("duplicate ref_id" in e.message for e in errors)
+
+
+def test_references_warnings(tmp_path: Path) -> None:
+    # not double-checked -> warning; pending needs no date or evidence
+    row = REF_ROW_OK.replace("two_sources,2026-10-06", "pending,")
+    errors, warns = _levels(_refs(tmp_path, row))
+    assert errors == []
+    assert any("not double-checked" in w.message for w in warns)
+    # a parameter citing a paper with no reference row
+    params = PARAM_ROWS_OK + "syn_c,process,C,1,,,-,Roe et al. 2019,S,\n"
+    _, warns = _levels(_refs(tmp_path, REF_ROW_OK, params))
+    assert any("syn_c" in w.message and "no references.csv row" in w.message for w in warns)
+    # a V parameter whose only reference is not double-checked
+    params_v = PARAM_ROWS_OK.replace("Synthetic fixture,S,", "Synthetic fixture,V,", 1)
+    _, warns = _levels(_refs(tmp_path, row, params_v))
+    assert any("flagged V" in w.message for w in warns)
+
+
+def test_validate_all_reads_references_when_present(clean_registry: Path) -> None:
+    assert validate_all(clean_registry) == []
+    _write(clean_registry / "references.csv", REF_HEADER + REF_ROW_OK.replace("syn_ref", "Bad"))
+    (issue,) = validate_all(clean_registry)
+    assert "snake_case" in issue.message
+    _write(clean_registry / "references.csv", REF_HEADER + REF_ROW_OK)
+    text = summary_markdown(clean_registry)
+    assert "## References (1)" in text and "| two_sources | 1 |" in text

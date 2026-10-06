@@ -46,6 +46,28 @@ Most of the registry was compiled from search snippets and prior knowledge becau
 |---|---|---|---|---|---|---|
 | | | | | | | |
 
+## 8. References: tie to the project, double-check the source (2026-10-06, ADR-0013)
+Every scientific reference has one row in `registry/references.csv`. There are two levels of checking, and they are not the same thing:
+
+| Level | What is checked | Recorded as | Enough for |
+|---|---|---|---|
+| **1 — identity** | The cited work exists as cited. Its DOI, title, first author, year and container (journal, report series) are confirmed by **two independent sources** from different domains, for example the publisher page and a bibliographic index | `ref_check = two_sources`, the evidence URLs in `check_evidence`, and the date in `checked_on` | Citing the work in docs |
+| **2 — value** | The value the project takes from it is found in the document | The parameter's `page` and `quote` (§3); `value_check = <id>=page_quote` on the reference | Flag `V` on the parameter |
+
+Rules:
+1. **`used_for` is mandatory.** It names what the reference supports: `parameters.csv:<id>`, a dataset (`sources.yaml:<id>`), a method or code path (`src/engine/...`), or a docs section. A reference that supports nothing in the project does not belong in the registry.
+2. **Two sources means two different domains.** Two search results from the same site count as one. Search engines' generated summaries are not sources.
+3. **Mismatches are fixed, not averaged.** When the DOI and the citation disagree (wrong suffix, wrong authors, wrong year), correct the row. Log the case in `docs/21` §1 when another file (for example PILAR-2b) carries the other version.
+4. **Vague citations** ("AFBR 2024", "overview tables", "Embrapa") get `ref_check = unidentified`, with the candidate works listed in `notes`. The parameters that rest on them keep their flag and a note. Never pick a candidate by guess.
+5. **`value_check`** records, per parameter, whether the value was seen:
+   - `page_quote`: read in the document;
+   - `seen_in_abstract`: in the abstract or a search snippet. This is still `S`;
+   - `not_seen`;
+   - `contradicted`: a different value for the same quantity. Log it in `docs/21` §1.
+6. **The validator enforces the structure** (`python -m engine.registry validate`).
+   - Errors: an unknown parameter id, `two_sources` without two evidence domains, a missing check date.
+   - Warnings: a parameter citing a paper ("et al." or a DOI) with no reference row, a reference not double-checked, a `V` parameter whose references are not double-checked.
+
 ## Implementation status (v0 code, 2026-10)
 
 **Implemented** in `src/engine/registry.py`. The loaders `load_parameters`, `get_param`, `load_sources` and `load_projects_capex` are unchanged. Tests are in `tests/test_registry.py`.

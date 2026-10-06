@@ -253,6 +253,31 @@ def test_worklist_joins_priority_references_and_evidence(screen, params):
     assert bool(wl.loc["fc_gen", "page_quote"]) and not bool(wl.loc["fc_bmp", "page_quote"])
 
 
+def test_worklist_uses_value_evidence_to_skip_rereading(screen, params):
+    # SYNTHETIC rows: r2 was read (it has evidence rows), r3 was not
+    refs = [
+        {"ref_id": "r2", "used_for": "parameters.csv:vin_gen", "ref_check": "two_sources"},
+        {
+            "ref_id": "r3",
+            "used_for": "parameters.csv:vin_cod; parameters.csv:vin_gen",
+            "ref_check": "two_sources",
+        },
+        {"ref_id": "r4", "used_for": "parameters.csv:cod_removal", "ref_check": "two_sources"},
+        {"ref_id": "r5", "used_for": "parameters.csv:cod_removal", "ref_check": "unidentified"},
+    ]
+    evidence = [{"ref_id": "r2", "param_id": "vin_gen"}, {"ref_id": "r4", "param_id": "x"}]
+    wl = verification_worklist(screen, params, refs, evidence).set_index("param_id")
+    step = wl["next_step"]
+    assert step["vin_cod"].startswith("read the document") and "unread" not in step["vin_cod"]
+    assert step["vin_gen"].startswith("read the document") and step["vin_gen"].endswith(
+        "still unread: r3"
+    )
+    # every readable reference read, none prints the central; r5 cannot be read
+    assert step["cod_removal"].startswith("the references read do not print the central")
+    assert wl.loc["cod_removal", "refs_read"] == "r4"
+    assert wl.loc["vin_cod", "refs_read"] == ""
+
+
 def test_cli_worklist_without_references(tmp_path, capsys):
     argv = ["worklist", "--synthetic", "--trajectories", "2", "--references", "x.csv"]
     assert main(argv + ["--out", str(tmp_path)]) == 0

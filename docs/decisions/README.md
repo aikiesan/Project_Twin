@@ -19,3 +19,4 @@ Status values: Proposed · Accepted · Superseded by ADR-XXXX.
 | [0012](ADR-0012-daily-digest-intake.md) | Intake of the daily digests: a triage note per day and a verification queue | Accepted |
 | [0013](ADR-0013-references-registry-and-double-check.md) | References registry: every paper tied to project values, every source double-checked | Accepted |
 | [0014](ADR-0014-morris-screen-design.md) | Morris screen of the skeleton: one factor per registry row, registry ranges, a synthetic reference case | Accepted |
+| [0015](ADR-0015-value-evidence-from-pdf-double-read.md) | Value evidence: page and quote per value, read twice from the publisher PDF, audited by a person | Accepted |

@@ -50,6 +50,7 @@ PARAMETERS_CSV = REGISTRY_DIR / "parameters.csv"
 SOURCES_YAML = REGISTRY_DIR / "sources.yaml"
 PROJECTS_CAPEX_CSV = REGISTRY_DIR / "projects_capex.csv"
 REFERENCES_CSV = REGISTRY_DIR / "references.csv"
+VALUE_EVIDENCE_CSV = REGISTRY_DIR / "value_evidence.csv"
 
 CONFIDENCE_FLAGS = ("V", "S", "K", "D")
 
@@ -292,6 +293,40 @@ REF_CHECK_STATUSES = ("two_sources", "one_source", "unconfirmed", "unidentified"
 
 #: Status of a value the project attributes to a reference (``value_check`` column).
 VALUE_CHECK_STATUSES = ("page_quote", "seen_in_abstract", "not_seen", "contradicted")
+
+#: Columns ``value_evidence.csv`` must have (docs/08 §6, ADR-0015): one row per value statement
+#: read in a reference, with the PDF page, the verbatim quote and how the reading was checked.
+VALUE_EVIDENCE_COLUMNS = (
+    "evidence_id",
+    "param_id",
+    "ref_id",
+    "pdf_page",
+    "printed_page",
+    "location",
+    "quote",
+    "value",
+    "unit",
+    "conditions",
+    "origin",
+    "support",
+    "check",
+    "cited_ref",
+    "notes",
+)
+
+#: Whose number the quote states: the paper's own measurement, a value the paper cites from
+#: another work (``cited_ref`` transcribes that work; it is not a project citation), or unclear.
+EVIDENCE_ORIGINS = ("own_measurement", "cited", "unclear")
+
+#: How the quoted value bears on the parameter: it supports the central value, falls inside
+#: the low-high range, is only related (other basis or conditions), or is different.
+EVIDENCE_SUPPORTS = ("supports_central", "supports_range", "related_only", "different")
+
+#: How the row was checked: two independent LLM reads agreed (``llm_double_read``); the second
+#: read confirmed the quote but disputed the support label (``llm_support_disputed``); the second
+#: read corrected the quote, page or value (``llm_corrected``); a person checked it against the
+#: PDF (``human_audited``). Only ``human_audited`` meets docs/08 §6.
+EVIDENCE_CHECKS = ("llm_double_read", "llm_support_disputed", "llm_corrected", "human_audited")
 
 _SNAKE_CASE_RE = re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
 _DOI_RE = re.compile(r"^10\.\d{4,9}/\S+$")
@@ -763,6 +798,12 @@ def load_references(path: Path | str = REFERENCES_CSV) -> list[dict[str, str]]:
         return [{k: (v or "").strip() for k, v in row.items()} for row in csv.DictReader(fh)]
 
 
+def load_value_evidence(path: Path | str = VALUE_EVIDENCE_CSV) -> list[dict[str, str]]:
+    """Rows of ``value_evidence.csv`` as dicts of stripped strings (ADR-0015)."""
+    with open(path, newline="", encoding="utf-8-sig") as fh:
+        return [{k: (v or "").strip() for k, v in row.items()} for row in csv.DictReader(fh)]
+
+
 def _read_param_sources(path: Path) -> dict[str, tuple[str, str]]:
     """``{id: (source, confidence)}`` read fresh from ``parameters.csv`` (no cache: validators
     must see the file as it is now). Empty when the file cannot be read."""
@@ -909,9 +950,88 @@ def validate_references(
     return sink.issues
 
 
+def validate_value_evidence(
+    path: Path | str = VALUE_EVIDENCE_CSV,
+    parameters_path: Path | str | None = None,
+    references_path: Path | str | None = None,
+) -> list[Issue]:
+    """Validate ``value_evidence.csv`` (docs/08 §6, ADR-0015).
+
+    Rules (error unless stated):
+
+    - header has :data:`VALUE_EVIDENCE_COLUMNS`; every row has the header's fields;
+    - ``evidence_id`` non-empty and unique;
+    - ``param_id`` names a parameter of ``parameters.csv``; ``ref_id`` names a row of
+      ``references.csv`` (both checked only when the file can be read);
+    - ``pdf_page`` is a positive integer (the page of the PDF file, not the printed number);
+    - ``quote`` is non-empty (verbatim text from the page);
+    - ``origin``, ``support`` and ``check`` are in :data:`EVIDENCE_ORIGINS`,
+      :data:`EVIDENCE_SUPPORTS` and :data:`EVIDENCE_CHECKS`;
+    - warning (one for the file): rows whose ``check`` is not ``human_audited``.
+
+    Args:
+        path: CSV file to check.
+        parameters_path: ``parameters.csv`` (default: next to ``path``).
+        references_path: ``references.csv`` (default: next to ``path``).
+    """
+    path = Path(path)
+    sink = _IssueSink(path.name)
+    text = _read_registry_text(path, sink)
+    if text is None:
+        return sink.issues
+    params = _read_param_sources(
+        Path(parameters_path) if parameters_path else path.with_name(PARAMETERS_CSV.name)
+    )
+    refs_path = Path(references_path) if references_path else path.with_name(REFERENCES_CSV.name)
+    try:
+        ref_ids = {r.get("ref_id", "") for r in load_references(refs_path)}
+    except (OSError, csv.Error):
+        ref_ids = set()
+    reader = csv.DictReader(io.StringIO(text, newline=""), restkey=_EXTRA_FIELDS_KEY)
+    if not _check_header(reader.fieldnames, VALUE_EVIDENCE_COLUMNS, sink):
+        return sink.issues
+    seen: dict[str, int] = {}
+    not_audited = 0
+    for row in reader:
+        line = reader.line_num
+        eid = (row.get("evidence_id") or "").strip()
+        if not _check_field_count(row, line, eid, sink):
+            continue
+        if not eid:
+            sink.error("empty evidence_id", line)
+        elif eid in seen:
+            sink.error(f"duplicate evidence_id (first defined on line {seen[eid]})", line, eid)
+        else:
+            seen[eid] = line
+        get = {k: (row.get(k) or "").strip() for k in VALUE_EVIDENCE_COLUMNS}
+        if params and get["param_id"] not in params:
+            sink.error(f"param_id {get['param_id']!r} is not in parameters.csv", line, eid)
+        if ref_ids and get["ref_id"] not in ref_ids:
+            sink.error(f"ref_id {get['ref_id']!r} is not in references.csv", line, eid)
+        if not re.fullmatch(r"[1-9]\d*", get["pdf_page"]):
+            sink.error(f"pdf_page {get['pdf_page']!r} is not a positive integer", line, eid)
+        if not get["quote"]:
+            sink.error("quote is empty: record the verbatim text from the page", line, eid)
+        for col, allowed in (
+            ("origin", EVIDENCE_ORIGINS),
+            ("support", EVIDENCE_SUPPORTS),
+            ("check", EVIDENCE_CHECKS),
+        ):
+            if get[col] not in allowed:
+                sink.error(f"{col} {get[col]!r} is not one of {', '.join(allowed)}", line, eid)
+        if get["check"] in EVIDENCE_CHECKS and get["check"] != "human_audited":
+            not_audited += 1
+    if not_audited:
+        sink.warning(
+            f"{not_audited} row(s) not human_audited: LLM readings only, a person must check "
+            "page and quote against the PDF before a value is used as V (docs/08 §6)"
+        )
+    return sink.issues
+
+
 def validate_all(registry_dir: Path | str = REGISTRY_DIR) -> list[Issue]:
     """Run the validators on ``registry_dir``: parameters, sources, projects_capex and, when the
-    file exists, references."""
+    files exist, references and value_evidence."""
     registry_dir = Path(registry_dir)
     issues = (
         validate_parameters(registry_dir / PARAMETERS_CSV.name)
@@ -920,6 +1040,8 @@ def validate_all(registry_dir: Path | str = REGISTRY_DIR) -> list[Issue]:
     )
     if (registry_dir / REFERENCES_CSV.name).exists():
         issues += validate_references(registry_dir / REFERENCES_CSV.name)
+    if (registry_dir / VALUE_EVIDENCE_CSV.name).exists():
+        issues += validate_value_evidence(registry_dir / VALUE_EVIDENCE_CSV.name)
     return issues
 
 
@@ -960,7 +1082,8 @@ def summary_markdown(registry_dir: Path | str = REGISTRY_DIR) -> str:
     """Return a Markdown summary of the registry.
 
     Sections: parameters (module x confidence flag), sources (module x status, and counts by
-    confidence), projects (feedstock x confidence), and the validation error/warning counts.
+    confidence), projects (feedstock x confidence), references (by ref_check) and value evidence
+    (support x check) when those files exist, and the validation error/warning counts.
     Blank cells are counted under ``(missing)``.
     """
     registry_dir = Path(registry_dir)
@@ -1034,6 +1157,29 @@ def summary_markdown(registry_dir: Path | str = REGISTRY_DIR) -> str:
             ]
         except (OSError, csv.Error) as exc:
             out += ["## References", "", f"Could not be read: {exc}", ""]
+
+    evidence_path = registry_dir / VALUE_EVIDENCE_CSV.name
+    if evidence_path.exists():
+        try:
+            with open(evidence_path, newline="", encoding="utf-8-sig") as fh:
+                ev_rows = list(csv.DictReader(fh))
+            pairs = [
+                (
+                    (r.get("support") or "").strip() or _MISSING,
+                    (r.get("check") or "").strip() or _MISSING,
+                )
+                for r in ev_rows
+            ]
+            out += [
+                f"## Value evidence ({len(ev_rows)})",
+                "",
+                "By support and check (docs/08 §6, ADR-0015):",
+                "",
+                _crosstab_markdown(pairs, "support", EVIDENCE_CHECKS),
+                "",
+            ]
+        except (OSError, csv.Error) as exc:
+            out += ["## Value evidence", "", f"Could not be read: {exc}", ""]
 
     issues = validate_all(registry_dir)
     n_err = sum(i.level == "error" for i in issues)

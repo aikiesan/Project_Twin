@@ -71,9 +71,11 @@ from engine import DATA_DIR, __version__
 from engine.process.strategies import StorageS1
 from engine.registry import (
     REFERENCES_CSV,
+    VALUE_EVIDENCE_CSV,
     Param,
     load_parameters,
     load_references,
+    load_value_evidence,
     param_hash,
 )
 from engine.skeleton import (
@@ -617,8 +619,14 @@ def _next_step(
     value_checks: Sequence[str],
     effect: float,
     needs_range: bool = False,
+    read_refs: frozenset[str] | set[str] = frozenset(),
 ) -> str:
-    """Next verification step of one row (docs/08 §3 and §8), first match wins."""
+    """Next verification step of one row (docs/08 §3 and §8), first match wins.
+
+    ``read_refs`` are the references already read page by page (they have rows in
+    ``value_evidence.csv``, ADR-0015). When every readable reference of the row was read and none
+    prints the central value, the step is to trace the value's origin instead of reading again.
+    """
     has_evidence = bool(p.page and p.quote)
     if p.confidence == "V" and has_evidence:
         return "done: V with page and quote" + ("; add a sourced range" if needs_range else "")
@@ -636,7 +644,23 @@ def _next_step(
     elif "page_quote" in value_checks and not has_evidence:
         step = "copy the page and quote into parameters.csv and set V"
     else:
-        step = "read the document: record page and verbatim quote (docs/08 §3)"
+        ids = [r.get("ref_id", "") for r in refs]
+        unread = [
+            rid
+            for rid, r in zip(ids, refs, strict=True)
+            if rid not in read_refs and r.get("ref_check") in ("two_sources", "one_source")
+        ]
+        if unread:
+            step = "read the document: record page and verbatim quote (docs/08 §3)"
+            if any(rid in read_refs for rid in ids):
+                step += f"; still unread: {', '.join(unread)}"
+        elif any(rid in read_refs for rid in ids):
+            step = (
+                "the references read do not print the central value: trace its origin or "
+                "choose a central with a page (docs/21 §1)"
+            )
+        else:
+            step = "read the document: record page and verbatim quote (docs/08 §3)"
     if needs_range:
         step += "; find a sourced range (none in the registry)"
     if effect == 0:
@@ -648,6 +672,7 @@ def verification_worklist(
     result: MorrisResult,
     params: Mapping[str, Param],
     references: Sequence[Mapping[str, str]] = (),
+    evidence: Sequence[Mapping[str, str]] = (),
 ) -> pd.DataFrame:
     """What to verify next, row by row: the Morris priority joined with ``references.csv``.
 
@@ -655,11 +680,13 @@ def verification_worklist(
     follow, ordered by their largest local elasticity. For each row the table gives the
     references whose ``used_for`` names it, their identity check, the value checks recorded for
     it, whether ``page`` and ``quote`` are filled, and the next step (docs/08 §3 and §8).
+    ``evidence`` (rows of ``value_evidence.csv``) tells which references were already read.
 
     Columns: ``order``, ``param_id``, ``confidence``, ``screen`` (``screened`` or the exclusion
     reason), ``max_mu_star_rel``, ``max_abs_elasticity``, ``refs`` (``ref_id=ref_check``),
-    ``value_check``, ``page_quote``, ``next_step``, ``source``.
+    ``value_check``, ``refs_read``, ``page_quote``, ``next_step``, ``source``.
     """
+    read_refs = {str(e.get("ref_id", "")) for e in evidence} - {""}
     el = result.elasticities[result.elasticities["output"].isin(PRIORITY_OUTPUTS)]
     max_el = {
         pid: _max_abs(g[["elasticity_down", "elasticity_up"]].to_numpy())
@@ -707,9 +734,17 @@ def verification_worklist(
                 "max_abs_elasticity": max_el.get(pid),
                 "refs": "; ".join(f"{r.get('ref_id', '')}={r.get('ref_check', '')}" for r in refs),
                 "value_check": "; ".join(f"{rid}={st}" for rid, st in vc),
+                "refs_read": "; ".join(
+                    r.get("ref_id", "") for r in refs if r.get("ref_id") in read_refs
+                ),
                 "page_quote": bool(p.page and p.quote),
                 "next_step": _next_step(
-                    p, refs, [st for _, st in vc], effect, needs_range="no numeric range" in screen
+                    p,
+                    refs,
+                    [st for _, st in vc],
+                    effect,
+                    needs_range="no numeric range" in screen,
+                    read_refs=read_refs,
                 ),
                 "source": p.source,
             }
@@ -834,6 +869,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     _add_screen_args(w)
     w.add_argument("--references", type=Path, default=REFERENCES_CSV)
+    w.add_argument("--evidence", type=Path, default=VALUE_EVIDENCE_CSV)
     a = ap.parse_args(argv)
 
     if a.synthetic:
@@ -854,7 +890,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         refs = load_references(a.references) if a.references.is_file() else []
         if not refs:
             print(f"\n(no references in {a.references}: every row needs its reference first)")
-        wl = verification_worklist(res, params, refs)
+        evidence = load_value_evidence(a.evidence) if a.evidence.is_file() else []
+        wl = verification_worklist(res, params, refs, evidence)
         _print_worklist(wl)
     if not a.no_write:
         path = write_outputs(res, a.out)

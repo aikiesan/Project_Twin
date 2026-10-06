@@ -141,14 +141,14 @@ Lei 14.993/2024 (Combustível do Futuro) · Decreto 12.614/2025 · CNPE Res. 4/2
 | Vinasse SO₄ | 2.0 | 0.6–6.4 | g/L | Fuess 2024; overview tables | S |
 | Vinasse CH₄ yield | 0.30 | 0.25–0.34 | Nm³ CH₄/kg COD removed | Melo 2024; Moraes 2015 | S |
 | Filter cake generation | 37 | 30–40 | kg/t cane | Janke 2015 | S |
-| Filter cake BMP | 220 | 185–260 | NL CH₄/kg VS | Janke 2020; Volpi 2022 | S |
+| Filter cake BMP | 220 | 185–260 | NL CH₄/kg VS | Janke et al. 2019 (cited as "Janke 2020" until 2026-10-06); Volpi 2022. 220 not printed in Janke 2019 (docs/21 C16) | S |
 | Straw available | 140 × 0.5 | — | kg DM/t cane × recoverable fraction | CNPEM/LNBR | S |
 | Straw BMP | 230 | 160–291 | NL CH₄/kg VS | Janke 2017 | S |
-| Max OLR (CSTR, solids) | 3.0 | 2.5–4.8 | kg VS/m³·d | Janke 2015; Volpi 2021 | S |
+| Max OLR (CSTR, solids) | 3.0 | 2.5–4.8 | kg VS/m³·d | Leite, Janke et al. 2015; Volpi 2021; Janke et al. 2016 WM (docs/21 C23) | S |
 | HRT (CSTR with solids) | 30 | 20–40 | d | Janke 2015 | S |
 | Filter cake storage loss | 12 (4 mo) / 22 (6 mo) | 6–27 | % | Energy-cane proxy (Hoffstadt 2020) — **gap** | S |
 | Restart after off-season | 30 | 30–60 | d | Barbosa 2022 | S |
-| BMP → full-scale factor | 0.85 | 0.70–1.0 | – | Janke 2020 | S |
+| BMP → full-scale factor | 0.85 | 0.70–1.0 | – | Janke et al. 2019 cited, but it prints no ratio (docs/21 C17, Q15) | S |
 | Upgrading electricity (membrane) | 0.25 | 0.18–0.35 | kWh/Nm³ raw biogas | Bauer 2013; Angelidaki 2018 | K |
 | Specific CAPEX, 60–100 k Nm³/d vinasse | 3,900 | 3,600–4,200 | R$/(Nm³/d) | Announced projects | D |
 | Specific CAPEX, EPE average | 3,735 | 2,700–3,735 | R$/(Nm³/d) | EPE NT 2025-08 / 2023-07 | S |

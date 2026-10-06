@@ -25,6 +25,7 @@
    - Errors: unknown parameter ids, `two_sources` without two evidence domains, no check date.
    - Warnings: parameters citing papers with no reference row, references not double-checked, `V` parameters resting on unchecked references.
 4. **The first population of `references.csv` comes from a three-pass check.** Each reference was checked by an agent, re-checked by an adversarial agent with its own searches, and sent to a third tie-break agent when the two did not both confirm it. A row is `two_sources` only when the passes agree and two domains confirm it.
+   *As run (2026-10-06):* the verify and tie-break passes ran out of search budget for most rows. Identity was then established by two more routes, each needing two independent sources: the first page of a publisher PDF in hand, and the reference lists of those PDFs (docs/08 §8 rule 6). Rows that no route covered stay `pending`, `unconfirmed` or `unidentified`.
 5. **CLAUDE.md §2 gains rule 11.** The digest intake (ADR-0012) and the radar prompt require a DOI and the two-source check before a paper enters `docs/23`.
 
 ## Consequences

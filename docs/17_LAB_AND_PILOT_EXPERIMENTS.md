@@ -33,7 +33,7 @@ Purpose: close the **parameter gaps** that most affect the model and that no pub
 - **Feeds:** digestate value, land constraint.
 
 ## E8 — Straw pre-treatment at continuous scale (PPBIOEN) ★
-- **Design:** milled vs NaOH-treated straw in CSTR (Janke 2020 found BMP gains vanished at CSTR scale for filter cake).
+- **Design:** milled vs NaOH-treated straw in CSTR (for filter cake, Janke et al. 2019 report BMP 223–251 mL CH₄/g VS across pre-treatments but only 218–223 in semi-continuous CSTRs, PDF p. 10; `registry/value_evidence.csv`).
 - **Feeds:** straw BMP, pre-treatment CAPEX/OPEX.
 
 ## E9 — Parasitic energy at pilot scale (PPBIOEN) ★

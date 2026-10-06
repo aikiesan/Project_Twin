@@ -565,3 +565,84 @@ def test_validate_all_reads_references_when_present(clean_registry: Path) -> Non
     _write(clean_registry / "references.csv", REF_HEADER + REF_ROW_OK)
     text = summary_markdown(clean_registry)
     assert "## References (1)" in text and "| two_sources | 1 |" in text
+
+
+# ---------------------------------------------------------------------------------------------
+# value_evidence.csv (docs/08 §6, ADR-0015) — SYNTHETIC rows
+# ---------------------------------------------------------------------------------------------
+
+EV_HEADER = (
+    "evidence_id,param_id,ref_id,pdf_page,printed_page,location,quote,value,unit,conditions,"
+    "origin,support,check,cited_ref,notes\n"
+)
+EV_ROW_OK = (
+    "syn_ref:syn_a:0,syn_a,syn_ref,3,103,Table 1,Synthetic verbatim quote,2,kg per t,"
+    "synthetic,own_measurement,supports_central,human_audited,,\n"
+)
+
+
+def _evidence(tmp_path: Path, rows: str) -> list[Issue]:
+    _write(tmp_path / "parameters.csv", PARAM_HEADER + PARAM_ROWS_OK)
+    _write(tmp_path / "references.csv", REF_HEADER + REF_ROW_OK)
+    return reg.validate_value_evidence(_write(tmp_path / "value_evidence.csv", EV_HEADER + rows))
+
+
+def test_value_evidence_clean_file_has_no_issues(tmp_path: Path) -> None:
+    assert _evidence(tmp_path, EV_ROW_OK) == []
+
+
+@pytest.mark.parametrize(
+    "old, new, message",
+    [
+        (",syn_a,syn_ref,", ",syn_zz,syn_ref,", "not in parameters.csv"),
+        (",syn_a,syn_ref,", ",syn_a,other_ref,", "not in references.csv"),
+        (",3,103,", ",0,103,", "pdf_page"),
+        (",3,103,", ",p3,103,", "pdf_page"),
+        ("Synthetic verbatim quote", "", "quote is empty"),
+        ("own_measurement", "measured", "origin"),
+        ("supports_central", "agrees", "support"),
+        ("human_audited", "looks_right", "check"),
+        ("syn_ref:syn_a:0,", ",", "empty evidence_id"),
+    ],
+)
+def test_value_evidence_errors(tmp_path: Path, old: str, new: str, message: str) -> None:
+    errors, _ = _levels(_evidence(tmp_path, EV_ROW_OK.replace(old, new)))
+    assert any(message in e.message for e in errors), errors
+
+
+def test_value_evidence_duplicates_and_audit_warning(tmp_path: Path) -> None:
+    errors, _ = _levels(_evidence(tmp_path, EV_ROW_OK + EV_ROW_OK))
+    assert any("duplicate evidence_id" in e.message for e in errors)
+    llm = EV_ROW_OK.replace("human_audited", "llm_double_read")
+    llm2 = llm.replace("syn_a:0", "syn_a:1").replace("llm_double_read", "llm_corrected")
+    errors, warns = _levels(_evidence(tmp_path, llm + llm2))
+    assert errors == []
+    (warn,) = warns
+    assert "2 row(s) not human_audited" in warn.message
+
+
+def test_validate_all_reads_value_evidence_when_present(clean_registry: Path) -> None:
+    _write(clean_registry / "references.csv", REF_HEADER + REF_ROW_OK)
+    _write(clean_registry / "value_evidence.csv", EV_HEADER + EV_ROW_OK)
+    assert validate_all(clean_registry) == []
+    text = summary_markdown(clean_registry)
+    assert "## Value evidence (1)" in text and "| supports_central | 0 | 0 | 0 | 1 | 1 |" in text
+    _write(clean_registry / "value_evidence.csv", EV_HEADER + EV_ROW_OK.replace(",3,", ",x,"))
+    (issue,) = validate_all(clean_registry)
+    assert issue.file == "value_evidence.csv" and "pdf_page" in issue.message
+
+
+@pytest.mark.parametrize(
+    "path, validator",
+    [
+        (reg.REFERENCES_CSV, reg.validate_references),
+        (reg.VALUE_EVIDENCE_CSV, reg.validate_value_evidence),
+    ],
+)
+def test_real_references_and_evidence_have_no_errors(path: Path, validator) -> None:
+    """The committed references.csv and value_evidence.csv pass with no errors (warnings for
+    references not double-checked and rows not human-audited are expected)."""
+    if not path.exists():
+        pytest.skip(f"{path.name} not present")
+    errors = [i for i in validator() if i.level == "error"]
+    assert errors == [], "\n".join(map(str, errors))

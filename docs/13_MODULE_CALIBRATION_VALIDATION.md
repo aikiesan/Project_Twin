@@ -94,8 +94,9 @@ python -m engine.sensitivity worklist --synthetic   # the ranking joined with re
 `worklist` writes `worklist.csv` next to the Morris outputs. For each row it lists:
 - the references whose `used_for` names the row, and their identity check;
 - the value checks;
+- which of those references were already read page by page (`refs_read`: they have rows in `registry/value_evidence.csv`, ADR-0015);
 - whether `page` and `quote` are filled;
-- the next step (docs/08 §5).
+- the next step (docs/08 §5). A row whose readable references were all read without finding the central value gets "trace its origin" instead of "read the document".
 
 Screened rows come first, in priority order. Rows without a range follow, ordered by their largest elasticity.
 

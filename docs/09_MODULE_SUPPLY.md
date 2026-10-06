@@ -58,11 +58,13 @@ Uncertainty: propagate parameter ranges (Monte Carlo) + Huff posterior.
 | Substrate | Base data | Method |
 |---|---|---|
 | Manure | Livestock points (have) + PPM totals + LUPA/Censo confinement shares | Points × head × manure/head/day × collectable fraction (confined only); rescale to PPM |
-| Poultry (layers, Bastos cluster) | Points + PPM | Same; seasonality ~flat |
+| Poultry (layers, Bastos cluster) | Points + PPM | Same; seasonality ~flat. Keep layers and broilers apart: their N and K loads differ, and both limit the manure share in the CSTR |
 | Sewage sludge | ANA ETE points + SINISA flows | Flow × sludge factor; only plants above size threshold |
-| OFMSW | CETESB RSU t/d per landfill/municipality | Organic fraction × collection scenario |
+| OFMSW | CETESB RSU t/d per landfill/municipality | Organic fraction × collection scenario. Local yield lead: IEE/USP plant, 120–180 Nm³ biogas per t (S, `digest_queue.csv` 20261006-01/02) |
 | Agro-industrial (slaughterhouse, dairy, citrus) | SIF points; others TBD | Coefficients per unit of output |
 | Competing uses | PILAR-2b FDE | Apply mobilisable fraction |
+
+PPM base year: the held series ends in 2024 (`ibge_ppm`). IBGE published PPM 2025 in September 2026: Brazil's cattle herd fell 1.7 % and milked cows reached the lowest level since 1979, while poultry set a record, and SP produces 22.5 % of the national eggs (digest 2026-10-06, S). In western SP the manure base-load (strategy S2) should therefore lean on poultry, not cattle. Re-export the 2025 municipal tables before Phase 1.
 
 ### Step 8 — Outputs & checks
 - Tables: `mill_year`, `mill_month`, `hex_supply` (Parquet), with `p05/p50/p95`.

@@ -40,7 +40,7 @@ Digester volume V = max over months of (OLR-limited, HRT-limited) requirement �
 | Strategy | Description | Evidence |
 |---|---|---|
 | S0 Vinasse-only | Operate in harvest, idle off-season | Costa Pinto ANP pattern (0–12 % off-season) |
-| S1 Stored filter cake (+straw) | Silo/ensiled filter cake fed off-season | Cocal reports; Narandiba 30–39 % off-season |
+| S1 Stored filter cake (+straw) | Silo/ensiled filter cake fed off-season | Cocal reports; Narandiba 30–39 % off-season; Cocal's 15-year LRCAP 2026 contract, which cites stored vinasse and cake for year-round output [S, digest 2026-10-06] |
 | S2 Manure base-load | Year-round manure + seasonal vinasse/cake | Danish/German co-digestion; Cocal Paraguaçu (poultry manure) |
 | S3 Other residues | Sludge, OFMSW, agro-industrial off-season | BioNorrois (beet pulp + agri-food waste) |
 | S4 Shutdown/restart | Stop and restart (~30 d) | Barbosa 2022 (restart beat switching) |

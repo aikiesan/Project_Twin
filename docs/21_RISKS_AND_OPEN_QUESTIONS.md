@@ -17,6 +17,7 @@
 | C12 | Filter cake CH₄ per tonne of fresh matter (three values) | `fc_ts_vs` × `fc_bmp`: 0.28 × 0.74 × 220 = **45.6** Nm³/t FM [S, D]; `fc_ch4_fm`: **54** (50–58) Nm³/t FM [S] | PILAR-2b `feedstocks.yaml` TORTA_FILTRO: TS 38 % × VS/TS 80 % × BMP 280 = **85.1** Nm³/t FM (refs: Talha et al. 2016; Velásquez Piñas et al. 2020) [S, D] | Found while building process v0 (docs/10 §7); third value found in the 2026-10-05 survey. Read each primary source and record its basis (lab BMP vs full scale; fresh vs stored cake; TS of which sample). Drives strategy S1. Never tune to close the gap |
 | C13 | Vinasse composition and biogas CH₄ content | `parameters.csv`: TS / VS = 16 / 9 g/L (`vin_ts_vs`) [S]; CH₄ in biogas 57.5 % (CP2B convention note, `cp2b_method_v5_1_spatial`, citing feedstocks.yaml and Atlas SP 50–65 %) | PILAR-2b `feedstocks.yaml` VINHACA: TS 3 % (≈ 30 g/L), VS/TS 60 %, BMP 160 NL/kg VS; `ch4_pct` 65 % (no reference attached) [S/K] | TS differs about twofold. The two CH₄ values come from the same team: check which one the v5.1 run used (convention note says 57.5 %). Process v0 needs `x_ch4` as an input: run both until resolved |
 | C14 | DOI of the 2015 vinasse AD review | `parameters.csv` `vin_gen`: "Moraes Zaiat Bonomi 2015 RSER 10.1016/j.rser.2015.01.023" | PILAR-2b `references.yaml` `bonomi2015_vinhaca`: "Bonomi, A. et al. … RSER 2015, 10.1016/j.rser.2015.01.022" | Authors and DOI suffix differ (.023 vs .022). Resolve the DOI on doi.org before citing either; fix the wrong record |
+| C15 | Scope of the EPE NT 2025-08 specific CAPEX (`capex_epe`, the skeleton's LCOB anchor) | `parameters.csv` note: "Mix of landfill and agro" [S] | Radar digest 2026-10-06: R$ 3,734.9 per Nm³/d **in R$ of Dec 2024**, labelled "sugar-energy biomethane" (routine flag V, no page recorded) | Read the NT (verification target 1, docs/08 §5): record the page, the table title, the price year and which plant types it covers. If it is sugar-energy only, it anchors vinasse plants directly; if it is a mix, keep it as a sector average |
 
 ## 2. Open questions
 1. Can CBIO and CGOB be claimed on the **same** biomethane volume? (legal)
@@ -29,6 +30,8 @@
 8. Which reactor types do SP mill plants actually use (CSTR vs plug-flow vs UASB)? Public sources describe stirred vertical tanks + horizontal digester (Geo design) — inference only.
 9. Do zero months in ANP data mean shutdown or missing reports?
 10. Was Programa Paulista de Biogás (Decreto 58.659/2012) revoked?
+11. How much mill biomethane goes to power under capacity-reserve contracts (LRCAP) instead of the gas market? Cocal won 9.2 MW for 15 years from Aug 2028 (digest 2026-10-06, S). It is a competing outlet in the supply curve and a separate revenue route (docs/16 §4).
+12. Will the revised CBPMESP IT-29 set separation distances for biomethane production? If yes, they become an exclusion buffer in siting (docs/12 Step 2).
 
 ## 3. Risks
 | Risk | Impact | Mitigation |

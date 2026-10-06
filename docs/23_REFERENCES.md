@@ -14,6 +14,8 @@ Flags: **V** read · **S** seen in search/abstract · **K** prior knowledge. **V
 - IFRI (2026). The European Biomethane Sector. [S]
 - BIP Europe TF4 (2023). Insights into the current cost of biomethane production from real industry data. [S]
 - World Biogas Association (2025). Market Report Brazil. [S]
+- EBA (2026). *Biomethane Investment Outlook 2026* (1 Jul 2026). https://www.europeanbiogas.eu/publication/eba-biomethane-investment-outlook-2026/ [S]
+- MME (2026). Consulta Pública nº 232/2026 — metas do RenovaBio 2027–2036 (15 Sep–29 Oct 2026). [S]
 - Laws/regulations: Lei 14.993/2024; Decreto 12.614/2025; CNPE Res. 4/2026; ANP Res. 995, 996, 1.006/2026; ANP Res. 987/2025; ARSESP Del. 744/2017, 1.342/2022, 1.765/2025; Lei 13.576/2017; Lei 15.042/2024; MAPA IN 61/2020; CETESB P4.231. [S]
 
 ## Feedstock & supply
@@ -28,6 +30,8 @@ Flags: **V** read · **S** seen in search/abstract · **K** prior knowledge. **V
 - Joglekar, A. et al. (2019). Pixelating crop production. *PLOS ONE*. doi:10.1371/journal.pone.0212281 [S]
 - Mennis, J. (2003). Generating surface models of population using dasymetric mapping. *Prof. Geogr.* 55(1):31–42. doi:10.1111/0033-0124.10042 [S]
 - Gilbert, M. et al. (2018). GLW3. *Sci. Data* 5:180227. doi:10.1038/sdata.2018.227 [S]
+- IBGE (2026). *Pesquisa da Pecuária Municipal 2025*, v. 53 (informativo). https://biblioteca.ibge.gov.br/visualizacao/periodicos/84/ppm_2025_v53_br_informativo.pdf [S]
+- Carvalho, R.A., Torres, J.L.R. et al. (2026). [Title not confirmed; cane yield and ATR prediction with Sentinel-2 and ALOS/PALSAR-2 by phenological stage.] *Smart Agricultural Technology*. doi:10.1016/j.atech.2026.102464 [S]
 - IPCC (2019). Refinement to the 2006 Guidelines, Vol. 4 Ch. 10 (manure management). [K]
 
 ## Process
@@ -47,6 +51,8 @@ Flags: **V** read · **S** seen in search/abstract · **K** prior knowledge. **V
 - Holliger, C. et al. (2016). Towards a standardization of BMP tests. *Water Sci. Technol.* 74:2515. doi:10.2166/wst.2016.336 [K]
 - Batstone, D.J. et al. (2002). ADM1. IWA STR No. 13. [K]
 - Barrera, E.L. et al. (2015). ADM1 with sulfate reduction for vinasse. *Water Res.* 71:42–54. [K]
+- Cisneros de la Cueva et al. (2026). [Title not recorded by the digest; solid-state co-digestion of cattle manure with molasses.] *Waste Biomass Valor.* doi:10.1007/s12649-026-03540-z [S]
+- Authors not seen (2026). Effects of acid pre-treatment of waste activated sludge on the biochemical methane potential of co-digestion with sugarcane vinasse. *Bioresour. Technol. Rep.* PII S2589014X26003750 (DOI not seen) [S]
 
 ## Economics & uncertainty
 - AACE International RP 18R-97 — Cost estimate classification. [K]
@@ -71,6 +77,7 @@ Flags: **V** read · **S** seen in search/abstract · **K** prior knowledge. **V
 - Lamsal, Jones, Thomas (2017). Sugarcane harvest logistics in Brazil. *Transp. Sci.* 51(2):771–789. doi:10.1287/trsc.2015.0650 [S]
 - Granco et al. (2018). Mill location spatial probit. *Biomass Bioenergy*. doi:10.1016/j.biombioe.2018.02.001 [S]
 - Branco et al. (2019). Optimal locations for new sugarcane mills (MINLP). *Biomass Bioenergy* 127:105249. [S]
+- Monteiro, C., Fanzeres, B., Kelman, R., Sampaio, R.A., Gaspar, L., Bacellar, L., Garcia, J.D. (2026). Integrated Investment and Operational Planning for Sugarcane-Based Biofuels and Bioelectricity under Market Uncertainty (OptBio). arXiv:2603.06823 [S]
 - Huff, D.L. (1964). Defining and estimating a trading area. *J. Marketing* 28(3):34–38. [K]
 - Malczewski, J. (2006). GIS-based MCDA survey. *IJGIS* 20(7):703–726. [K]
 - Luxen, D., Vetter, C. (2011). OSRM. ACM SIGSPATIAL. doi:10.1145/2093973.2094062 [S]

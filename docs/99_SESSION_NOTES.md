@@ -229,3 +229,23 @@ Next:
 Next:
 - Compare `pilar2b.municipality_cp2b_potential` (v5.1) with `cp2b_redu_v2` (v2.0) and log the differences in docs/21 §Conflicts.
 - Consider `pilar2b.municipality_timeseries` (PPM herds, PAM) as the source for the manure base-load v0, instead of the `ibge_ppm` "get".
+
+## 2026-10-06 — first triage of the daily digests (cloud session)
+Inputs: the three digests of 2026-10-06 (Radar Biometano, Arquivo NIPE-CP2B run 3, Biogas BR), pasted into the session.
+- **New intake path (ADR-0012).** One note per digest day in `research_notes/digests/`, plus the running queue `registry/staging/digest_queue.csv` (27 rows today). A digest's `[V]` counts as `S` until a page and a quote are recorded. `parameters.csv` and `projects_capex.csv` were not changed.
+- **Primary sites were blocked** by the session's egress proxy (curl and WebFetch: agenciasp, SIDRA, IBGE, arXiv, gov.br, Springer). Nothing was promoted to `V`.
+- **Changes:**
+  - docs/07: LAI **R9** (ANP RenovaBio certification data per unit), and the CP2B FAPESP number (2024/01112-1) in the template.
+  - docs/16: CP 232/2026, new price rows, the TransJordano corridor (§2b), LRCAP as a revenue route, and a dated watch list (§6).
+  - docs/21: conflict **C15** (scope of the EPE CAPEX value; the radar gives the price year, Dec 2024) and open questions 11–12.
+  - docs/09, 12, 15 and 23: PPM 2025, layers vs broilers, OFMSW yield lead, fleet offtake points, OptBio, EBA outlook, LCFS benchmark.
+  - `sources.yaml`: two stubs (`reg_mme_cp_232_2026`, `intl_eu_eba_investment_outlook_2026`); notes on `ibge_ppm`, `epe_nt_2025_08` and `anp_renovabio_cert_panel` (now `status: lai`).
+  - The radar routine prompt: phase text per ADR-0010; page and quote for `[V]` numbers; registry suggestions in the queue's columns. **Copy the new prompt into the deployed routine by hand.**
+- **Registry:** 0 errors, 127 warnings (unchanged from before the session).
+
+Next, from the queue (`status: open`):
+1. File LAI R9 with R1 and R2.
+2. Re-export PPM 2025 (SIDRA 3939, 74 and 94) for SP municipalities on a machine that reaches SIDRA; then the manure base-load v0 of the skeleton.
+3. Read EPE NT 2025-08 for `capex_epe` (page, quote, scope, price year) and close C15.
+4. Download the CP 232/2026 spreadsheets before 29 Oct.
+5. Ask IEE/USP, through the CP2B member there, for the OFMSW plant data.

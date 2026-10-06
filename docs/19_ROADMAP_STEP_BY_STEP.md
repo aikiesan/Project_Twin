@@ -19,9 +19,10 @@ Tick boxes as you go. Each phase ends with a **gate** — don't move on until it
 - [x] Load the held datasets into PostGIS (`python -m engine.ingest.load_postgis`, docs/27) — 41 tables, 184,551 rows, private data in schema `private` (2026-10-05)
 - [x] Register all **already-held** CP2B datasets in `registry/sources.yaml` (`status: have`, provenance) — 101 sources (2026-10-04); see docs/25
 - [x] Survey and import the holdings in the `Documents` folders — 16 sources, 2026-10-05 (docs/25 §5)
+- [x] Intake path for the daily digests: one triage note per day plus a verification queue (ADR-0012, 2026-10-06)
 
 ### Requests that take time (do now — they are the critical path)
-- [ ] File LAI R1 and R2 (ANP per-plant ethanol and biomethane) and R4 (CETESB vinasse plans) — `07_LAI_REQUESTS.md`
+- [ ] File LAI R1 and R2 (ANP per-plant ethanol and biomethane), R9 (ANP RenovaBio certification data, added 2026-10-06) and R4 (CETESB vinasse plans) — `07_LAI_REQUESTS.md`
 - [ ] File LAI R3 (SAPCANA) and R5 (CDA livestock); then R6 and R8; start the R7 agreement (LUPA)
 - [ ] Email partners (São Martinho, Comgás, Equinor) with a precise data wish-list + NDA scope
 - [ ] Email PPBIOEN/LABIOEN leads with E1–E3 proposals (`17_LAB_AND_PILOT_EXPERIMENTS.md`)

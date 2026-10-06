@@ -24,6 +24,8 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import curve_fit
 
+from engine.registry import PARAMETER_EVIDENCE_COLUMNS
+
 BMP_REQUIRED = [
     "experiment_id",
     "substrate_id",
@@ -289,7 +291,9 @@ def proposed_registry_rows(
     """Draft a ``parameters.csv`` line (central = mean, low/high = min/max of replicates).
 
     The row is flagged **V** because it comes from our own measured data; a human must still
-    review conditions (temperature, inoculum, substrate origin) and paste it in.
+    review conditions (temperature, inoculum, substrate origin), fill the evidence columns
+    (``page`` = report table, ``quote``, ``verified_by``, ``verified_on``, ``conditions``; left
+    empty here) and paste it in.
     """
     v = np.asarray(values, dtype=float)
     v = v[np.isfinite(v)]
@@ -299,5 +303,5 @@ def proposed_registry_rows(
     note = f"n={v.size} replicates; sd={v.std(ddof=1) if v.size > 1 else float('nan'):.3g}"
     return (
         f"{param_id},{module},{name},{v.mean():.4g},{v.min():.4g},{v.max():.4g},{unit},"
-        f"{source},V,{note}"
+        f"{source},V,{note}" + "," * len(PARAMETER_EVIDENCE_COLUMNS)
     )

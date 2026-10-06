@@ -82,6 +82,8 @@ class Param:
         confidence: one of V, S, K, D (see docs/08_VERIFICATION_PROTOCOL.md).
         notes: free text.
         raw_central, raw_low, raw_high: the original cell text.
+        page, quote: where the value was read in the primary document and the verbatim text
+            (docs/08 §3-4); empty until the value is verified. Required for flag ``V``.
     """
 
     id: str
@@ -97,6 +99,8 @@ class Param:
     raw_central: str
     raw_low: str
     raw_high: str
+    page: str = ""
+    quote: str = ""
 
     @property
     def has_range(self) -> bool:
@@ -133,6 +137,8 @@ def _load_parameters_cached(path: str) -> tuple[Param, ...]:
                     raw_central=(row.get("central") or "").strip(),
                     raw_low=(row.get("low") or "").strip(),
                     raw_high=(row.get("high") or "").strip(),
+                    page=(row.get("page") or "").strip(),
+                    quote=(row.get("quote") or "").strip(),
                 )
             )
     return tuple(rows)
@@ -196,6 +202,20 @@ PARAMETER_COLUMNS = (
     "source",
     "confidence",
     "notes",
+)
+
+#: Evidence columns of ``parameters.csv`` (docs/08 §4). Optional for the loader and the
+#: validator; a ``V`` row needs ``page`` and ``quote``. ``verified_by`` names who or what read
+#: the document (an LLM extraction must say so, docs/08 §6), ``conditions`` the basis of the
+#: value (substrate, scale, temperature, units), ``price_year``/``currency`` monetary rows.
+PARAMETER_EVIDENCE_COLUMNS = (
+    "page",
+    "quote",
+    "verified_by",
+    "verified_on",
+    "conditions",
+    "price_year",
+    "currency",
 )
 
 #: Keys every ``sources.yaml`` entry must carry (missing or empty -> error).
@@ -401,7 +421,9 @@ def validate_parameters(path: Path | str = PARAMETERS_CSV) -> list[Issue]:
       ``raw_*``) but listed as a warning; a blank ``central`` is a warning because
       :meth:`Param.require_central` will raise;
     - flag ``V`` without a non-empty ``page`` and ``quote`` column -> warning
-      (docs/08_VERIFICATION_PROTOCOL.md §3-4).
+      (docs/08_VERIFICATION_PROTOCOL.md §3-4);
+    - ``verified_on`` empty or ``YYYY-MM-DD``; a ``quote`` without ``page`` or ``verified_by``
+      -> warning (where it was read and by whom must go with it).
 
     Args:
         path: CSV file to check (default: the registry's ``parameters.csv``).
@@ -475,16 +497,20 @@ def validate_parameters(path: Path | str = PARAMETERS_CSV) -> list[Issue]:
             broken = "; ".join(f"{a} > {b}" for a, b in bad)
             sink.error(f"values not ordered low <= central <= high ({broken}): {shown}", line, pid)
 
-        if flag == "V":
-            page = (row.get("page") or "").strip()
-            quote = (row.get("quote") or "").strip()
-            if not page or not quote:
-                sink.warning(
-                    "flag V but no page and verbatim quote recorded (add 'page'/'quote' "
-                    "columns, docs/08_VERIFICATION_PROTOCOL.md §3-4)",
-                    line,
-                    pid,
-                )
+        page = (row.get("page") or "").strip()
+        quote = (row.get("quote") or "").strip()
+        if flag == "V" and (not page or not quote):
+            sink.warning(
+                "flag V but no page and verbatim quote recorded (add 'page'/'quote' "
+                "columns, docs/08_VERIFICATION_PROTOCOL.md §3-4)",
+                line,
+                pid,
+            )
+        verified_on = (row.get("verified_on") or "").strip()
+        if verified_on and not _ISO_DATE_RE.fullmatch(verified_on):
+            sink.error(f"verified_on {verified_on!r} is not YYYY-MM-DD", line, pid)
+        if quote and not (page and (row.get("verified_by") or "").strip()):
+            sink.warning("quote recorded without page or verified_by", line, pid)
     return sink.issues
 
 

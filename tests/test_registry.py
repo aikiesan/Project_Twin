@@ -18,6 +18,7 @@ from engine import registry as reg
 from engine.registry import (
     Issue,
     Param,
+    load_parameters,
     main,
     param_hash,
     summary_markdown,
@@ -180,9 +181,23 @@ def test_parameters_v_flag_requires_page_and_quote(tmp_path: Path) -> None:
     path = _write(tmp_path / "a.csv", PARAM_HEADER + "syn_v,process,V,2,1,3,-,syn,V,\n")
     _, warns = _levels(validate_parameters(path))
     assert len(warns) == 1 and "flag V but no page" in warns[0].message
-    header = PARAM_HEADER.strip() + ",page,quote\n"
-    row = 'syn_v,process,V,2,1,3,-,syn,V,,p. 12,"synthetic quote"\n'
+    header = PARAM_HEADER.strip() + ",page,quote,verified_by,verified_on\n"
+    row = 'syn_v,process,V,2,1,3,-,syn,V,,p. 12,"synthetic quote",tester,2026-10-06\n'
     assert validate_parameters(_write(tmp_path / "b.csv", header + row)) == []
+    # a quote must say who read it; a verification date must be ISO
+    row = 'syn_v,process,V,2,1,3,-,syn,V,,p. 12,"synthetic quote",,06/10/2026\n'
+    errors, warns = _levels(validate_parameters(_write(tmp_path / "c.csv", header + row)))
+    assert len(errors) == 1 and "verified_on" in errors[0].message
+    assert len(warns) == 1 and "without page or verified_by" in warns[0].message
+
+
+def test_load_parameters_reads_page_and_quote(tmp_path: Path) -> None:
+    header = PARAM_HEADER.strip() + ",page,quote\n"
+    path = _write(tmp_path / "p.csv", header + 'syn_v,process,V,2,1,3,-,syn,V,,"6, Table 6","q"\n')
+    p = load_parameters(path)["syn_v"]
+    assert (p.page, p.quote) == ("6, Table 6", "q")
+    plain = _write(tmp_path / "plain.csv", PARAM_HEADER + PARAM_ROWS_OK)
+    assert all(q.page == "" and q.quote == "" for q in load_parameters(plain).values())
 
 
 # ---------------------------------------------------------------------------------------------

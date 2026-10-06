@@ -88,7 +88,16 @@ The Morris screening is in §7.
 ```bash
 python -m engine.sensitivity morris --synthetic
 python -m engine.sensitivity morris --mill costa_pinto --crop-year 2025   # once cane is sourced
+python -m engine.sensitivity worklist --synthetic   # the ranking joined with references.csv
 ```
+
+`worklist` writes `worklist.csv` next to the Morris outputs. For each row it lists:
+- the references whose `used_for` names the row, and their identity check;
+- the value checks;
+- whether `page` and `quote` are filled;
+- the next step (docs/08 §5).
+
+Screened rows come first, in priority order. Rows without a range follow, ordered by their largest elasticity.
 
 **Code.** `engine.sensitivity` re-runs `engine.skeleton.run_chain`, the cane → residues → CSTR → LCOB part of the skeleton run, so the screen and the run cannot drift apart.
 

@@ -30,9 +30,11 @@ SALib (Herman and Usher 2017). Each factor is sampled on a ``levels``-point grid
 screening choice, not a claim about the distribution of the value. μ* is reported in output
 units and relative to the central-case output (``mu_star_rel``).
 
-**Local elasticities.** Every row with a numeric central value, screened or not, also gets
-``ε = (y(x(1+δ)) − y(x(1−δ))) / (2 δ · y(x))``. Rows without a range are therefore not ignored:
-a large ε says that a sourced range is worth finding.
+**Local elasticities.** Every row with a numeric central value, screened or not, also gets two
+one-sided elasticities, ``ε_down = (y(x) − y(x(1−δ))) / (δ · y(x))`` and
+``ε_up = (y(x(1+δ)) − y(x)) / (δ · y(x))`` (one-sided because the capacity cap is a kink).
+Rows without a range are therefore not ignored: a large ε says that a sourced range is worth
+finding.
 
 **Reference case.** Either a calibration mill from ``registry/skeleton_mills.yaml`` (same inputs
 and ANP nameplate as :func:`engine.skeleton.run_skeleton`) or a labelled **synthetic** case:
@@ -41,10 +43,15 @@ the central-value potential. With linear CAPEX the synthetic LCOB, capacity fact
 ``mu_star_rel`` do not depend on the cane value; only the biomethane volume scales with it. The
 synthetic case is not a mill and its numbers are not results (ADR-0010).
 
+**Worklist.** ``worklist`` joins the priority with ``registry/references.csv`` and the
+``page``/``quote`` columns of ``parameters.csv``: for each row, its references, their identity
+check, the value checks and the next verification step (docs/08 §5).
+
 Usage::
 
     python -m engine.sensitivity morris --synthetic
     python -m engine.sensitivity morris --mill costa_pinto --crop-year 2025
+    python -m engine.sensitivity worklist --synthetic
 """
 
 from __future__ import annotations
@@ -62,7 +69,13 @@ import pandas as pd
 
 from engine import DATA_DIR, __version__
 from engine.process.strategies import StorageS1
-from engine.registry import Param, load_parameters, param_hash
+from engine.registry import (
+    REFERENCES_CSV,
+    Param,
+    load_parameters,
+    load_references,
+    param_hash,
+)
 from engine.skeleton import (
     ANP_MONTHLY_CSV,
     SKELETON_MILLS_YAML,
@@ -595,6 +608,115 @@ def gate0_share(priority: pd.DataFrame, top_n: int = GATE0_TOP_N) -> dict:
     }
 
 
+_PAPER_IN_SOURCE_RE = re.compile(r"10\.\d{4,9}/|et al", re.IGNORECASE)
+
+
+def _next_step(
+    p: Param,
+    refs: Sequence[Mapping[str, str]],
+    value_checks: Sequence[str],
+    effect: float,
+    needs_range: bool = False,
+) -> str:
+    """Next verification step of one row (docs/08 §3 and §8), first match wins."""
+    has_evidence = bool(p.page and p.quote)
+    if p.confidence == "V" and has_evidence:
+        return "done: V with page and quote" + ("; add a sourced range" if needs_range else "")
+    if "contradicted" in value_checks:
+        step = "resolve the contradicting value (docs/21 §1), then record page and quote"
+    elif not refs:
+        if "project choice" in p.source:
+            step = "find a source: the value is a project choice"
+        elif _PAPER_IN_SOURCE_RE.search(p.source):
+            step = "add the paper's references.csv row (ADR-0013)"
+        else:
+            step = "identify the document and add its references.csv row"
+    elif not any(r.get("ref_check") == "two_sources" for r in refs):
+        step = "double-check the reference identity (two sources, docs/08 §8)"
+    elif "page_quote" in value_checks and not has_evidence:
+        step = "copy the page and quote into parameters.csv and set V"
+    else:
+        step = "read the document: record page and verbatim quote (docs/08 §3)"
+    if needs_range:
+        step += "; find a sourced range (none in the registry)"
+    if effect == 0:
+        step += " — can wait, no effect in this case"
+    return step
+
+
+def verification_worklist(
+    result: MorrisResult,
+    params: Mapping[str, Param],
+    references: Sequence[Mapping[str, str]] = (),
+) -> pd.DataFrame:
+    """What to verify next, row by row: the Morris priority joined with ``references.csv``.
+
+    Screened rows come first, in priority order; rows excluded from the screen (no range)
+    follow, ordered by their largest local elasticity. For each row the table gives the
+    references whose ``used_for`` names it, their identity check, the value checks recorded for
+    it, whether ``page`` and ``quote`` are filled, and the next step (docs/08 §3 and §8).
+
+    Columns: ``order``, ``param_id``, ``confidence``, ``screen`` (``screened`` or the exclusion
+    reason), ``max_mu_star_rel``, ``max_abs_elasticity``, ``refs`` (``ref_id=ref_check``),
+    ``value_check``, ``page_quote``, ``next_step``, ``source``.
+    """
+    el = result.elasticities[result.elasticities["output"].isin(PRIORITY_OUTPUTS)]
+    max_el = {
+        pid: _max_abs(g[["elasticity_down", "elasticity_up"]].to_numpy())
+        for pid, g in el.groupby("param_id")
+    }
+    by_param: dict[str, list[Mapping[str, str]]] = {}
+    for ref in references:
+        for item in str(ref.get("used_for", "")).split(";"):
+            item = item.strip()
+            if item.startswith("parameters.csv:"):
+                by_param.setdefault(item.split(":", 1)[1], []).append(ref)
+
+    def value_checks(pid: str, refs: Sequence[Mapping[str, str]]) -> list[tuple[str, str]]:
+        found = []
+        for ref in refs:
+            for item in str(ref.get("value_check", "")).split(";"):
+                key, _, status = item.strip().partition("=")
+                if key.strip() == pid:
+                    found.append((ref.get("ref_id", ""), status.strip()))
+        return found
+
+    screened = [
+        (pid, "screened", float(mu))
+        for pid, mu in zip(
+            result.priority["param_id"], result.priority["max_mu_star_rel"], strict=True
+        )
+    ]
+    unscreened = sorted(
+        ((e.pid, e.reason, math.nan) for e in result.excluded),
+        key=lambda t: -(max_el.get(t[0]) or 0.0),
+    )
+    rows = []
+    for order, (pid, screen, mu) in enumerate(screened + unscreened, start=1):
+        p = params[pid]
+        refs = by_param.get(pid, [])
+        vc = value_checks(pid, refs)
+        effect = mu if screen == "screened" else (max_el.get(pid) or 0.0)
+        rows.append(
+            {
+                "order": order,
+                "param_id": pid,
+                "confidence": p.confidence,
+                "screen": screen,
+                "max_mu_star_rel": mu,
+                "max_abs_elasticity": max_el.get(pid),
+                "refs": "; ".join(f"{r.get('ref_id', '')}={r.get('ref_check', '')}" for r in refs),
+                "value_check": "; ".join(f"{rid}={st}" for rid, st in vc),
+                "page_quote": bool(p.page and p.quote),
+                "next_step": _next_step(
+                    p, refs, [st for _, st in vc], effect, needs_range="no numeric range" in screen
+                ),
+                "source": p.source,
+            }
+        )
+    return pd.DataFrame(rows)
+
+
 def _jsonable(obj: object) -> object:
     if isinstance(obj, dict):
         return {str(k): _jsonable(v) for k, v in obj.items()}
@@ -660,35 +782,22 @@ def write_outputs(result: MorrisResult, out_dir: Path | str = DEFAULT_OUT_DIR) -
     return path
 
 
-def main(argv: Sequence[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(prog="python -m engine.sensitivity", description=__doc__)
-    sub = ap.add_subparsers(dest="cmd", required=True)
-    m = sub.add_parser("morris", help="Morris screen + local elasticities of the skeleton")
-    case = m.add_mutually_exclusive_group(required=True)
+def _add_screen_args(parser: argparse.ArgumentParser) -> None:
+    case = parser.add_mutually_exclusive_group(required=True)
     case.add_argument("--synthetic", action="store_true", help="labelled synthetic case")
     case.add_argument("--mill", help="calibration mill id in skeleton_mills.yaml")
-    m.add_argument("--crop-year", type=int, help="crop year (mill case; synthetic default 2025)")
-    m.add_argument("--strategy", choices=("S0", "S1"), help="mill case only")
-    m.add_argument("--trajectories", type=int, default=20)
-    m.add_argument("--levels", type=int, default=4)
-    m.add_argument("--seed", type=int, default=20261006)
-    m.add_argument("--out", type=Path, default=DEFAULT_OUT_DIR)
-    m.add_argument("--no-write", action="store_true", help="print only")
-    a = ap.parse_args(argv)
+    parser.add_argument("--crop-year", type=int, help="crop year (synthetic default 2025)")
+    parser.add_argument("--strategy", choices=("S0", "S1"), help="mill case only")
+    parser.add_argument("--trajectories", type=int, default=20)
+    parser.add_argument("--levels", type=int, default=4)
+    parser.add_argument("--seed", type=int, default=20261006)
+    parser.add_argument("--out", type=Path, default=DEFAULT_OUT_DIR)
+    parser.add_argument("--no-write", action="store_true", help="print only")
 
-    if a.synthetic:
-        ref = synthetic_case(crop_year=a.crop_year or 2025)
-    else:
-        if a.crop_year is None:
-            ap.error("--mill needs --crop-year")
-        try:
-            ref = mill_case(a.mill, a.crop_year, strategy=a.strategy)
-        except MissingInputError as exc:
-            print(f"cannot run: {exc}")
-            return 2
-    res = morris_screen(ref, trajectories=a.trajectories, levels=a.levels, seed=a.seed)
+
+def _print_screen(res: MorrisResult) -> None:
     print(f"run_id {res.run_id}")
-    print(f"case   {ref.basis}")
+    print(f"case   {res.case.basis}")
     print("central: " + ", ".join(f"{k}={v:.4g}" for k, v in res.central.items()))
     print(f"\npriority (max mu*/|y| over {', '.join(PRIORITY_OUTPUTS)}):")
     for row in res.priority.itertuples():
@@ -701,8 +810,57 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"  {e.pid:<20} [{e.confidence}]  {e.reason}")
     g = res.summary["gate0"]
     print(f"\nGate 0: {g['n_v']}/{g['n_ranked']} of the top {g['top_n']} moving rows are V")
+
+
+def _print_worklist(wl: pd.DataFrame) -> None:
+    print("\nverification worklist (docs/08 §5):")
+    for row in wl.itertuples():
+        effect = (
+            f"mu*rel {row.max_mu_star_rel:5.3f}"
+            if row.screen == "screened"
+            else f"|e| {row.max_abs_elasticity or 0:5.2f} "
+        )
+        print(f"  {row.order:>2}  {row.param_id:<20} [{row.confidence}]  {effect}  {row.next_step}")
+        if row.refs:
+            print(f"      refs: {row.refs}")
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(prog="python -m engine.sensitivity", description=__doc__)
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    _add_screen_args(sub.add_parser("morris", help="Morris screen + local elasticities"))
+    w = sub.add_parser(
+        "worklist", help="Morris screen joined with references.csv: what to verify next"
+    )
+    _add_screen_args(w)
+    w.add_argument("--references", type=Path, default=REFERENCES_CSV)
+    a = ap.parse_args(argv)
+
+    if a.synthetic:
+        ref = synthetic_case(crop_year=a.crop_year or 2025)
+    else:
+        if a.crop_year is None:
+            ap.error("--mill needs --crop-year")
+        try:
+            ref = mill_case(a.mill, a.crop_year, strategy=a.strategy)
+        except MissingInputError as exc:
+            print(f"cannot run: {exc}")
+            return 2
+    params = load_parameters()
+    res = morris_screen(ref, params, trajectories=a.trajectories, levels=a.levels, seed=a.seed)
+    _print_screen(res)
+    wl = None
+    if a.cmd == "worklist":
+        refs = load_references(a.references) if a.references.is_file() else []
+        if not refs:
+            print(f"\n(no references in {a.references}: every row needs its reference first)")
+        wl = verification_worklist(res, params, refs)
+        _print_worklist(wl)
     if not a.no_write:
-        print(f"written to {write_outputs(res, a.out)}")
+        path = write_outputs(res, a.out)
+        if wl is not None:
+            wl.to_csv(path / "worklist.csv", index=False)
+        print(f"written to {path}")
     return 0
 
 

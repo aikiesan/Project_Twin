@@ -21,8 +21,14 @@ Most of the registry was compiled from search snippets and prior knowledge becau
    - not found → keep `S/K`, note "not found in [doc]".
 5. If two V sources disagree → **do not average**; add to `21_RISKS_AND_OPEN_QUESTIONS.md` §Conflicts and choose a rule (e.g. SP-specific > national > international; recent > old; measured > estimated).
 
-## 4. Extended columns for `parameters.csv` (add during Phase 0)
+## 4. Extended columns for `parameters.csv` (added 2026-10-06)
 `page`, `quote`, `verified_by`, `verified_on`, `conditions`, `price_year`, `currency`.
+- `page` is the PDF page, with the printed journal page and the table or section where useful (e.g. `6 (p. 1421, Table 6)`).
+- `quote` is verbatim, at most two sentences or one table row.
+- `verified_by` says who read the document. An LLM extraction says so and names its independent re-check (§6). Its human audit is still owed (§6).
+- `verified_on` is `YYYY-MM-DD`.
+
+The validator warns about a `V` row without a page and quote, and about a quote without a page or `verified_by`. A malformed `verified_on` is an error.
 
 ## 5. Verification order (highest leverage first)
 1. EPE NT 2025-08 & 2023-07 (CAPEX factor, OPEX scope, LCOB ranges)
@@ -45,6 +51,14 @@ Most of the registry was compiled from search snippets and prior knowledge becau
 7. the filter-cake rows.
 
 `ethanol_yield` needs a sourced range first (docs/21 Q13). Rows with no effect in the current chain (straw, OLR/HRT limits, SO₄ and K) can wait. A row becomes `V` only through its page and quote. The reference behind it must be `two_sources` in `references.csv` (§8).
+
+`python -m engine.sensitivity worklist --synthetic` prints this order with the next step of each row. The first matching step applies:
+1. done, when the row is `V` with page and quote;
+2. resolve a contradicting value;
+3. add or identify its reference;
+4. double-check the reference;
+5. copy a recorded page and quote;
+6. read the document.
 
 ## 6. LLM-assisted extraction rules
 - Use LLMs to **locate and extract**, never to **supply** values.

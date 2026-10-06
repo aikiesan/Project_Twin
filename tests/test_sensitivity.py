@@ -6,6 +6,7 @@ Uses the registry parameters held in git, the ANP evidence CSV and the skeleton 
 
 import json
 import math
+from dataclasses import replace
 from pathlib import Path
 
 import pandas as pd
@@ -25,6 +26,7 @@ from engine.sensitivity import (
     morris_screen,
     set_row,
     synthetic_case,
+    verification_worklist,
     write_outputs,
 )
 from engine.skeleton import MissingInputError, run_skeleton
@@ -214,3 +216,48 @@ def test_factor_is_frozen():
     f = Factor("a", (1.0,), (2.0,), (1.5,), "u", "S", "s")
     with pytest.raises(AttributeError):
         f.pid = "b"  # type: ignore[misc]
+
+
+def test_worklist_joins_priority_references_and_evidence(screen, params):
+    # SYNTHETIC reference rows and evidence: they exercise each branch, they are not data
+    p = dict(params)
+    p["fc_gen"] = replace(p["fc_gen"], confidence="V", page="p. 1", quote="synthetic quote")
+    refs = [
+        {"ref_id": "r1", "used_for": "parameters.csv:vin_cod; docs/23", "ref_check": "one_source"},
+        {
+            "ref_id": "r2",
+            "used_for": "parameters.csv:fc_bmp; parameters.csv:cod_removal",
+            "ref_check": "two_sources",
+            "value_check": "fc_bmp=page_quote; cod_removal=contradicted",
+        },
+        {"ref_id": "r3", "used_for": "parameters.csv:vin_ch4_yield", "ref_check": "two_sources"},
+    ]
+    wl = verification_worklist(screen, p, refs).set_index("param_id")
+    step = wl["next_step"]
+    assert step["fc_gen"] == "done: V with page and quote"
+    assert step["vin_cod"].startswith("double-check the reference identity")
+    assert wl.loc["vin_cod", "refs"] == "r1=one_source"
+    assert step["fc_bmp"].startswith("copy the page and quote")
+    assert wl.loc["fc_bmp", "value_check"] == "r2=page_quote"
+    assert step["cod_removal"].startswith("resolve the contradicting value")
+    assert step["vin_ch4_yield"].startswith("read the document")
+    assert step["wacc_real"].startswith("find a source: the value is a project choice")
+    assert step["vin_gen"].startswith("add the paper's references.csv row")  # DOI in source
+    assert step["capex_epe"].startswith("identify the document")  # a report, no DOI
+    assert step["hrt_cstr"].endswith("can wait, no effect in this case")
+    assert "find a sourced range" in step["ethanol_yield"]
+    # screened rows first, in priority order; excluded rows after them
+    screened = wl[wl["screen"] == "screened"]
+    assert list(screened.index) == list(screen.priority["param_id"])
+    assert wl.loc["ethanol_yield", "order"] > screened["order"].max()
+    assert bool(wl.loc["fc_gen", "page_quote"]) and not bool(wl.loc["fc_bmp", "page_quote"])
+
+
+def test_cli_worklist_without_references(tmp_path, capsys):
+    argv = ["worklist", "--synthetic", "--trajectories", "2", "--references", "x.csv"]
+    assert main(argv + ["--out", str(tmp_path)]) == 0
+    out = capsys.readouterr().out
+    assert "no references in x.csv" in out and "verification worklist" in out
+    (run_dir,) = tmp_path.iterdir()
+    wl = pd.read_csv(run_dir / "worklist.csv")
+    assert {"param_id", "next_step", "refs"} <= set(wl.columns)

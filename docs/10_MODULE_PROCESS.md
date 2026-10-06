@@ -78,10 +78,14 @@ Module: `engine.process.mass_balance`. It is the process step of the walking ske
 
 **Not yet implemented:** the heat balance, electricity use, digestate N/P/K, H₂S load, filter-cake storage losses (φ_store, which waits on E1) and the ammonia check (no TAN content per substrate). Strategies S0–S5 are Phase 2.
 
-**Registry gaps** (`REGISTRY_GAPS` in the module) block straw and manure:
-- **Straw:** the VS fraction of recovered straw is missing (`straw_gen` is in kg DM per t cane).
-- **Manure:** TS and VS per tonne of fresh manure are missing, per species (`b0_*` is per kg VS).
-- **Gas and checks:** `x_ch4`, density and TAN content per substrate.
+**Straw and manure (added 2026-10-05).** `parameters.csv` now holds TS, VS/TS, BMP and the biogas CH₄ fraction for straw (untreated), cattle slurry, swine slurry, fresh poultry droppings and poultry litter. The values come from PILAR-2b's `feedstocks.yaml` and its cited papers: S for TS, VS and BMP, and K for the CH₄ fractions, which have no reference attached. `substrates_from_registry()` builds all five, together with vinasse and filter cake. These are lab BMP values; the `b0_*` rows are IPCC B₀, a different concept, and are not used here.
+
+**Biogas CH₄ fraction.** `PlantDesign.x_ch4` can be one value for the whole mix, or `None`. With `None`, biogas is Σ CH₄ₛ / xₛ over the fed substrates, and `x_ch4_mix` reports the result. A fed substrate with no fraction is refused, not guessed.
+
+**Remaining registry gaps** (`REGISTRY_GAPS` in the module):
+- **CH₄ fraction for vinasse and filter cake.** The vinasse value is in conflict (docs/21 C13), and filter cake has no row.
+- **Fresh-matter density per substrate.** v0 assumes 1.0 t/m³.
+- **TAN content per substrate,** needed for the ammonia check.
 
 **Volpi et al. 2021:** `test_volpi_2021_consistency` only checks the two values recorded in §5 (maximum OLR 4.8 g VS/L·d, about 230 NmL CH₄/g VS). A full reproduction needs the paper's feed composition and HRT, so the paper is now on the verification list.
 

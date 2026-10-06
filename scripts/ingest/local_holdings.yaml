@@ -198,3 +198,46 @@ sources:
       - Reposicionamento_Submissão_ESD/DBFZ_REFERENCES/BIOMASSEPOTENZIALE_BASISDATEN_readme.xlsx
       - Reposicionamento_Submissão_ESD/DBFZ_REFERENCES/Metadata_Nutzungshinweise.pdf
       - Reposicionamento_Submissão_ESD/DBFZ_REFERENCES/Data_regional_DE.csv
+
+  # ===== Second Documents import (2026-10-05, docs/25 §5.6): calibration and validation =====
+  # --- calibration target: ANP open data to 08/2026 (newer than anp_biomethane_open_data_2026_04)
+  - id: anp_biomethane_open_data_2026_08
+    root: docs
+    base: Reposicionamento_Submissão_ESD/biometano-dados-abertos
+    include: ["*.csv"]
+
+  # --- CP2B v5.1 spatial logistic factor, plant validation (130 plants, LOO), straw haul radius,
+  #     road/straight-line detour ratios, ESD review tables, and the CH4/biogas/biomethane convention
+  - id: cp2b_method_v5_1_spatial
+    root: docs
+    base: Reposicionamento_Submissão_ESD/Metodo_CP2b
+    include:
+      - Convencao_CH4_biogas_biometano.md
+      - "fl_espacial/outputs/*.csv"
+      - "fl_espacial/outputs/*.gpkg"
+      - "fl_espacial/outputs/banco/*"
+      - "outputs_v5/revisao_ESD/*.csv"
+      - "outputs_v5/revisao_ESD/*.json"
+      - outputs_v5/revisao_ESD/LEIA-ME.md
+
+  # --- validation: PILAR-2b curated table of real plants (company names and CNPJ only)
+  - id: pilar2b_biogas_plants_brazil
+    root: docs
+    base: Pilar2b
+    include:
+      - analysis/data/05_biogas_plants_brazil.csv
+      - analysis/data/05_biogas_plants_brazil.xlsx
+      - analysis/data/05b_biogas_aggregates_by_state.csv
+      - cp2b-workspace/NewLook/docs/data/BIOGAS_PLANTS_DATASET.md
+
+  # --- land cover: the official Collection 10 legend, kept with the SP clips that
+  #     engine.ingest.clip_raster writes into the same folder (ADR-0011)
+  #     (two entries so both PDFs land at the top of the folder, not under origin sub-folders)
+  - id: mapbiomas_col10_coverage_sp
+    root: docs
+    base: CP2B/DNIT_MULTIMODAL
+    include: [Legenda-Colecao-10-Legend-Code.pdf]
+  - id: mapbiomas_col10_coverage_sp
+    root: docs
+    base: CP2B/PNGs
+    include: [Legenda-Colecao-10-Descricao-Detalhada-PDF_PT-BR_EN.pdf]

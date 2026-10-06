@@ -54,6 +54,8 @@ class Substrate:
         k_first_order_per_d: first-order rate for η_kin; ``None`` means complete within HRT.
         cod_kg_per_m3, cod_removal_frac, ch4_yield_nm3_per_kg_cod: COD basis inputs.
         so4_kg_per_m3, k_kg_per_m3: for the COD/SO₄ and potassium checks (optional).
+        ch4_frac_biogas: CH₄ fraction of the biogas this substrate yields (optional; used when
+            :attr:`PlantDesign.x_ch4` is ``None``).
         param_ids: registry ids the values came from (empty for hand-made substrates).
     """
 
@@ -69,6 +71,7 @@ class Substrate:
     ch4_yield_nm3_per_kg_cod: float | None = None
     so4_kg_per_m3: float | None = None
     k_kg_per_m3: float | None = None
+    ch4_frac_biogas: float | None = None
     param_ids: tuple[str, ...] = field(default=())
 
     def __post_init__(self) -> None:
@@ -80,6 +83,8 @@ class Substrate:
             v = getattr(self, attr)
             if not 0 <= v <= 1:
                 raise ValueError(f"{self.name}: {attr}={v} must be a fraction in [0, 1]")
+        if self.ch4_frac_biogas is not None and not 0 < self.ch4_frac_biogas <= 1:
+            raise ValueError(f"{self.name}: ch4_frac_biogas must be a fraction in (0, 1]")
         if self.basis == "vs" and self.bmp_nm3_ch4_per_t_vs is None:
             raise ValueError(f"{self.name}: VS basis needs bmp_nm3_ch4_per_t_vs")
         if self.basis == "cod":
@@ -139,20 +144,23 @@ class PlantDesign:
     Attributes:
         digester_volume_m3: total working volume.
         upgrading_capacity_nm3_d: nameplate biomethane output, Nm³/d.
-        x_ch4: CH₄ fraction of the biogas (docs/10 §2.2: ~0.55-0.65; no registry row yet).
+        x_ch4: CH₄ fraction of the biogas for the whole mix, or ``None`` to derive it from each
+            substrate's :attr:`Substrate.ch4_frac_biogas` (biogas = Σ CH₄_s / x_s).
         ch4_recovery_frac: upgrading CH₄ recovery (registry ``upg_ch4_recovery``).
     """
 
     digester_volume_m3: float
     upgrading_capacity_nm3_d: float
-    x_ch4: float
+    x_ch4: float | None
     ch4_recovery_frac: float
 
     def __post_init__(self) -> None:
         if self.digester_volume_m3 <= 0 or self.upgrading_capacity_nm3_d <= 0:
             raise ValueError("digester_volume_m3 and upgrading_capacity_nm3_d must be > 0")
-        if not 0 < self.x_ch4 <= 1 or not 0 < self.ch4_recovery_frac <= 1:
-            raise ValueError("x_ch4 and ch4_recovery_frac must be fractions in (0, 1]")
+        if self.x_ch4 is not None and not 0 < self.x_ch4 <= 1:
+            raise ValueError("x_ch4 must be a fraction in (0, 1] or None")
+        if not 0 < self.ch4_recovery_frac <= 1:
+            raise ValueError("ch4_recovery_frac must be a fraction in (0, 1]")
 
 
 def _days_in_month(month: object) -> int:
@@ -237,7 +245,7 @@ def simulate(
 
     Returns:
         One row per month: loads (``flow_m3_d``, ``vs_load_kg_d``, ``olr_kg_vs_m3_d``,
-        ``hrt_d``), gas (``ch4_nm3``, ``biogas_nm3``, ``biomethane_potential_nm3``,
+        ``hrt_d``), gas (``ch4_nm3``, ``biogas_nm3``, ``x_ch4_mix``, ``biomethane_potential_nm3``,
         ``biomethane_nm3``, ``biomethane_curtailed_nm3``, ``biomethane_nm3_d``),
         ``capacity_factor``, and flags ``olr_ok``, ``hrt_ok``, ``ts_ok``, ``cod_so4_ok``,
         ``k_ok`` (``None`` = not evaluable), ``tan_ok`` (always ``None`` in v0) and ``feasible``
@@ -249,17 +257,26 @@ def simulate(
     out["olr_kg_vs_m3_d"] = out["vs_load_kg_d"] / v
     out["hrt_d"] = [v / q if q > 0 else math.inf for q in out["flow_m3_d"]]
 
-    ch4 = []
+    ch4, biogas = [], []
     for month, hrt in zip(out["month"], out["hrt_d"], strict=True):
         grp = feed[feed["month"].astype(str) == month]
-        ch4.append(
-            sum(
-                substrates[s].ch4_nm3(m, hrt, limits.bmp_fullscale)
-                for s, m in zip(grp["substrate"], grp["fresh_t"], strict=True)
-            )
-        )
+        ch4_t = biogas_t = 0.0
+        for name, m in zip(grp["substrate"], grp["fresh_t"], strict=True):
+            s = substrates[name]
+            c = s.ch4_nm3(m, hrt, limits.bmp_fullscale)
+            ch4_t += c
+            if design.x_ch4 is None and m > 0:
+                if s.ch4_frac_biogas is None:
+                    raise ValueError(
+                        f"{name}: no ch4_frac_biogas; set PlantDesign.x_ch4 or the substrate "
+                        "fraction (vinasse and filter cake: see docs/21 C13)"
+                    )
+                biogas_t += c / s.ch4_frac_biogas
+        ch4.append(ch4_t)
+        biogas.append(ch4_t / design.x_ch4 if design.x_ch4 is not None else biogas_t)
     out["ch4_nm3"] = ch4
-    out["biogas_nm3"] = out["ch4_nm3"] / design.x_ch4
+    out["biogas_nm3"] = biogas
+    out["x_ch4_mix"] = [c / b if b > 0 else math.nan for c, b in zip(ch4, biogas, strict=True)]
     out["biomethane_potential_nm3"] = out["ch4_nm3"] * design.ch4_recovery_frac
     nameplate_month = design.upgrading_capacity_nm3_d * out["days"]
     out["biomethane_nm3"] = out["biomethane_potential_nm3"].clip(upper=nameplate_month)
@@ -309,17 +326,45 @@ def _central(params: Mapping[str, Param], pid: str) -> float:
     return params[pid].require_central()
 
 
+#: VS-basis substrates built from four registry rows each: ``<prefix>_ts`` (% FM),
+#: ``<prefix>_vs_ts`` (% TS), a BMP row (NL CH₄/kg VS) and ``<prefix>_ch4_pct`` (% v/v).
+VS_SUBSTRATE_ROWS = {
+    "straw": ("straw", "straw_bmp_untreated"),
+    "cattle_slurry": ("cattle_slurry", "cattle_slurry_bmp"),
+    "swine_slurry": ("swine_slurry", "swine_slurry_bmp"),
+    "poultry_droppings": ("poultry_droppings", "poultry_droppings_bmp"),
+    "poultry_litter": ("poultry_litter", "poultry_litter_bmp"),
+}
+
+
+def _vs_substrate(
+    p: Mapping[str, Param], name: str, prefix: str, bmp_id: str, density: float
+) -> Substrate:
+    ids = (f"{prefix}_ts", f"{prefix}_vs_ts", bmp_id, f"{prefix}_ch4_pct")
+    return Substrate(
+        name=name,
+        basis="vs",
+        density_t_per_m3=density,
+        ts_frac_fm=_central(p, ids[0]) / 100,
+        vs_frac_ts=_central(p, ids[1]) / 100,
+        bmp_nm3_ch4_per_t_vs=_central(p, bmp_id),  # NL/kg VS = Nm³/t VS
+        ch4_frac_biogas=_central(p, ids[3]) / 100,
+        param_ids=ids,
+    )
+
+
 def substrates_from_registry(
     params: Mapping[str, Param] | None = None, *, fresh_density_t_per_m3: float = 1.0
 ) -> dict[str, Substrate]:
-    """Vinasse (COD basis) and filter cake (VS basis) from ``parameters.csv`` central values.
+    """All v0 substrates from ``parameters.csv`` central values.
+
+    - vinasse (COD basis) and filter cake (VS basis): no ``ch4_frac_biogas`` yet, because the
+      CH₄ fraction of vinasse is in conflict (docs/21 C13) and filter cake has no row;
+    - straw and four manures (VS basis) from :data:`VS_SUBSTRATE_ROWS`, with their CH₄ fraction.
 
     ``fresh_density_t_per_m3`` converts fresh mass to volume for the HRT. The registry has no
-    density row; 1.0 t/m³ is a v0 modelling assumption (docs/10 §6), passed explicitly here so
+    density row; 1.0 t/m³ is a v0 modelling assumption (docs/10 §7), passed explicitly here so
     it shows in every call that relies on it.
-
-    Straw and manure are not built: the registry has BMP/B₀ for them but no VS content per
-    tonne of fresh matter (see :data:`REGISTRY_GAPS`).
     """
     p = params if params is not None else load_parameters()
     vin_ts_g_l, vin_vs_g_l = _split_pair(p["vin_ts_vs"])
@@ -353,7 +398,10 @@ def substrates_from_registry(
         bmp_nm3_ch4_per_t_vs=_central(p, "fc_bmp"),  # NL/kg VS = Nm³/t VS
         param_ids=("fc_ts_vs", "fc_bmp"),
     )
-    return {"vinasse": vinasse, "filter_cake": filter_cake}
+    built = {"vinasse": vinasse, "filter_cake": filter_cake}
+    for name, (prefix, bmp_id) in VS_SUBSTRATE_ROWS.items():
+        built[name] = _vs_substrate(p, name, prefix, bmp_id, fresh_density_t_per_m3)
+    return built
 
 
 def limits_from_registry(params: Mapping[str, Param] | None = None) -> OperatingLimits:
@@ -368,11 +416,10 @@ def limits_from_registry(params: Mapping[str, Param] | None = None) -> Operating
     )
 
 
-#: Inputs the v0 skeleton needs that the registry does not hold yet (docs/10 §6).
+#: Inputs the v0 skeleton needs that the registry does not hold yet (docs/10 §7).
 REGISTRY_GAPS = {
-    "straw_vs": "VS fraction of recovered straw (straw_gen is in kg DM per t cane)",
-    "manure_ts_vs": "TS and VS per tonne of fresh manure, per species (b0_* is per kg VS)",
-    "x_ch4": "CH4 fraction of biogas per mix (docs/10 §2.2 gives 0.55-0.65 as typical)",
+    "x_ch4_vinasse_filter_cake": "CH4 fraction of biogas for vinasse (in conflict, docs/21 C13) "
+    "and filter cake (no registry row)",
     "fresh_density": "fresh-matter density per substrate (v0 assumes 1.0 t/m3)",
     "tan_content": "TAN per substrate, for the ammonia check",
 }

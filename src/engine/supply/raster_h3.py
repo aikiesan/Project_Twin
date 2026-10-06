@@ -12,7 +12,8 @@ Design choices (see ADR-0002 for the H3 resolution):
   rule; boundary error averages out at res 8 ≈ 0.74 km² ≈ 800 pixels of 30 m).
 - Pixel area is computed **per pixel row** from the raster geometry, never assumed constant:
   geographic rasters (EPSG:4326/4674) use the exact spherical-zone area on the authalic sphere
-  (or the ellipsoid via ``pyproj.Geod`` when ``geodesic=True``); projected rasters use
+  (or the ellipsoid via ``pyproj.Geod`` when ``geodesic=True``; use it for real areas: the
+  sphere overstates pixel area by 0.20-0.30 % across SP's latitudes); projected rasters use
   ``|a·e − b·d|`` from the affine transform (correct for equal-area projections only —
   a warning is raised otherwise).
 - The class code(s) are **required arguments**: check the legend of the collection you

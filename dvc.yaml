@@ -2,8 +2,9 @@
 # Stages are added as data arrive; commands must exist and be deterministic.
 # Run:  dvc repro <stage>     (dvc is installed on the home machine, not in CI)
 vars:
+  # Collection 10 ends in 2024 (ADR-0011 clips); add 2025 with Collection 11.
   - years: [2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016,
-            2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
+            2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]
 
 stages:
   inventory_raw:
@@ -19,15 +20,15 @@ stages:
       - data/interim/inventory_raw_folders.csv
 
   # MapBiomas sugarcane area per H3 res-8 cell, one output per year.
-  # Set the legend code(s) of YOUR collection in params.yaml (mapbiomas.cane_codes).
+  # Legend code(s) come from params.yaml (mapbiomas.cane_code_args); see the citation there.
   cane_area_h3:
     foreach: ${years}
     do:
-      cmd: python -m engine.supply.raster_h3 data/raw/mapbiomas/mapbiomas_sp_${item}.tif
-        --year ${item} --res 8 ${mapbiomas.cane_code_args}
+      cmd: python -m engine.supply.raster_h3 data/raw/mapbiomas_col10_coverage_sp/mapbiomas_sp_${item}.tif
+        --year ${item} --res 8 --geodesic ${mapbiomas.cane_code_args}
         --out data/interim/cane_area_h3/cane_area_h3_${item}.parquet
       deps:
-        - data/raw/mapbiomas/mapbiomas_sp_${item}.tif
+        - data/raw/mapbiomas_col10_coverage_sp/mapbiomas_sp_${item}.tif
         - src/engine/supply/raster_h3.py
       params:
         - mapbiomas.cane_code_args

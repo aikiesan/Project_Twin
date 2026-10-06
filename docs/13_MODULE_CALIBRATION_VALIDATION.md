@@ -71,8 +71,10 @@ The `run_id` is deterministic. It is `skel-<mill>-<crop year>-<hash>`, where the
 
 **First diagnostic, with a test cane value (not data).** Under S0, Narandiba's simulated off-season share is 0. ANP shows about 0.43 (30–39 % utilization from Dec 2025 to Mar 2026). This is the gap that strategy S1 (stored filter cake) has to explain.
 
+**Strategy S1 (added the same day).** Run it with `--strategy S1` once the mill's `storage` block is filled: `store_frac`, the storing and release months, and `loss_frac_per_month` with `loss_source`. The summary then also reports the silo balance. With test values, Narandiba's simulated off-season share rises from 0 (S0) to about 0.25, against about 0.43 observed.
+
 **Not yet implemented:**
-- strategy S1 and the others (S2–S5);
-- calibration of the AD shares;
+- strategies S2–S5;
+- calibration of the AD shares and of `store_frac`;
 - the manure base-load;
 - the Morris screening.

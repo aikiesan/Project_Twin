@@ -12,7 +12,8 @@ One run is one calibration mill and one crop year (April to March):
 
 Every run gets a deterministic ``run_id`` built from the registry hash, the mill inputs and the
 ANP file, and writes ``monthly.csv``, ``comparison.csv`` and ``summary.json`` to
-``data/processed/skeleton/<run_id>/``. Only strategy S0 (no storage) is implemented.
+``data/processed/skeleton/<run_id>/``. Strategies S0 (no storage) and S1 (stored filter
+cake, :mod:`engine.process.strategies`) are implemented.
 
 The numbers rest on ``S``/``K`` parameters: they are v0 diagnostics, never results to publish
 or export to PILAR-2b (ADR-0010).
@@ -21,6 +22,7 @@ Usage::
 
     python -m engine.skeleton list
     python -m engine.skeleton run --mill costa_pinto --crop-year 2025 [--x-ch4 0.65]
+    python -m engine.skeleton run --mill narandiba --crop-year 2025 --strategy S1
 """
 
 from __future__ import annotations
@@ -48,6 +50,7 @@ from engine.process.mass_balance import (
     size_digester,
     substrates_from_registry,
 )
+from engine.process.strategies import StorageS1, apply_s1_storage, storage_balance
 from engine.registry import CONFIDENCE_FLAGS, Param, load_parameters, param_hash
 from engine.supply.residues import (
     FEED_SUBSTRATES,
@@ -60,8 +63,11 @@ SKELETON_MILLS_YAML = REGISTRY_DIR / "skeleton_mills.yaml"
 ANP_MONTHLY_CSV = EVIDENCE_DIR / "anp_monthly_sp_plants_from_pilar2b.csv"
 DEFAULT_OUT_DIR = DATA_DIR / "processed" / "skeleton"
 
-#: Strategies the runner can simulate (docs/10 §3). S1 (stored filter cake) comes next.
-IMPLEMENTED_STRATEGIES = ("S0",)
+#: Strategies the runner can simulate (docs/10 §3).
+IMPLEMENTED_STRATEGIES = ("S0", "S1")
+
+#: Keys of the ``storage`` block (strategy S1); ``release_shares`` is optional.
+STORAGE_KEYS = ("store_frac", "store_months", "release_months", "loss_frac_per_month")
 
 #: Off-season calendar months used for the off-season share (docs/09 Step 5).
 OFF_SEASON_MONTHS = (12, 1, 2, 3)
@@ -76,7 +82,9 @@ CAVEATS = (
     "v0 walking skeleton (ADR-0010): most parameters are S or K; diagnostics, not results",
     "ANP volumes and capacities are m3 with no stated reference conditions (docs/21 C11); "
     "compared as Nm3",
-    "strategy S0 only: no filter-cake storage, so off-season output is zero by construction",
+    "S0: no storage, so off-season output is zero by construction. S1: one silo pool with a "
+    "constant fresh-mass loss per month (v0); its cake-only off-season feed fails the TS check, "
+    "because digestate recirculation is not modelled (engine.process.strategies)",
     "harvest profile: uniform April-November until the UNICA series is in (docs/09 §5)",
     "LCOB: no price-year escalation, taxes or revenues (docs/11 §9)",
 )
@@ -106,6 +114,7 @@ class MillConfig:
     cane_t: Mapping[int, Observation | None]
     ethanol_l: Mapping[int, Observation | None]
     ad_shares: Mapping[str, float]
+    storage: Mapping[str, object] | None = None
     notes: str = ""
 
 
@@ -132,6 +141,36 @@ def _by_year(raw: object, where: str) -> dict[int, Observation | None]:
     if not isinstance(raw, Mapping):
         raise ValueError(f"{where}: expected a mapping of crop year -> entry")
     return {int(y): _observation(v, f"{where}[{y}]") for y, v in raw.items()}
+
+
+def _storage_block(raw: object, where: str) -> dict | None:
+    """Raw S1 settings, or ``None``. Values may be null until filled; checked when S1 runs."""
+    if raw is None:
+        return None
+    if not isinstance(raw, Mapping):
+        raise ValueError(f"{where}: expected a mapping")
+    unknown = set(raw) - {*STORAGE_KEYS, "release_shares", "loss_source", "notes"}
+    if unknown:
+        raise ValueError(f"{where}: unknown key(s) {', '.join(sorted(unknown))}")
+    return dict(raw)
+
+
+def storage_from_config(block: Mapping[str, object]) -> StorageS1:
+    """Build :class:`StorageS1` from a filled ``storage`` block (raises if a value is empty)."""
+    empty = [k for k in STORAGE_KEYS if block.get(k) is None]
+    source = str(block.get("loss_source") or "").strip()
+    if not source or source.upper() == "TODO":
+        empty.append("loss_source")
+    if empty:
+        raise MissingInputError("storage needs " + ", ".join(empty))
+    shares = block.get("release_shares")
+    return StorageS1(
+        store_frac=float(block["store_frac"]),  # type: ignore[arg-type]
+        store_months=tuple(int(m) for m in block["store_months"]),  # type: ignore[union-attr]
+        release_months=tuple(int(m) for m in block["release_months"]),  # type: ignore[union-attr]
+        loss_frac_per_month=float(block["loss_frac_per_month"]),  # type: ignore[arg-type]
+        release_shares=tuple(float(x) for x in shares) if shares else None,  # type: ignore[union-attr]
+    )
 
 
 def load_mill_configs(
@@ -161,20 +200,31 @@ def load_mill_configs(
             cane_t=_by_year(m.get("cane_t"), f"{where}.cane_t"),
             ethanol_l=_by_year(m.get("ethanol_l"), f"{where}.ethanol_l"),
             ad_shares=shares,
+            storage=_storage_block(m.get("storage"), f"{where}.storage"),
             notes=str(m.get("notes") or ""),
         )
     return mills, float(x_ch4)
 
 
-def missing_inputs(mill: MillConfig, crop_year: int) -> list[str]:
-    """What the run of ``crop_year`` still needs (empty list = ready)."""
+def missing_inputs(mill: MillConfig, crop_year: int, strategy: str | None = None) -> list[str]:
+    """What the run of ``crop_year`` still needs (empty list = ready).
+
+    ``strategy`` overrides the mill's configured strategy (as ``--strategy`` does).
+    """
+    strategy = strategy or mill.strategy
     missing = []
     if mill.cane_t.get(crop_year) is None:
         missing.append(f"cane_t[{crop_year}]")
-    if mill.strategy not in IMPLEMENTED_STRATEGIES:
-        missing.append(
-            f"strategy {mill.strategy} (implemented: {', '.join(IMPLEMENTED_STRATEGIES)})"
-        )
+    if strategy not in IMPLEMENTED_STRATEGIES:
+        missing.append(f"strategy {strategy} (implemented: {', '.join(IMPLEMENTED_STRATEGIES)})")
+    elif strategy == "S1":
+        if mill.storage is None:
+            missing.append("storage block (strategy S1)")
+        else:
+            try:
+                storage_from_config(mill.storage)
+            except MissingInputError as exc:
+                missing.append(str(exc))
     return missing
 
 
@@ -308,6 +358,7 @@ def run_skeleton(
     anp_path: Path | str = ANP_MONTHLY_CSV,
     params: Mapping[str, Param] | None = None,
     x_ch4: float | None = None,
+    strategy: str | None = None,
     brl_per_usd: float | None = None,
     out_dir: Path | str | None = DEFAULT_OUT_DIR,
 ) -> SkeletonRun:
@@ -319,17 +370,20 @@ def run_skeleton(
         config_path, anp_path: inputs; defaults are the registry file and the ANP evidence CSV.
         params: registry parameters (default: ``registry/parameters.csv``).
         x_ch4: biogas CH₄ fraction; default is the config value (docs/21 C13).
+        strategy: ``"S0"`` or ``"S1"``; default is the mill's configured strategy.
         brl_per_usd: exchange rate for the US$/MMBtu anchor; ``None`` leaves it unevaluated.
         out_dir: parent folder for ``<run_id>/``; ``None`` writes nothing.
 
     Raises:
-        MissingInputError: the crop year has no cane value, or the strategy is not implemented.
+        MissingInputError: the crop year has no cane value, the strategy is not implemented,
+            or S1 runs without a filled ``storage`` block.
     """
     mills, x_default = load_mill_configs(config_path)
     if mill_id not in mills:
         raise KeyError(f"unknown mill {mill_id!r}; known: {', '.join(sorted(mills))}")
     mill = mills[mill_id]
-    missing = missing_inputs(mill, crop_year)
+    strategy = strategy or mill.strategy
+    missing = missing_inputs(mill, crop_year, strategy)
     if missing:
         raise MissingInputError(
             f"{mill_id} {crop_year}: missing {'; '.join(missing)} in {config_path}"
@@ -352,6 +406,11 @@ def run_skeleton(
         straw_to_ad_frac=mill.ad_shares["straw"],
         ethanol_l=ethanol.value if ethanol is not None else None,
     )
+    storage = None
+    if strategy == "S1":
+        assert mill.storage is not None  # checked by missing_inputs
+        storage = storage_from_config(mill.storage)
+        residues = apply_s1_storage(residues, storage)
     subs = substrates_from_registry(p)
     feed = to_feed(residues, vinasse_density_t_per_m3=subs["vinasse"].density_t_per_m3)
 
@@ -394,7 +453,12 @@ def run_skeleton(
         "ethanol_l": asdict(ethanol) if ethanol is not None else None,
         "ad_shares": dict(mill.ad_shares),
         "x_ch4": x,
-        "strategy": mill.strategy,
+        "strategy": strategy,
+        "storage": (
+            {**asdict(storage), "loss_source": str(mill.storage.get("loss_source"))}
+            if storage is not None and mill.storage is not None
+            else None
+        ),
         "anp_plant_id": mill.anp_plant_id,
         "anp_file_sha256": _file_sha256(anp_path),
     }
@@ -425,6 +489,7 @@ def run_skeleton(
             "months_infeasible": [
                 m for m, ok in zip(sim["month"], sim["feasible"], strict=True) if not ok
             ],
+            "storage_balance": storage_balance(residues) if storage is not None else None,
             "lcob": asdict(lcob) if lcob is not None else None,
             "anchors": anchors.to_dict(orient="records") if anchors is not None else None,
         },
@@ -477,6 +542,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     p_run.add_argument("--mill", required=True)
     p_run.add_argument("--crop-year", type=int, required=True)
     p_run.add_argument("--x-ch4", type=float, default=None, help="override the config x_ch4")
+    p_run.add_argument("--strategy", choices=IMPLEMENTED_STRATEGIES, default=None)
     p_run.add_argument("--brl-per-usd", type=float, default=None, help="for the US$ anchor")
     p_run.add_argument("--anp", type=Path, default=ANP_MONTHLY_CSV)
     p_run.add_argument("--out", type=Path, default=DEFAULT_OUT_DIR)
@@ -499,6 +565,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             config_path=args.config,
             anp_path=args.anp,
             x_ch4=args.x_ch4,
+            strategy=args.strategy,
             brl_per_usd=args.brl_per_usd,
             out_dir=args.out,
         )

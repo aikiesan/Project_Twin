@@ -286,3 +286,15 @@ Next:
 1. Sourced cane per crop year for both mills, entered in `skeleton_mills.yaml` by the user, from RenovaBio reports, company reports or UNICA. Then run both and log C2 and C6.
 2. Strategy S1: a filter-cake storage share and a release profile, with `fc_storage_loss` as an explicit scenario input (it is not numeric in the registry).
 3. Morris screening (SALib) over the skeleton's registry parameters.
+
+### Same evening — strategy S1 (stored filter cake)
+- **`engine.process.strategies`:**
+  - `StorageS1` and `apply_s1_storage`: one silo pool with a constant fresh-mass loss per month, emptied over the release months;
+  - `storage_balance` reports stored, released, lost and the end stock.
+- **The runner:**
+  - takes `--strategy S0|S1`;
+  - a mill's `storage` block holds `store_frac`, the months and `loss_frac_per_month` with `loss_source`;
+  - Narandiba has an empty block in `skeleton_mills.yaml`.
+- **Diagnostic with test values (not data):** Narandiba's off-season share goes from 0 (S0) to about 0.25 (S1, half the cake stored, 3 %/month loss), against about 0.43 in ANP.
+- **Known v0 limit:** the cake-only off-season feed fails the TS check, because digestate recirculation is not modelled.
+- Tests: `tests/test_process_strategies.py`, plus S1 cases in `tests/test_skeleton.py`.

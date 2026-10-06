@@ -9,6 +9,10 @@
 # - The nameplate comes from the ANP series in evidence/ (anp_plant_id), not from this file.
 # - x_ch4 (biogas CH4 fraction for vinasse + filter cake) is in conflict, docs/21 C13: 0.575
 #   (CP2B convention note) vs 0.65 (PILAR-2b feedstocks.yaml). Run both (--x-ch4).
+# - storage (strategy S1, engine.process.strategies): store_frac is a calibration start value;
+#   loss_frac_per_month is a scenario input that needs loss_source (the registry's
+#   fc_storage_loss, "12 (4 mo) / 22 (6 mo)" % of potential [S], is not numeric yet). Run S1 with
+#   --strategy S1 once the block is filled; S0 needs no storage block.
 schema_version: 0.1
 x_ch4: 0.575
 
@@ -34,7 +38,13 @@ mills:
       2025: {value: null, source: TODO, confidence: null}
     ethanol_l: {}
     ad_shares: {vinasse: 1.0, filter_cake: 1.0, straw: 0.0}
+    storage:
+      store_frac: null
+      store_months: [4, 5, 6, 7, 8, 9, 10, 11]
+      release_months: [12, 1, 2, 3]
+      loss_frac_per_month: null
+      loss_source: TODO
     notes: >-
       ANP reports about zero until Jul 2025, then 30-49 % including off-season months (docs/21
-      C6). Expected to be S1-like (stored filter cake); S0 is run first to show the gap, S1 comes
-      with the storage step.
+      C6). Expected to be S1-like (stored filter cake): run S0 first to show the gap, then
+      --strategy S1 once the storage block is filled.

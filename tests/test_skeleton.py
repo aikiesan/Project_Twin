@@ -74,11 +74,17 @@ def test_missing_inputs_and_refusal():
     assert missing_inputs(mills["narandiba_test"], 2025) == []
     assert missing_inputs(mills["narandiba_test"], 2026) == ["cane_t[2026]"]
     assert missing_inputs(mills["narandiba_test"], 2030) == ["cane_t[2030]"]
-    assert "strategy S1" in missing_inputs(mills["storage_test"], 2025)[0]
+    assert missing_inputs(mills["storage_test"], 2025) == []
+    assert missing_inputs(mills["narandiba_test"], 2025, "S1") == ["storage block (strategy S1)"]
+    empty = missing_inputs(mills["storage_empty_test"], 2025)[0]
+    assert "store_frac" in empty and "loss_frac_per_month" in empty and "loss_source" in empty
+    assert "strategy S3" in missing_inputs(mills["unknown_strategy_test"], 2025)[0]
     with pytest.raises(MissingInputError, match="cane_t"):
         run_skeleton("narandiba_test", 2026, config_path=FIXTURE, out_dir=None)
-    with pytest.raises(MissingInputError, match="S1"):
-        run_skeleton("storage_test", 2025, config_path=FIXTURE, out_dir=None)
+    with pytest.raises(MissingInputError, match="S3"):
+        run_skeleton("unknown_strategy_test", 2025, config_path=FIXTURE, out_dir=None)
+    with pytest.raises(MissingInputError, match="storage needs"):
+        run_skeleton("storage_empty_test", 2025, config_path=FIXTURE, out_dir=None)
     with pytest.raises(KeyError):
         run_skeleton("nope", 2025, config_path=FIXTURE, out_dir=None)
 
@@ -168,3 +174,23 @@ def test_cli(tmp_path, capsys):
     args = ["run", "--mill", "narandiba_test", "--crop-year", "2025", "--out", str(tmp_path)]
     assert main(["--config", str(FIXTURE), *args]) == 0
     assert "run_id skel-narandiba_test-2025-" in capsys.readouterr().out
+
+
+def test_s1_moves_output_into_the_off_season():
+    s0 = run_skeleton("storage_test", 2025, config_path=FIXTURE, strategy="S0", out_dir=None)
+    s1 = run_skeleton("storage_test", 2025, config_path=FIXTURE, out_dir=None)
+    assert s1.summary["inputs"]["strategy"] == "S1"
+    assert s0.run_id != s1.run_id
+    assert s0.summary["comparison_with_anp"]["offseason_share_sim"] == 0
+    assert s1.summary["comparison_with_anp"]["offseason_share_sim"] > 0
+    bal = s1.summary["results"]["storage_balance"]
+    stored = bal["filter_cake_stored_t_fm"]
+    assert stored > 0
+    assert stored == pytest.approx(
+        bal["filter_cake_released_t_fm"]
+        + bal["filter_cake_storage_loss_t_fm"]
+        + bal["filter_cake_end_stock_t_fm"]
+    )
+    assert s1.summary["inputs"]["storage"]["loss_source"] == "test fixture"
+    # off-season feed is cake only, so the TS check flags those months (documented v0 limit)
+    assert set(s1.summary["results"]["months_infeasible"]) >= {"2025-12", "2026-03"}

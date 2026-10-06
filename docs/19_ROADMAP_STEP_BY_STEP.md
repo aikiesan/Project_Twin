@@ -34,8 +34,8 @@ Tick boxes as you go. Each phase ends with a **gate** — don't move on until it
 - [ ] Manure base-load v0 from municipal PPM herds (`ibge_ppm`), aggregated; no farm points
 - [ ] Process v0: Level-1 CSTR mass balance with operating constraints (`10_MODULE_PROCESS.md`); unit test that reproduces Volpi et al. 2021
 - [x] LCOB v0: annuity, with EPE NT 2025-08 and the FIESP 2025 report as anchors — `engine.economics.lcob` (docs/11 §9, 2026-10-06); WACC and lifetime are `K` until anchored
-- [ ] Compare simulated and observed (ANP) monthly output for both plants; resolve or log conflicts C2 and C6
-- [ ] Each run gets a `run_id` and a parameter hash; outputs go to `data/processed/skeleton/`
+- [ ] Compare simulated and observed (ANP) monthly output for both plants; resolve or log conflicts C2 and C6 — the comparison is built (`engine.skeleton`, docs/13 §6); it waits on sourced cane values in `registry/skeleton_mills.yaml`
+- [x] Each run gets a `run_id` and a parameter hash; outputs go to `data/processed/skeleton/` — `python -m engine.skeleton run` (2026-10-06)
 
 ### Weeks 4–6 — Verification led by sensitivity
 - [ ] Morris screening (SALib) on the skeleton, for annual CH₄, capacity factor and LCOB

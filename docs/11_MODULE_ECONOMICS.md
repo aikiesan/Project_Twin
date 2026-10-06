@@ -76,3 +76,5 @@ Module: `engine.economics.lcob`. It is the economics step of the walking skeleto
 - **No price-year escalation:** the EPE CAPEX is in R$ of Dec 2024 (docs/21 C15); other values keep their own years.
 - The denominator is delivered biomethane, so the capacity factor from the process module drives the LCOB.
 - **Not yet implemented:** NPV/IRR, the revenue stack, feedstock and transport costs from the supply and siting modules, Monte Carlo and Sobol (§7).
+
+`compare_with_anchors(..., brl_per_usd=None)` lists the US$/MMBtu anchor without evaluating it. The skeleton runner uses this when no exchange rate is given (docs/13 §6).

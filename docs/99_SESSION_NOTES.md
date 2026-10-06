@@ -267,3 +267,22 @@ Next for the skeleton:
 3. **Strategy S1 for Narandiba:** filter-cake storage with a loss factor (`fc_storage_loss` is not numeric yet, so it has to be an explicit scenario input).
 4. **Manure base-load v0** from PPM herds, once PPM 2025 is re-exported.
 5. **Morris screening** on the skeleton (SALib), to rank what to verify first.
+
+## 2026-10-06 (evening) — PR #12 and the skeleton runner
+- **PR [aikiesan/Project_Twin#12](https://github.com/aikiesan/Project_Twin/pull/12)** is open with the digest intake and residues/LCOB v0. This session watches it for CI and reviews.
+- **`engine.skeleton`** (`python -m engine.skeleton list | run`) chains:
+  - cane → residues → digester sized for the worst month → mass balance with the ANP nameplate → LCOB;
+  - a monthly comparison with the ANP biogas series.
+
+  Outputs go to `data/processed/skeleton/<run_id>/`. The `run_id` is deterministic. Only S0 is implemented. docs/13 §6.
+- **`registry/skeleton_mills.yaml`** holds the inputs for Costa Pinto and Narandiba. **Cane values are empty**, so the runner refuses to run until a sourced value is entered.
+- **Small API additions:**
+  - `OperatingLimits.param_ids`;
+  - `compare_with_anchors(brl_per_usd=None)`.
+- **Diagnostic with a test cane value (not data).** Narandiba under S0 gives an off-season share of 0, against about 0.43 in ANP. Costa Pinto under S0: utilization MAE about 13 pp, off-season share 0 against 0.09. S0 cannot produce Narandiba's off-season output, which supports trying S1 (stored filter cake) next.
+- Tests: 10 new in `tests/test_skeleton.py`. Full suite, ruff, black and the registry validator pass.
+
+Next:
+1. Sourced cane per crop year for both mills, entered in `skeleton_mills.yaml` by the user, from RenovaBio reports, company reports or UNICA. Then run both and log C2 and C6.
+2. Strategy S1: a filter-cake storage share and a release profile, with `fc_storage_loss` as an explicit scenario input (it is not numeric in the registry).
+3. Morris screening (SALib) over the skeleton's registry parameters.

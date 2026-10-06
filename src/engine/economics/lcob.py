@@ -220,14 +220,15 @@ ANCHORS = {
 def compare_with_anchors(
     lcob_brl_per_nm3: float,
     *,
-    brl_per_usd: float,
+    brl_per_usd: float | None,
     hhv_mj_per_nm3: float | None = None,
     params: Mapping[str, Param] | None = None,
 ) -> pd.DataFrame:
     """Place an LCOB inside the registry anchor ranges (docs/11 §8).
 
     The US$/MMBtu anchor needs ``brl_per_usd`` (no default: it is a dated scenario value) and a
-    heating value (registry ``hhv_biomethane`` when ``hhv_mj_per_nm3`` is ``None``).
+    heating value (registry ``hhv_biomethane`` when ``hhv_mj_per_nm3`` is ``None``). With
+    ``brl_per_usd=None`` that anchor is listed with ``engine_value`` and ``within_range`` empty.
 
     Returns:
         One row per anchor: ``anchor_id``, ``low``, ``central``, ``high``, ``unit``,
@@ -240,14 +241,22 @@ def compare_with_anchors(
     for anchor_id, note in ANCHORS.items():
         a = p[anchor_id]
         if a.unit.startswith("US$ per MMBtu"):
-            value = brl_per_nm3_to_usd_per_mmbtu(
-                lcob_brl_per_nm3, hhv_mj_per_nm3=hhv, brl_per_usd=brl_per_usd
+            value = (
+                None
+                if brl_per_usd is None
+                else brl_per_nm3_to_usd_per_mmbtu(
+                    lcob_brl_per_nm3, hhv_mj_per_nm3=hhv, brl_per_usd=brl_per_usd
+                )
             )
         elif a.unit.startswith("R$ per m3"):
             value = lcob_brl_per_nm3
         else:
             raise ValueError(f"{anchor_id}: unit {a.unit!r} is not handled")
-        within = None if a.low is None or a.high is None else bool(a.low <= value <= a.high)
+        within = (
+            None
+            if value is None or a.low is None or a.high is None
+            else bool(a.low <= value <= a.high)
+        )
         rows.append(
             {
                 "anchor_id": anchor_id,
@@ -258,7 +267,7 @@ def compare_with_anchors(
                 "engine_value": value,
                 "within_range": within,
                 "confidence": a.confidence,
-                "note": note,
+                "note": note if value is not None else f"{note}; no exchange rate given",
             }
         )
     return pd.DataFrame(rows)

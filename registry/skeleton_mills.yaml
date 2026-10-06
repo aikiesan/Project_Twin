@@ -1,0 +1,50 @@
+# Walking-skeleton inputs for the two calibration mills (ADR-0010; docs/13 §3.2).
+# Read by engine.skeleton (python -m engine.skeleton list | run).
+#
+# - cane_t / ethanol_l are OBSERVATIONS per crop year (season starting in April of that year).
+#   Each entry needs value, source and confidence (V/S/K/D, docs/08). Leave value null until a
+#   source is in hand: the runner refuses to run a crop year without cane.
+# - ad_shares are CALIBRATION START VALUES, not data: the share of each generated stream sent to
+#   the digester (docs/09 §5). They are what the comparison with ANP will tune.
+# - The nameplate comes from the ANP series in evidence/ (anp_plant_id), not from this file.
+# - x_ch4 (biogas CH4 fraction for vinasse + filter cake) is in conflict, docs/21 C13: 0.575
+#   (CP2B convention note) vs 0.65 (PILAR-2b feedstocks.yaml). Run both (--x-ch4).
+# - storage (strategy S1, engine.process.strategies): store_frac is a calibration start value;
+#   loss_frac_per_month is a scenario input that needs loss_source (the registry's
+#   fc_storage_loss, "12 (4 mo) / 22 (6 mo)" % of potential [S], is not numeric yet). Run S1 with
+#   --strategy S1 once the block is filled; S0 needs no storage block.
+schema_version: 0.1
+x_ch4: 0.575
+
+mills:
+  costa_pinto:
+    name: Raízen Costa Pinto (Piracicaba, SP)
+    anp_plant_id: sp_raizen_costa_pinto
+    strategy: S0
+    cane_t:
+      2024: {value: null, source: TODO, confidence: null}
+      2025: {value: null, source: TODO, confidence: null}
+    ethanol_l: {}
+    ad_shares: {vinasse: 1.0, filter_cake: 1.0, straw: 0.0}
+    notes: >-
+      ANP months Aug 2024 - Apr 2026 (evidence/). Announced feed: 150 kt/yr filter cake and
+      1.9 Mm3/yr vinasse [S, research_notes/R07 row 5]; announced 72,000 Nm3/d annual average vs
+      ANP 130,368 m3/d (docs/21 C2). Sep 2025 is near zero in ANP (gap or stop, open question 9).
+  narandiba:
+    name: Cocal Narandiba (Narandiba, SP)
+    anp_plant_id: sp_cocal_narandiba
+    strategy: S0
+    cane_t:
+      2025: {value: null, source: TODO, confidence: null}
+    ethanol_l: {}
+    ad_shares: {vinasse: 1.0, filter_cake: 1.0, straw: 0.0}
+    storage:
+      store_frac: null
+      store_months: [4, 5, 6, 7, 8, 9, 10, 11]
+      release_months: [12, 1, 2, 3]
+      loss_frac_per_month: null
+      loss_source: TODO
+    notes: >-
+      ANP reports about zero until Jul 2025, then 30-49 % including off-season months (docs/21
+      C6). Expected to be S1-like (stored filter cake): run S0 first to show the gap, then
+      --strategy S1 once the storage block is filled.

@@ -12,7 +12,7 @@ Track every request in the table at the end.
 >
 > Prezados,
 >
-> Com base na Lei nº 12.527/2011, solicito, para fins de pesquisa científica no âmbito do Centro Paulista de Estudos em Biogás e Bioprodutos (CP2B/NIPE-UNICAMP, projeto FAPESP [nº]), os seguintes dados:
+> Com base na Lei nº 12.527/2011, solicito, para fins de pesquisa científica no âmbito do Centro Paulista de Estudos em Biogás e Bioprodutos (CP2B/NIPE-UNICAMP, projeto FAPESP nº 2024/01112-1), os seguintes dados:
 >
 > 1. [Dado detalhado]
 > 2. Caso o item 1 não possa ser fornecido por sigilo comercial ou proteção de dados pessoais, solicito alternativamente [versão agregada/anonimizada].
@@ -55,6 +55,11 @@ Track every request in the table at the end.
 ## R8 — ARSESP (SIC.SP): biomethane interconnection
 1. Valores de TUSD-Verde aprovados, Planos de Negócios Verdes protocolados e custos de interconexão (km de rede, Bio-Citygate) por projeto.
 
+## R9 — ANP (Fala.BR): RenovaBio certification data per unit
+Why: the ANP certification panel (`anp_renovabio_cert_panel`) is Power BI only, with no declared download (radar 2026-10-06). The certification files hold the mill-level labels for Phase 1 (cane, ethanol, vinasse). File it together with R1 and R2.
+1. Extração tabular (CSV/XLSX), por unidade produtora certificada no RenovaBio no Estado de São Paulo, com CNPJ, rota e período de validade do certificado, dos dados declarados no processo de certificação (RenovaCalc): cana processada (t), produção de etanol anidro e hidratado (m³), vinhaça gerada e aplicada (m³), Nota de Eficiência Energético-Ambiental (NEEA) e fração do volume elegível, 2018–2026.
+2. Alternativa: a mesma extração sem os dados de produção (apenas unidade, CNPJ, rota, NEEA, fração elegível e validade); ou os dados de produção agregados por município da unidade.
+
 ---
 
 ## Tracking table
@@ -69,5 +74,6 @@ Track every request in the table at the end.
 | R6 | Sabesp/ARSESP | SIC.SP | | | | | |
 | R7 | CATI/IEA | Agreement | | | | | |
 | R8 | ARSESP | SIC.SP | | | | | |
+| R9 | ANP | Fala.BR | | | | | |
 
 If refused: file **recurso de 1ª instância** within 10 days citing the aggregated alternative and the research purpose.

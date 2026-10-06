@@ -36,10 +36,12 @@ Use international data as **benchmarks and statistical priors**, not as direct i
 - **BIP TF4 (Oct 2023):** current biomethane cost from **real industry data** — CAPEX/OPEX by size/feedstock. **Use:** cost priors.
 - **OIES NG203 (Jan 2026):** avg production cost ≈ €75–80/MWh (range 50–175); **no sustained EU-wide cost decline since late 2010s**; strong scale economies [S].
 - **ACER 2026; IFRI June 2026:** policy and market design lessons.
+- **EBA Biomethane Investment Outlook 2026 (1 Jul 2026):** €36 bn of committed investment (€28 bn in the previous edition) for about +9 bcm/yr of capacity by 2030 [S]. **Use:** an aggregate check on the CAPEX prior, computed from the PDF (`intl_eu_eba_investment_outlook_2026`).
 
 ### United States
 - **EPA AgSTAR** livestock digester database (Excel incl. shut-down projects). **Use:** failure rates of manure digesters.
 - **EPA LMOP** landfill gas database.
+- **California LCFS:** about US$ 45/MMBtu for dairy-manure RNG against US$ 4.00–4.25/MMBtu for landfill gas, cited by the MBCBrasil study (eixos, 15 Sep 2026) [S]. **Use:** an upper bound for an avoided-methane credit on manure. Check whether the figure is the credit only or the total price, and its year.
 
 ### IEA Bioenergy Task 37
 - Country reports & case stories; **Brazil is a member** → benchmark and dissemination channel for CP2B.

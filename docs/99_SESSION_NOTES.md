@@ -229,3 +229,72 @@ Next:
 Next:
 - Compare `pilar2b.municipality_cp2b_potential` (v5.1) with `cp2b_redu_v2` (v2.0) and log the differences in docs/21 §Conflicts.
 - Consider `pilar2b.municipality_timeseries` (PPM herds, PAM) as the source for the manure base-load v0, instead of the `ibge_ppm` "get".
+
+## 2026-10-06 — first triage of the daily digests (cloud session)
+Inputs: the three digests of 2026-10-06 (Radar Biometano, Arquivo NIPE-CP2B run 3, Biogas BR), pasted into the session.
+- **New intake path (ADR-0012).** One note per digest day in `research_notes/digests/`, plus the running queue `registry/staging/digest_queue.csv` (27 rows today). A digest's `[V]` counts as `S` until a page and a quote are recorded. `parameters.csv` and `projects_capex.csv` were not changed.
+- **Primary sites were blocked** by the session's egress proxy (curl and WebFetch: agenciasp, SIDRA, IBGE, arXiv, gov.br, Springer). Nothing was promoted to `V`.
+- **Changes:**
+  - docs/07: LAI **R9** (ANP RenovaBio certification data per unit), and the CP2B FAPESP number (2024/01112-1) in the template.
+  - docs/16: CP 232/2026, new price rows, the TransJordano corridor (§2b), LRCAP as a revenue route, and a dated watch list (§6).
+  - docs/21: conflict **C15** (scope of the EPE CAPEX value; the radar gives the price year, Dec 2024) and open questions 11–12.
+  - docs/09, 12, 15 and 23: PPM 2025, layers vs broilers, OFMSW yield lead, fleet offtake points, OptBio, EBA outlook, LCFS benchmark.
+  - `sources.yaml`: two stubs (`reg_mme_cp_232_2026`, `intl_eu_eba_investment_outlook_2026`); notes on `ibge_ppm`, `epe_nt_2025_08` and `anp_renovabio_cert_panel` (now `status: lai`).
+  - The radar routine prompt: phase text per ADR-0010; page and quote for `[V]` numbers; registry suggestions in the queue's columns. **Copy the new prompt into the deployed routine by hand.**
+- **Registry:** 0 errors, 127 warnings (unchanged from before the session).
+
+Next, from the queue (`status: open`):
+1. File LAI R9 with R1 and R2.
+2. Re-export PPM 2025 (SIDRA 3939, 74 and 94) for SP municipalities on a machine that reaches SIDRA; then the manure base-load v0 of the skeleton.
+3. Read EPE NT 2025-08 for `capex_epe` (page, quote, scope, price year) and close C15.
+4. Download the CP 232/2026 spreadsheets before 29 Oct.
+5. Ask IEE/USP, through the CP2B member there, for the OFMSW plant data.
+
+## 2026-10-06 (later) — residues v0 and LCOB v0 for the walking skeleton
+- **`engine.supply.residues`:** cane per mill and crop year → monthly vinasse, filter cake and straw, generated vs sent to AD, and the feed table for the process module. Fixed April–November profile until UNICA. docs/09 §5.
+- **`engine.economics.lcob`:** CRF, CAPEX (linear or power law), annuity LCOB with components, R$/Nm³ → US$/MMBtu, and the comparison with the EPE and FIESP anchors. docs/11 §9.
+- **Registry:**
+  - new `K` rows `wacc_real` (10 %, 8–12), `plant_life` (20 yr) and `hhv_biomethane` (38 MJ/Nm³, 37–39);
+  - `lcob_fiesp` and `lcob_fiesp_full`: the citation year was corrected to June 2025 (docs/25), with the values unchanged;
+  - 0 errors, 127 warnings.
+- **Checks:** 26 new tests, including one that runs the chain cane → residues → CSTR → LCOB on registry values. Full suite, ruff and black pass.
+- **First chain output (not a result, ADR-0010):** 2 Mt of cane with all vinasse and cake to AD, `x_ch4` 0.6, a 40,000 Nm³/d nameplate → full output April–November, zero off-season, LCOB ≈ R$ 1.95/Nm³. That sits just above the EPE range (0.78–1.83). Against the FIESP range it depends on the exchange rate, which is not in the registry; at an illustrative 5.4 R$/US$ it falls inside.
+- Roadmap: "Residues v0" and "LCOB v0" ticked.
+
+Next for the skeleton:
+1. **The two mills' inputs.** Cane crushed per crop year for Costa Pinto and Narandiba, with a source (RenovaBio report, company report or UNICA), plus their ANP nameplate (`evidence/anp_monthly_sp_plants_from_pilar2b.csv`).
+2. **A runner** (`engine.skeleton`): one config per mill, `run_id` plus `param_hash`, outputs to `data/processed/skeleton/`, and a monthly comparison with the ANP series.
+3. **Strategy S1 for Narandiba:** filter-cake storage with a loss factor (`fc_storage_loss` is not numeric yet, so it has to be an explicit scenario input).
+4. **Manure base-load v0** from PPM herds, once PPM 2025 is re-exported.
+5. **Morris screening** on the skeleton (SALib), to rank what to verify first.
+
+## 2026-10-06 (evening) — PR #12 and the skeleton runner
+- **PR [aikiesan/Project_Twin#12](https://github.com/aikiesan/Project_Twin/pull/12)** is open with the digest intake and residues/LCOB v0. This session watches it for CI and reviews.
+- **`engine.skeleton`** (`python -m engine.skeleton list | run`) chains:
+  - cane → residues → digester sized for the worst month → mass balance with the ANP nameplate → LCOB;
+  - a monthly comparison with the ANP biogas series.
+
+  Outputs go to `data/processed/skeleton/<run_id>/`. The `run_id` is deterministic. Only S0 is implemented. docs/13 §6.
+- **`registry/skeleton_mills.yaml`** holds the inputs for Costa Pinto and Narandiba. **Cane values are empty**, so the runner refuses to run until a sourced value is entered.
+- **Small API additions:**
+  - `OperatingLimits.param_ids`;
+  - `compare_with_anchors(brl_per_usd=None)`.
+- **Diagnostic with a test cane value (not data).** Narandiba under S0 gives an off-season share of 0, against about 0.43 in ANP. Costa Pinto under S0: utilization MAE about 13 pp, off-season share 0 against 0.09. S0 cannot produce Narandiba's off-season output, which supports trying S1 (stored filter cake) next.
+- Tests: 10 new in `tests/test_skeleton.py`. Full suite, ruff, black and the registry validator pass.
+
+Next:
+1. Sourced cane per crop year for both mills, entered in `skeleton_mills.yaml` by the user, from RenovaBio reports, company reports or UNICA. Then run both and log C2 and C6.
+2. Strategy S1: a filter-cake storage share and a release profile, with `fc_storage_loss` as an explicit scenario input (it is not numeric in the registry).
+3. Morris screening (SALib) over the skeleton's registry parameters.
+
+### Same evening — strategy S1 (stored filter cake)
+- **`engine.process.strategies`:**
+  - `StorageS1` and `apply_s1_storage`: one silo pool with a constant fresh-mass loss per month, emptied over the release months;
+  - `storage_balance` reports stored, released, lost and the end stock.
+- **The runner:**
+  - takes `--strategy S0|S1`;
+  - a mill's `storage` block holds `store_frac`, the months and `loss_frac_per_month` with `loss_source`;
+  - Narandiba has an empty block in `skeleton_mills.yaml`.
+- **Diagnostic with test values (not data):** Narandiba's off-season share goes from 0 (S0) to about 0.25 (S1, half the cake stored, 3 %/month loss), against about 0.43 in ANP.
+- **Known v0 limit:** the cake-only off-season feed fails the TS check, because digestate recirculation is not modelled.
+- Tests: `tests/test_process_strategies.py`, plus S1 cases in `tests/test_skeleton.py`.

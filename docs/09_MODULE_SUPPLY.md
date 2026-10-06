@@ -58,11 +58,13 @@ Uncertainty: propagate parameter ranges (Monte Carlo) + Huff posterior.
 | Substrate | Base data | Method |
 |---|---|---|
 | Manure | Livestock points (have) + PPM totals + LUPA/Censo confinement shares | Points × head × manure/head/day × collectable fraction (confined only); rescale to PPM |
-| Poultry (layers, Bastos cluster) | Points + PPM | Same; seasonality ~flat |
+| Poultry (layers, Bastos cluster) | Points + PPM | Same; seasonality ~flat. Keep layers and broilers apart: their N and K loads differ, and both limit the manure share in the CSTR |
 | Sewage sludge | ANA ETE points + SINISA flows | Flow × sludge factor; only plants above size threshold |
-| OFMSW | CETESB RSU t/d per landfill/municipality | Organic fraction × collection scenario |
+| OFMSW | CETESB RSU t/d per landfill/municipality | Organic fraction × collection scenario. Local yield lead: IEE/USP plant, 120–180 Nm³ biogas per t (S, `digest_queue.csv` 20261006-01/02) |
 | Agro-industrial (slaughterhouse, dairy, citrus) | SIF points; others TBD | Coefficients per unit of output |
 | Competing uses | PILAR-2b FDE | Apply mobilisable fraction |
+
+PPM base year: the held series ends in 2024 (`ibge_ppm`). IBGE published PPM 2025 in September 2026: Brazil's cattle herd fell 1.7 % and milked cows reached the lowest level since 1979, while poultry set a record, and SP produces 22.5 % of the national eggs (digest 2026-10-06, S). In western SP the manure base-load (strategy S2) should therefore lean on poultry, not cattle. Re-export the 2025 municipal tables before Phase 1.
 
 ### Step 8 — Outputs & checks
 - Tables: `mill_year`, `mill_month`, `hex_supply` (Parquet), with `p05/p50/p95`.
@@ -73,3 +75,20 @@ Uncertainty: propagate parameter ranges (Monte Carlo) + Huff posterior.
 - Mill status history (closures 2008–2015).
 - Border effects (cane from MG/PR/MS supplying SP mills and vice versa).
 - Typical SP haul distance (20–30 km grey literature) — derive from calibrated β.
+
+## 5. Implementation status (residues v0, 2026-10-06)
+
+Module: `engine.supply.residues`. It is the supply step of the walking skeleton (ADR-0010); Steps 1–3 (facilities, cane per H3 cell, Huff allocation) are not wired in yet, so the skeleton starts from the cane crushed per mill. Tests: `tests/test_supply_residues.py`.
+
+**Implemented (Steps 4–5, for one mill and one crop year)**
+- `coefficients_from_registry()`: ethanol yield, vinasse ratio, filter cake, straw and its recoverable share and TS (`ethanol_yield`, `vin_gen`, `fc_gen`, `straw_gen`, `straw_recov`, `straw_ts`), each recorded in `param_ids`.
+- `monthly_residues()`: one row per month from April to March, with unit-suffixed columns. **Generated and sent-to-AD are separate columns** (CLAUDE.md §2 rule 9). The AD shares (`vinasse_to_ad_frac`, `filter_cake_to_ad_frac`, `straw_to_ad_frac`) have no default, because they are calibration targets (docs/13 §3.2). The mill's own ethanol volume (for example from its RenovaBio report) can replace the yield.
+- `to_feed()`: the long table that `engine.process.mass_balance.simulate` reads.
+- A check against the Santa Adélia 2023 report: its cane gives ethanol within 1 % of the reported volume. That is expected, because `ethanol_yield` was derived from the same report (flag D).
+
+**v0 assumptions, stated in code**
+- **Harvest profile:** `UNIFORM_APR_NOV`, equal shares from April to November. It is a placeholder until the UNICA biweekly series is downloaded; any profile can be passed instead.
+- **Vinasse is generated with the ethanol of the same month.** There is no vinasse storage or lag.
+- **No filter-cake storage.** Off-season months get zero residues; storage belongs to strategy S1 (docs/10 §3), which waits on φ_store (lab E1).
+
+**Not yet implemented:** Steps 1–3 and 6, the manure base-load (PPM herds), Monte Carlo over the coefficients, and the UNICA profile.

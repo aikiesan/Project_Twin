@@ -45,9 +45,12 @@ capex_epe,costs,Specific CAPEX sector average (EPE),3735,2700,3735,R$ per Nm3/d,
 scale_exp,costs,Capacity scaling exponent,0.65,0.6,0.85,-,Six-tenths rule; projects (derived),D,
 opex_epe,costs,OPEX reference,0.15,,,R$ per Nm3,EPE NT 2025-08,S,Check scope (feedstock/digestate/energy?)
 lcob_epe_sucro,costs,LCOB sugar-energy (2 Mt/yr mill),1.30,0.78,1.83,R$ per m3,EPE technical note (identify which),S,
-lcob_fiesp,costs,LCOB SP production,11.4,9.1,13.7,US$ per MMBtu,FIESP consortium 2024 via Brasil Energia,S,
-lcob_fiesp_full,costs,LCOB SP incl. taxes & logistics,21.7,15.1,28.3,US$ per MMBtu,FIESP consortium 2024,S,
+lcob_fiesp,costs,LCOB SP production,11.4,9.1,13.7,US$ per MMBtu,FIESP-led study June 2025 (source fiesp_sp_biomethane_2024) via Brasil Energia,S,Year corrected from 2024 (docs/25); values not yet read in the report
+lcob_fiesp_full,costs,LCOB SP incl. taxes & logistics,21.7,15.1,28.3,US$ per MMBtu,FIESP-led study June 2025 (source fiesp_sp_biomethane_2024),S,Year corrected from 2024 (docs/25); values not yet read in the report
 bndes_debt_share,costs,BNDES debt share,0.80,0.70,0.89,fraction of CAPEX,Projects (derived),D,Use BNDES CSV for terms
+wacc_real,costs,Real WACC (discount rate for LCOB),10,8,12,% per yr,docs/11 §6 scenario set (project choice; no external source yet),K,Anchor on BNDES/Fundo Clima loan terms and an equity cost before results (research_notes/R02 lists WACC as a gap)
+plant_life,costs,Economic lifetime of the plant,20,,,yr,docs/11 §6 (project choice; no external source yet),K,Upgrading replacement at ~10-12 yr is not modelled in LCOB v0
+hhv_biomethane,market,Biomethane higher heating value,38,37,39,MJ per Nm3,CLAUDE.md §3 (ANP spec basis),K,Verify against ANP Res. 1.006/2026; used only to convert R$/Nm3 to US$/MMBtu
 capacity_factor,process,Plant capacity factor (SP mill plants observed),,0.0,0.6,fraction,PILAR-2b 05e ANP monthly,V,Costa Pinto 0-58%; Narandiba 30-49%
 cf_bonfim,process,Capacity factor Raízen Bonfim (power),0.73,,,fraction,21 MW / 135 GWh/yr (derived),D,
 price_bm_fob,market,Biomethane FOB plant price,3.28,,,R$ per m3 (Jan 2026),Argus,S,

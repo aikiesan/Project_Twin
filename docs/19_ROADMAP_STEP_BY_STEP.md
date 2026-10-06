@@ -19,9 +19,10 @@ Tick boxes as you go. Each phase ends with a **gate** — don't move on until it
 - [x] Load the held datasets into PostGIS (`python -m engine.ingest.load_postgis`, docs/27) — 41 tables, 184,551 rows, private data in schema `private` (2026-10-05)
 - [x] Register all **already-held** CP2B datasets in `registry/sources.yaml` (`status: have`, provenance) — 101 sources (2026-10-04); see docs/25
 - [x] Survey and import the holdings in the `Documents` folders — 16 sources, 2026-10-05 (docs/25 §5)
+- [x] Intake path for the daily digests: one triage note per day plus a verification queue (ADR-0012, 2026-10-06)
 
 ### Requests that take time (do now — they are the critical path)
-- [ ] File LAI R1 and R2 (ANP per-plant ethanol and biomethane) and R4 (CETESB vinasse plans) — `07_LAI_REQUESTS.md`
+- [ ] File LAI R1 and R2 (ANP per-plant ethanol and biomethane), R9 (ANP RenovaBio certification data, added 2026-10-06) and R4 (CETESB vinasse plans) — `07_LAI_REQUESTS.md`
 - [ ] File LAI R3 (SAPCANA) and R5 (CDA livestock); then R6 and R8; start the R7 agreement (LUPA)
 - [ ] Email partners (São Martinho, Comgás, Equinor) with a precise data wish-list + NDA scope
 - [ ] Email PPBIOEN/LABIOEN leads with E1–E3 proposals (`17_LAB_AND_PILOT_EXPERIMENTS.md`)
@@ -29,12 +30,12 @@ Tick boxes as you go. Each phase ends with a **gate** — don't move on until it
 ### Weeks 2–4 — Walking skeleton: Costa Pinto and Narandiba, cane → monthly CH₄ → LCOB
 - [ ] Clip the MapBiomas col. 10 annual 30 m rasters (held under `Documents/ILUC_NIPE`) to SP, 2008–2024; register them, then run the `cane_area_h3` DVC stage
 - [ ] Catchment v0 for the two mills: road distance (OSRM) and a simple nearest-mill rule, with parameters from `parameters.csv`
-- [ ] Residues v0: vinasse, filter cake and straw from the coefficients in `parameters.csv`; monthly harvest profile (UNICA biweekly, or a fixed April–November profile until it is downloaded)
+- [x] Residues v0: vinasse, filter cake and straw from the coefficients in `parameters.csv`; monthly harvest profile (UNICA biweekly, or a fixed April–November profile until it is downloaded) — `engine.supply.residues`, fixed profile for now (docs/09 §5, 2026-10-06)
 - [ ] Manure base-load v0 from municipal PPM herds (`ibge_ppm`), aggregated; no farm points
 - [ ] Process v0: Level-1 CSTR mass balance with operating constraints (`10_MODULE_PROCESS.md`); unit test that reproduces Volpi et al. 2021
-- [ ] LCOB v0: annuity, with EPE NT 2025-08 and the FIESP 2025 report as anchors
-- [ ] Compare simulated and observed (ANP) monthly output for both plants; resolve or log conflicts C2 and C6
-- [ ] Each run gets a `run_id` and a parameter hash; outputs go to `data/processed/skeleton/`
+- [x] LCOB v0: annuity, with EPE NT 2025-08 and the FIESP 2025 report as anchors — `engine.economics.lcob` (docs/11 §9, 2026-10-06); WACC and lifetime are `K` until anchored
+- [ ] Compare simulated and observed (ANP) monthly output for both plants; resolve or log conflicts C2 and C6 — the comparison is built (`engine.skeleton`, docs/13 §6); it waits on sourced cane values in `registry/skeleton_mills.yaml`
+- [x] Each run gets a `run_id` and a parameter hash; outputs go to `data/processed/skeleton/` — `python -m engine.skeleton run` (2026-10-06)
 
 ### Weeks 4–6 — Verification led by sensitivity
 - [ ] Morris screening (SALib) on the skeleton, for annual CH₄, capacity factor and LCOB

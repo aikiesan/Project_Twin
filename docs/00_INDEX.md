@@ -55,6 +55,7 @@
 ## G. Raw material
 - `../research_notes/` — R00–R10 full research reports (all URLs, numbers, flags; R07–R10 S-flagged, verification pending)
 - `../research_notes/raw/` — structured workflow results (claims, proposed rows, validation report)
+- `../research_notes/digests/` — triage of the daily digests (Radar, Arquivo NIPE-CP2B, Biogas BR), one note per day; queue in `../registry/staging/digest_queue.csv` (ADR-0012)
 - `../registry/staging/` — proposed registry rows not yet merged
 - `../tools/agent_workflows/` — Claude Code multi-agent workflow scripts used to build the project
 - `../evidence/` — primary documents and data extracts (V-level)

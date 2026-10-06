@@ -27,6 +27,7 @@ Choose plant **locations, scales, feedstock contracts, storage and gas-delivery 
 | CNG virtual pipeline | Compression 200–250 bar, trailers, decompression at client |
 | LNG/LBG | Liquefaction CAPEX/energy; Lidköping analog |
 | Own use / fleet | Mill trucks, tractors (diesel parity) |
+| Third-party fleet corridor | Delivery to open-access truck stations, such as the TransJordano corridor (Ribeirão Preto–Sumaré–Cubatão, docs/16 §2b); CNG transport cost to the nearest station |
 
 ### Step 5 — Optimization model (multi-period MILP)
 Sets: sites *j*, feedstock sources *s*, months *t*, sizes *k*, modes *m*.
@@ -34,6 +35,7 @@ Decisions: open site with size *k* (binary), flows x_{s,j,t}, storage inventory 
 Objective: minimize Σ (annualized CAPEX + OPEX + transport − co-product revenue) − or maximize NPV with revenue scenarios.
 Constraints: supply availability per month; process constraints linearized (OLR, HRT, TS) per site-month; storage balance with losses (I_{t+1} = (1−λ)I_t + in − out); capacity linking; mode capacity; one plant per mill (option).
 Solver: HiGHS via Pyomo or linopy; Gurobi academic if size requires.
+Formulation reference: OptBio (Monteiro et al., arXiv:2603.06823, Mar 2026) [S], an open two-stage stochastic MILP with CVaR for Brazilian sugarcane biorefineries, including biomethane, with piecewise-linear economies of scale. Read it before writing this step.
 
 ### Step 6 — Supply curve
 - For each optimal site: annual biomethane and LCOB (Monte Carlo bands).

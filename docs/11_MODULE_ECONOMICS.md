@@ -59,3 +59,22 @@ $$\log(\text{CAPEX}_{ij}) = \alpha + \beta\log(\text{cap}_{ij}) + \gamma_{\text{
 ## 8. Validation
 - Compare LCOB with EPE (R$ 0.78–1.83/m³ for a 2 Mt/yr mill), FIESP (US$ 9.1–13.7/MMBtu production; 15.1–28.3 with taxes & logistics), IEA via BNDES (US$ 15–27/MMBtu LatAm) — all [S].
 - Sanity: European average ≈ €75–80/MWh (OIES 2026) [S].
+
+## 9. Implementation status (LCOB v0, 2026-10-06)
+
+Module: `engine.economics.lcob`. It is the economics step of the walking skeleton (ADR-0010). Tests: `tests/test_economics_lcob.py`, which also runs the chain cane → residues → CSTR → LCOB on registry values.
+
+**Implemented**
+- `crf()`, `capex_brl()` (linear in nameplate, or a power law with `scale_exp`), `lcob_annuity()` (the §2 annuity form, with each component per Nm³) and `brl_per_nm3_to_usd_per_mmbtu()` (heating value and exchange rate are explicit arguments).
+- `economics_from_registry()` / `lcob_from_registry()`: specific CAPEX (`capex_epe` by default, or any other specific-CAPEX row), `opex_epe` per Nm³, `wacc_real` and `plant_life`.
+- `compare_with_anchors()`: places an LCOB inside the registry ranges `lcob_epe_sucro` (R$/m³) and `lcob_fiesp` (US$/MMBtu, converted with `hhv_biomethane` and a given exchange rate).
+
+**New registry rows (2026-10-06), all `K`:** `wacc_real` 10 % (8–12 %) and `plant_life` 20 yr, both the scenario choices of §6, with no external source yet; `hhv_biomethane` 38 MJ/Nm³ (37–39), from CLAUDE.md §3, used only for unit conversion.
+
+**v0 limits**
+- One CAPEX at year 0, constant real costs and output, no upgrading replacement, no taxes or financing structure.
+- **No price-year escalation:** the EPE CAPEX is in R$ of Dec 2024 (docs/21 C15); other values keep their own years.
+- The denominator is delivered biomethane, so the capacity factor from the process module drives the LCOB.
+- **Not yet implemented:** NPV/IRR, the revenue stack, feedstock and transport costs from the supply and siting modules, Monte Carlo and Sobol (§7).
+
+`compare_with_anchors(..., brl_per_usd=None)` lists the US$/MMBtu anchor without evaluating it. The skeleton runner uses this when no exchange rate is given (docs/13 §6).

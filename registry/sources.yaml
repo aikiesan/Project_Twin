@@ -3,7 +3,7 @@
 # status: have | get | lai | paid | build
 # confidence: V (read) | S (snippet, verify) | K (prior knowledge, verify)
 schema_version: 0.1
-updated: 2026-10-04
+updated: 2026-10-06
 
 sources:
   # ---------------- SUPPLY: SUGARCANE ----------------
@@ -32,8 +32,12 @@ sources:
     spatial: per unit
     temporal: weekly
     access: open
-    status: get
+    status: lai   # LAI R9 (docs/07)
     confidence: S
+    notes: >-
+      Radar digest 2026-10-06: Power BI only, updated weekly, no declared download; per-unit
+      granularity not explicit. The certification data behind it (cane, ethanol, vinasse, NEEA,
+      eligible volume per unit) is requested in LAI R9. Queue 20261006-09.
   - id: anp_cbio_panel
     name: ANP Plataforma CBIO dynamic panel
     publisher: ANP
@@ -201,6 +205,9 @@ sources:
       SIDRA exports dated 2026-07-16 to 2026-09-23 (file timestamps), copied from
       Documents/Reposicionamento_Submissão_ESD/00_Primary_Data_Sources_PILAR2b. Herds are annual stocks:
       do not sum years (the team audit flagged a legacy table whose Total_* fields did).
+      PPM 2025 was published in Sep 2026 (radar digest 2026-10-06; informativo at
+      https://biblioteca.ibge.gov.br/visualizacao/periodicos/84/ppm_2025_v53_br_informativo.pdf).
+      Re-export tables 3939, 74 and 94 with 2025 for SP municipalities; queue 20261006-08.
   - id: lupa_2016_17
     name: LUPA farm-unit census 2016/17 (CATI/IEA)
     publisher: CATI / IEA-SP
@@ -288,6 +295,10 @@ sources:
     provides: [capex_factor_R$_per_Nm3d, opex_R$_per_Nm3]
     status: get
     confidence: S
+    notes: >-
+      Radar digest 2026-10-06 (routine flag V, no page recorded): CAPEX R$ 3,734.9 per Nm3/d and
+      OPEX R$ 0.150/Nm3, both in R$ of Dec 2024, labelled sugar-energy biomethane. The scope label
+      conflicts with the parameters.csv note (docs/21 C15). Queue 20261006-07.
   - id: epe_nt_2023_07
     name: EPE NT-EPE-DPG-SDB-2023-07 (2025-2034)
     publisher: EPE
@@ -472,6 +483,23 @@ sources:
     status: get
     module: regulation
     confidence: S
+  - id: reg_mme_cp_232_2026
+    name: MME Consulta Pública 232/2026 — RenovaBio targets 2027-2036 (note, AIR, modelling and CBIO projection spreadsheets)
+    publisher: MME
+    url: https://www.gov.br/mme/pt-br/assuntos/noticias/mme-abre-consulta-publica-sobre-metas-do-renovabio-para-o-periodo-de-2027-a-2036
+    also: [http://consultas-publicas.mme.gov.br]
+    module: regulation
+    provides: [cbio_target_by_year_2027_2036, carbon_intensity_reduction_target]
+    temporal: annual 2027-2036
+    access: open
+    status: get
+    confidence: S
+    license: TODO verify (Brazilian government publication)
+    use: CBIO demand range for revenue scenarios (docs/16 §4)
+    notes: >-
+      Consultation 15 Sep-29 Oct 2026. -12.1 % carbon intensity of the fuel matrix by 2036 (2018
+      base). The annual CBIO targets are in the supporting spreadsheets; the press figure of 74 M
+      CBIO in 2036 is not on the MME page. Radar digest 2026-10-06; queue 20261006-10.
   - id: reg_anp_995_996_2026
     name: ANP Res. 995/2026 (targets, CGOB) and 996/2026 (certification, issuance)
     publisher: ANP
@@ -741,6 +769,20 @@ sources:
     module: intl_benchmark
     status: get
     confidence: S
+  - id: intl_eu_eba_investment_outlook_2026
+    name: EBA Biomethane Investment Outlook 2026 (1 Jul 2026)
+    publisher: EBA
+    url: https://www.europeanbiogas.eu/publication/eba-biomethane-investment-outlook-2026/
+    module: intl_benchmark
+    format: PDF
+    access: open
+    license: TODO verify EBA terms
+    use: aggregate check on the CAPEX prior (committed investment per unit of new capacity)
+    status: get
+    confidence: S
+    notes: >-
+      EUR 36 bn committed (EUR 28 bn in the previous edition) for about +9 bcm/yr by 2030, per the
+      radar digest 2026-10-06. Compute any EUR per bcm/yr ratio from the PDF, not from the digest.
   - id: intl_eu_bip_cost_study
     name: Biomethane Industrial Partnership TF4 — current cost of biomethane from real industry data (Oct 2023)
     publisher: Biomethane Industrial Partnership

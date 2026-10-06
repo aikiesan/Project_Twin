@@ -1,0 +1,49 @@
+# Test fixture for tests/test_skeleton.py. The cane values are TEST INPUTS, not data.
+schema_version: 0.1
+x_ch4: 0.6
+mills:
+  narandiba_test:
+    name: Narandiba (test fixture)
+    anp_plant_id: sp_cocal_narandiba
+    strategy: S0
+    cane_t:
+      2025: {value: 1000000, source: test fixture, confidence: K}
+      2026: {value: null, source: TODO, confidence: null}
+    ethanol_l: {}
+    ad_shares: {vinasse: 1.0, filter_cake: 1.0, straw: 0.0}
+  storage_test:
+    name: S1 mill (test fixture)
+    anp_plant_id: sp_cocal_narandiba
+    strategy: S1
+    cane_t:
+      2025: {value: 1000000, source: test fixture, confidence: K}
+    ethanol_l: {}
+    ad_shares: {vinasse: 1.0, filter_cake: 1.0, straw: 0.0}
+    storage:
+      store_frac: 0.5
+      store_months: [4, 5, 6, 7, 8, 9, 10, 11]
+      release_months: [12, 1, 2, 3]
+      loss_frac_per_month: 0.03
+      loss_source: test fixture
+  storage_empty_test:
+    name: S1 mill without storage values (test fixture)
+    anp_plant_id: sp_cocal_narandiba
+    strategy: S1
+    cane_t:
+      2025: {value: 1000000, source: test fixture, confidence: K}
+    ethanol_l: {}
+    ad_shares: {vinasse: 1.0, filter_cake: 1.0, straw: 0.0}
+    storage:
+      store_frac: null
+      store_months: [4, 5, 6, 7, 8, 9, 10, 11]
+      release_months: [12, 1, 2, 3]
+      loss_frac_per_month: null
+      loss_source: TODO
+  unknown_strategy_test:
+    name: S3 mill (test fixture)
+    anp_plant_id: sp_cocal_narandiba
+    strategy: S3
+    cane_t:
+      2025: {value: 1000000, source: test fixture, confidence: K}
+    ethanol_l: {}
+    ad_shares: {vinasse: 1.0, filter_cake: 1.0, straw: 0.0}

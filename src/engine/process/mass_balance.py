@@ -126,7 +126,8 @@ class OperatingLimits:
     """Constraint thresholds (docs/10 §2.3) and the BMP→full-scale factor.
 
     ``ts_max_frac`` defaults to 0.12, the upper end of the wet-CSTR range in docs/10 §2.3
-    (there is no registry row for it yet).
+    (there is no registry row for it yet). ``param_ids`` lists the registry rows used, when
+    built by :func:`limits_from_registry`.
     """
 
     olr_max_kg_vs_m3_d: float
@@ -135,6 +136,7 @@ class OperatingLimits:
     cod_so4_min: float | None = None
     k_max_kg_m3: float | None = None
     ts_max_frac: float = 0.12
+    param_ids: tuple[str, ...] = field(default=())
 
 
 @dataclass(frozen=True)
@@ -413,6 +415,7 @@ def limits_from_registry(params: Mapping[str, Param] | None = None) -> Operating
         bmp_fullscale=_central(p, "bmp_fullscale"),
         cod_so4_min=_central(p, "cod_so4_crit"),
         k_max_kg_m3=_central(p, "k_inhib"),  # g K/L = kg/m³
+        param_ids=("olr_max_cstr", "hrt_cstr", "bmp_fullscale", "cod_so4_crit", "k_inhib"),
     )
 
 

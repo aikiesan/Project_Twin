@@ -249,3 +249,21 @@ Next, from the queue (`status: open`):
 3. Read EPE NT 2025-08 for `capex_epe` (page, quote, scope, price year) and close C15.
 4. Download the CP 232/2026 spreadsheets before 29 Oct.
 5. Ask IEE/USP, through the CP2B member there, for the OFMSW plant data.
+
+## 2026-10-06 (later) — residues v0 and LCOB v0 for the walking skeleton
+- **`engine.supply.residues`:** cane per mill and crop year → monthly vinasse, filter cake and straw, generated vs sent to AD, and the feed table for the process module. Fixed April–November profile until UNICA. docs/09 §5.
+- **`engine.economics.lcob`:** CRF, CAPEX (linear or power law), annuity LCOB with components, R$/Nm³ → US$/MMBtu, and the comparison with the EPE and FIESP anchors. docs/11 §9.
+- **Registry:**
+  - new `K` rows `wacc_real` (10 %, 8–12), `plant_life` (20 yr) and `hhv_biomethane` (38 MJ/Nm³, 37–39);
+  - `lcob_fiesp` and `lcob_fiesp_full`: the citation year was corrected to June 2025 (docs/25), with the values unchanged;
+  - 0 errors, 127 warnings.
+- **Checks:** 26 new tests, including one that runs the chain cane → residues → CSTR → LCOB on registry values. Full suite, ruff and black pass.
+- **First chain output (not a result, ADR-0010):** 2 Mt of cane with all vinasse and cake to AD, `x_ch4` 0.6, a 40,000 Nm³/d nameplate → full output April–November, zero off-season, LCOB ≈ R$ 1.95/Nm³. That sits just above the EPE range (0.78–1.83). Against the FIESP range it depends on the exchange rate, which is not in the registry; at an illustrative 5.4 R$/US$ it falls inside.
+- Roadmap: "Residues v0" and "LCOB v0" ticked.
+
+Next for the skeleton:
+1. **The two mills' inputs.** Cane crushed per crop year for Costa Pinto and Narandiba, with a source (RenovaBio report, company report or UNICA), plus their ANP nameplate (`evidence/anp_monthly_sp_plants_from_pilar2b.csv`).
+2. **A runner** (`engine.skeleton`): one config per mill, `run_id` plus `param_hash`, outputs to `data/processed/skeleton/`, and a monthly comparison with the ANP series.
+3. **Strategy S1 for Narandiba:** filter-cake storage with a loss factor (`fc_storage_loss` is not numeric yet, so it has to be an explicit scenario input).
+4. **Manure base-load v0** from PPM herds, once PPM 2025 is re-exported.
+5. **Morris screening** on the skeleton (SALib), to rank what to verify first.

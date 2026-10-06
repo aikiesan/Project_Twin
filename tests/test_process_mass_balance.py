@@ -131,6 +131,21 @@ def test_size_digester_takes_worst_month_of_olr_and_hrt():
     assert out["olr_ok"].all() and out["hrt_ok"].all()
 
 
+def test_digester_sized_at_the_limit_is_not_flagged_by_rounding():
+    # 30,002 m3 in 30 d at HRT_min = 80/3 d: V / Q rounds to 26.666666666666664 < 80/3
+    limits = OperatingLimits(
+        olr_max_kg_vs_m3_d=3.0, hrt_min_d=80 / 3, bmp_fullscale=0.85, cod_so4_min=None
+    )
+    feed = _feed([("2024-06", "vinasse", 30_002)])
+    v = size_digester(feed, {"vinasse": VINASSE}, limits)
+    out = simulate(feed, {"vinasse": VINASSE}, _design(volume=v), limits)
+    assert out["hrt_d"].iloc[0] < limits.hrt_min_d  # the rounding the tolerance absorbs
+    assert out["hrt_ok"].all() and out["feasible"].all()
+    # a real shortfall is still flagged
+    short = simulate(feed, {"vinasse": VINASSE}, _design(volume=v * 0.999), limits)
+    assert not short["hrt_ok"].iloc[0]
+
+
 def test_bad_inputs_are_refused():
     with pytest.raises(KeyError):
         simulate(_feed([("2024-06", "manure", 1)]), {"vinasse": VINASSE}, _design(), LIMITS)

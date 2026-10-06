@@ -35,6 +35,17 @@ Most of the registry was compiled from search snippets and prior knowledge becau
 8. Project announcements in `projects_capex.csv` (normalize capacity basis)
 9. International: BIP TF4, DEA catalogue, Biogas-Messprogramm III
 
+**Within the skeleton's parameters (from 2026-10-06), follow the Morris priority** (docs/13 §7, `priority.csv` of the latest `python -m engine.sensitivity morris` run). On the synthetic case the first rows are:
+1. `vin_cod`;
+2. `capex_epe`;
+3. `wacc_real`;
+4. `vin_gen`;
+5. `cod_removal`;
+6. `vin_ch4_yield`;
+7. the filter-cake rows.
+
+`ethanol_yield` needs a sourced range first (docs/21 Q13). Rows with no effect in the current chain (straw, OLR/HRT limits, SO₄ and K) can wait. A row becomes `V` only through its page and quote. The reference behind it must be `two_sources` in `references.csv` (§8).
+
 ## 6. LLM-assisted extraction rules
 - Use LLMs to **locate and extract**, never to **supply** values.
 - Output must include `source_id`, `page`, `quote`; reject rows without a quote.

@@ -32,6 +32,7 @@
 10. Was Programa Paulista de Biogás (Decreto 58.659/2012) revoked?
 11. How much mill biomethane goes to power under capacity-reserve contracts (LRCAP) instead of the gas market? Cocal won 9.2 MW for 15 years from Aug 2028 (digest 2026-10-06, S). It is a competing outlet in the supply curve and a separate revenue route (docs/16 §4).
 12. Will the revised CBPMESP IT-29 set separation distances for biomethane production? If yes, they become an exclusion buffer in siting (docs/12 Step 2).
+13. What is a sourced range for `ethanol_yield` (L ethanol per t cane) at SP mills? The registry holds a single derived value (81 L/t [D], Santa Adélia). In the Morris screen it moves biomethane as much as `vin_gen` and `vin_cod` (one-sided elasticity 0.81, docs/13 §7), but it cannot be ranked without a range. Candidates are the RenovaBio mill-year data (LAI R9) and UNICA's ethanol per tonne series. Do not invent ±x %.
 
 ## 3. Risks
 | Risk | Impact | Mitigation |

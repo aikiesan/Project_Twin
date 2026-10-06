@@ -38,7 +38,7 @@ Tick boxes as you go. Each phase ends with a **gate** — don't move on until it
 - [x] Each run gets a `run_id` and a parameter hash; outputs go to `data/processed/skeleton/` — `python -m engine.skeleton run` (2026-10-06)
 
 ### Weeks 4–6 — Verification led by sensitivity
-- [ ] Morris screening (SALib) on the skeleton, for annual CH₄, capacity factor and LCOB
+- [x] Morris screening (SALib) on the skeleton, for annual CH₄, capacity factor and LCOB — `python -m engine.sensitivity morris` (docs/13 §7, ADR-0014, 2026-10-06); first ranking on a labelled synthetic case, re-run per mill once cane is sourced
 - [ ] Add columns `page, quote, verified_by, verified_on, conditions, price_year, currency` to `parameters.csv`
 - [ ] Verify the top-ranked parameters (target: top 15), in the order of `08_VERIFICATION_PROTOCOL.md` §5 within that set
 - [ ] Normalize `projects_capex.csv` (capacity basis, scope, price year)

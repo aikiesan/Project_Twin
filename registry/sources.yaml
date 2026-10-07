@@ -1545,3 +1545,48 @@ sources:
       subscribers, analytics, any table with a personal-looking column, backup tables and the
       views that read them. Functions, triggers and RLS policies are not restored. Never write
       back to the source.
+  - id: semil_anuario_energeticos_2025
+    name: Anuário de Energéticos por Município no Estado de São Paulo – 2025, ano base 2024 (2ª Edição)
+    publisher: Secretaria de Meio Ambiente, Infraestrutura e Logística do Estado de São Paulo (SEMIL), Subsecretaria de Energia e Mineração
+    url: https://semil.sp.gov.br/sem/balanco-energetico-do-estado-de-sao-paulo/
+    module: siting
+    provides: [electricity_consumption_by_class_municipality_kwh, electricity_consumers_by_class, natural_gas_consumption_by_class_municipality_m3, natural_gas_consumers_by_class, petroleum_derivatives_and_hydrated_ethanol_by_municipality]
+    spatial: municipality (645 SP, by name only, no IBGE code); summary tables by administrative region
+    temporal: 2024
+    format: PDF (Anuario-de-Energeticos-por-Municipios-do-Estado-de-Sao-Paulo-2025-ano-base-2024-1.pdf, 11,055,051 bytes)
+    access: open
+    license: TODO not stated in the text read so far
+    status: get
+    confidence: S
+    local_path: data/raw/semil_anuario_energeticos_2025/
+    notes: >-
+      URL is the SEMIL page the user named for both SEMIL energy publications (2026-10-07); the PDF
+      text prints no URL, DOI or ISBN. Copy held in Google Drive Project_Twin/data (user upload,
+      2026-10-07); copy it to local_path and record sha256 (printed by
+      scripts/ingest/semil_anuario_2024.py). Data sources stated in the document: concessionaires
+      and regulators (ANEEL, ANP); gas distributors named "CONGAS, Gás Brasiliano e Naturgy".
+      Gas volumes in "m³" with no reference conditions (docs/21 Q18). The Drive text extraction
+      is truncated (electricity after "Ubirajara", petroleum after "Pongaí", section 6 missing),
+      so extraction must run on the PDF. Confidence S until the pages are checked against the PDF.
+      Same publisher also serves the companion Power BI panel (not readable from the cloud).
+  - id: semil_beesp_2025
+    name: Balanço Energético do Estado de São Paulo 2025, ano base 2024 (BEESP; Série Informações Energéticas, 002)
+    publisher: Secretaria de Meio Ambiente, Infraestrutura e Logística do Estado de São Paulo (SEMIL)
+    url: https://semil.sp.gov.br/sem/balanco-energetico-do-estado-de-sao-paulo/
+    module: supply
+    provides: [state_energy_balance_2024, natural_gas_supply_and_consumption_by_sector, sugarcane_and_bagasse_balance]
+    spatial: state of São Paulo (no regional or municipal tables)
+    temporal: 2024 (with historical series)
+    format: PDF (BEESP-2025AB2024-2a-Edicao.pdf, 10,070,466 bytes, 160 p.)
+    access: open
+    license: TODO not stated in the text read so far
+    status: get
+    confidence: S
+    local_path: data/raw/semil_beesp_2025/
+    notes: >-
+      The BEESP prints this URL among its closing links. Methodology follows the BEN (EPE)
+      and the OLADE method, as the document states. Copy held in Google Drive Project_Twin/data
+      (2026-10-07). The Drive text extraction stops at Tabela 8.1.5, so the appendices with the
+      calorific values, toe factors and the source list (§8.4-8.8) still need reading from the
+      PDF. Values quoted from the extracted text (e.g. Tabela 3.03 natural gas, 3.26 bagasse)
+      stay S until pages are recorded. See docs/21 C34.

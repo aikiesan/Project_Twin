@@ -48,7 +48,7 @@ Formulation reference: OptBio (Monteiro et al., arXiv:2603.06823, Mar 2026) [S],
 ## 3. Benchmarks
 - Paulino, Cherri & Soler 2024 (SP, GIS-AHP + optimization) — reproduce their criteria as a baseline, then show what changes with costs/seasonality.
 - Blanco, Hinojosa & Zavala 2024 (waste-to-biomethane logistics: pipeline vs LNG).
-- Jonker et al. 2016 (sugarcane spatial LP), Costa et al. 2020 (location-allocation for sugarcane supply).
+- Jonker et al. 2016 (sugarcane spatial LP), Costa et al. 2020 (location-allocation for sugarcane supply; Triângulo Mineiro, MG, not SP).
 
 ## 4. Outputs
 Maps of optimal sites/scales/modes, supply curve figure, table of top sites, scenario comparison.

@@ -79,8 +79,8 @@ Flags: **V** read · **S** seen in search/abstract · **K** prior knowledge. **V
 - Biomass (2026). Brazil's biogas–biomethane potential: techno-economic inventory. MDPI 2673-8783/6/1/4 [S]
 
 ## Siting & logistics
-- Paulino, R.F.S., Cherri, A.C., Soler, E.M. (2024). Suitability model and optimal location of biodigesters in SP. *Energy Reports* 11:4726–4740. doi:10.1016/j.egyr.2024.04.038 [S]
-- Costa et al. (2020). GIS for location of bioenergy plants in tropical agricultural areas. *Renew. Energy* 153:911–918. doi:10.1016/j.renene.2020.01.050 [S]
+- Paulino, E.J., Cherri, A.C., Soler, E.M. (2024). Suitability model and optimal location of biodigesters in the state of São Paulo. *Energy Reports* 11:4726–4740. doi:10.1016/j.egyr.2024.04.038 [identity two_sources]
+- Costa, F.R. et al. (2020). GIS applied to location of bioenergy plants in tropical agricultural areas. *Renew. Energy* 153:911–918. doi:10.1016/j.renene.2020.01.050 [identity two_sources; study area Triângulo Mineiro, MG]
 - Akca et al. (2023). *Applied Energy* 352:121932. doi:10.1016/j.apenergy.2023.121932 [S]
 - Blanco, Hinojosa, Zavala (2024). The waste-to-biomethane logistic problem. *ACS Sustain. Chem. Eng.* 12:8453. doi:10.1021/acssuschemeng.4c01429 [S]
 - Yue, You, Snyder (2014). Biomass-to-bioenergy supply chain optimization. *Comput. Chem. Eng.* 66:36–56. doi:10.1016/j.compchemeng.2013.11.016 [S]

@@ -79,6 +79,7 @@ The validator warns about a `V` row without a page and quote, and about a quote 
 | Date | Parameter id | Old | New | Flag | Source/page | By |
 |---|---|---|---|---|---|---|
 | 2026-10-06 | `codig_bmp` | 230 (S) | 230, page and quote recorded | S → V | Volpi et al. 2021, PDF p. 1 (p. 8969, Abstract) and p. 12 (p. 8980); range 200–260 not printed (docs/21 C25) | LLM double read; human audit pending |
+| 2026-10-07 | `fc_ch4_fm` | 54 (S) | 54, page and quote recorded | S → V | Janke et al. 2015 IJMS, PDF p. 7 (p. 20691, §2.2.1: range 50–58) and p. 8 (p. 20692, Table 4: FC-3 = 54); 54 is one sample, also the mean of the three | LLM double read; human audit pending |
 | 2026-10-06 | `temp` | 55 (S) | 55, page and quote recorded | S → V | Volpi et al. 2021, PDF p. 3 (p. 8971) | LLM double read; human audit pending |
 | 2026-10-06 | `fc_bmp`, `bmp_fullscale` | source "Janke 2020" | "Janke et al. 2019 … 10.1016/j.renene.2019.05.029" | S (kept) | Publisher PDF first page; values not changed (docs/21 C16, C17) | LLM double read |
 | 2026-10-06 | `olr_max_cstr` | source "Janke 2015 IJMS 10.3390/ijms161023210" | "Leite, Janke et al. 2015 …; Volpi 2021; Janke et al. 2016 Waste Manag" | S (kept) | DOI belongs to Leite et al.; 3.0 matches Janke 2016 as cited by Volpi 2021 p. 12 (docs/21 C23) | Reference check |

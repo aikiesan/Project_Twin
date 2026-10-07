@@ -60,6 +60,7 @@
 - − Text extracted from two-column PDFs can interleave columns. The three corrected rows show that a quote must be compared with the printed page, not with the extraction.
 - **Follow-up:**
   - **PDF pass 2:** the papers behind the remaining top-ranked `S` parameters (Moraes 2015, Fuess 2018, Melo 2024, Leite/Janke 2015 IJMS, Kiyuna 2017, Ferraz 2016), once their PDFs are in hand.
+    - *2026-10-07 progress:* Janke 2015 IJMS (22 rows), Moraes 2015 (46 rows) and Fuess, Rodrigues & Garcia 2017 JESH-A (20 rows, new reference `fuess2017_jesh`) read twice from the publisher PDFs in the Drive folder Project_Twin_papers. `fc_ch4_fm` moved to `V` (human audit pending). New conflicts C27–C29. Statements about out-of-scope quantities (BOD, pH, HRT/OLR of high-rate reactors) and reader arithmetic were not written. Fuess 2018, Melo 2024, Leite 2015, Janke 2016 WM, Kiyuna 2017 and Ferraz 2016 still pending.
   - **Audit sheet:** a short human-audit checklist per paper.
 
 ## Alternatives considered

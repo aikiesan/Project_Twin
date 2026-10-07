@@ -346,3 +346,36 @@ Next:
 3. **Normalise `projects_capex.csv`** capacity bases (docs/21 C3).
 4. **S1 digestate recirculation**, so the off-season cake-only feed passes the TS check.
 5. **Morris per mill**, once cane per crop year is sourced.
+
+## 2026-10-07 — Paper inventory and PDF pass 2 (part 1)
+
+**Paper inventory (user side).** The project lead ran a cell-by-cell Jupyter inventory over their local Documents and Downloads folders:
+- 4,942 PDFs scanned and 3,818 unique by sha256.
+- DOIs taken from PDF metadata or page 1, checked against Crossref (title on page 1).
+- Matched to `references.csv` by DOI.
+- 1,122 unique papers copied into the Drive folder **Project_Twin_papers**. 11 are under `01_in_registry/<ref_id>.pdf`, the rest under `02_by_topic/`, plus `index.csv` and `papers_for_claude.csv`.
+- 28 PDFs with confidential or partner terms were excluded.
+
+The Crossref columns of `papers_for_claude.csv` (fetched on the lead's PC; Crossref is blocked from the cloud session) are used as the second identity source next to a publisher PDF's first page (route b).
+
+**Identity.** costa2020 and paulino2024 checked: Paulino's first author is E.J., not R.F.S.; Costa et al. 2020 study Triângulo Mineiro (MG), not SP.
+
+**Value reads (ADR-0015, extractor + independent verifier):**
+- **Janke et al. 2015 IJMS** (22 rows):
+  - `fc_ch4_fm` 54 printed (sample FC-3; range 50–58) → `V`, human audit pending.
+  - `vin_ts_vs` 16/9 g/L is not printed (C26 confirmed).
+  - HRT 30 d not printed (C28).
+  - Filter cake BMP up to 281 (C27).
+- **Moraes et al. 2015** (46 rows):
+  - A review, so all its values are cited.
+  - The PDF prints DOI .023 (C14 closed on our side).
+  - Only the range 10–15 L/L for `vin_gen` is printed, not 12.
+  - 0.30 for `vin_ch4_yield` is not printed.
+  - Some Table 8 reference numbers do not match the reference list.
+- **Fuess, Rodrigues & Garcia 2017 JESH-A** (new `fuess2017_jesh`, 20 rows):
+  - Own end-of-harvest COD 22.9–35.8 g/L at four South-Central distilleries.
+  - K 1.33–4.01 g/L as elemental K.
+  - SO₄ 2.1–3.8 g/L.
+  - Cited molasses vinasse COD 82–130 g/L (C29).
+
+**Next:** Fuess 2018 (was still uploading); Melo 2024, Leite 2015, Janke 2016 WM, Kiyuna 2017, Ferraz 2016 when in hand; use `papers_for_claude.csv` to find PDFs behind other `S`/`K` parameters.

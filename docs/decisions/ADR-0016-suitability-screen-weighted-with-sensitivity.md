@@ -42,3 +42,7 @@
 ## Alternatives considered
 - **AHP pairwise weights as the main method.** Kept for the Paulino et al. 2024 comparison only (docs/12). Pairwise judgements add a consistency check but not a source for the weights.
 - **Fixed thresholds (pass/fail per criterion).** Simpler, but they hide trade-offs and need cited thresholds the project does not have yet.
+
+## Notes
+- **2026-10-07, distinct sites.** Neighbouring cells share most of their 30 km sums, so on the real grid v0 the top 15 cells fall in one municipality (Tietê). Ranked lists of *sites* are therefore drawn with a minimum spacing (greedy, best-first, great-circle distance; `engine.siting.suitability.spaced_selection`, default 30 km), once by the equal-weight rank and once by the share of Dirichlet draws in the top k. Cell scores and ranks are unchanged.
+- **2026-10-07, extra exclusions.** `score_grid_v0.py --exclude label=path` adds a hard exclusion from any polygon layer (cell centre inside; `engine.siting.exclusions`). Only layers registered in `sources.yaml` with a legal basis; first use is federal integral-protection UCs (`mapbiomas_federal_uc_integral`). The run records each layer's sha256.

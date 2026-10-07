@@ -23,6 +23,8 @@ Steps:
    Rows that stay in the top k under most weightings are robust candidates.
 4. :func:`one_at_a_time` raises and lowers each weight by ``delta`` (relative), renormalises, and
    reports how much of the base top k survives.
+5. :func:`spaced_selection` turns a ranking of cells into distinct candidate sites: neighbouring
+   cells share most of their 30 km catchment, so the raw top k is one cluster, not k sites.
 
 Pure pandas/numpy: geometry work (H3 cells, distances) happens before this module.
 """
@@ -247,6 +249,48 @@ def one_at_a_time(
                 }
             )
     return pd.DataFrame(out)
+
+
+EARTH_RADIUS_KM = 6371.0088  # IUGG mean Earth radius; screening distances only
+
+
+def spaced_selection(
+    lat: Sequence[float],
+    lon: Sequence[float],
+    order: Sequence[int],
+    *,
+    min_km: float,
+    n: int,
+) -> list[int]:
+    """Greedy pick of up to ``n`` positions, at least ``min_km`` apart (great circle).
+
+    Args:
+        lat, lon: degrees, one entry per candidate.
+        order: candidate positions, best first (e.g. by ascending rank); NaN-scored rows left out.
+        min_km: minimum spacing between picked candidates, km.
+        n: maximum number of picks.
+
+    Returns:
+        Picked positions, in ``order``. Each pick is the best candidate not within ``min_km`` of
+        a better pick (non-maximum suppression).
+    """
+    if min_km < 0 or n < 1:
+        raise ValueError("min_km must be >= 0 and n >= 1")
+    la, lo = np.radians(np.asarray(lat, float)), np.radians(np.asarray(lon, float))
+    picked: list[int] = []
+    for i in order:
+        if picked:
+            p = np.asarray(picked)
+            a = (
+                np.sin((la[p] - la[i]) / 2) ** 2
+                + np.cos(la[i]) * np.cos(la[p]) * np.sin((lo[p] - lo[i]) / 2) ** 2
+            )
+            if (2 * EARTH_RADIUS_KM * np.arcsin(np.sqrt(a))).min() < min_km:
+                continue
+        picked.append(int(i))
+        if len(picked) == n:
+            break
+    return picked
 
 
 def _kept(df: pd.DataFrame, exclude_col: str | None) -> pd.Series:

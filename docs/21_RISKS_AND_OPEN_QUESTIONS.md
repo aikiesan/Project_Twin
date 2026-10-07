@@ -45,7 +45,7 @@
 4. 2027 CNPE target (due 1 Nov 2026)?
 5. Status of the SP biomethane origin certificate.
 6. Per-plant monthly ethanol — will LAI succeed?
-7. Typical SP cane haul distance (peer-reviewed)?
+7. Typical SP cane haul distance (peer-reviewed)? A model-derived reference now exists: straw-weighted road distance from cane cells to the nearest mill, P50 19.51 km (P25 12.91, P75 27.17, P90 35.22) on the OSM road graph (`straw_mill_road_km_*`, D, `esd_fl_espacial_outputs`). It is distance to the nearest mill, not the observed haul, so `haul_dist` (25 km, grey literature, S) stays open.
 8. Which reactor types do SP mill plants actually use (CSTR vs plug-flow vs UASB)? Public sources describe stirred vertical tanks + horizontal digester (Geo design) — inference only.
 9. Do zero months in ANP data mean shutdown or missing reports?
 10. Was Programa Paulista de Biogás (Decreto 58.659/2012) revoked?

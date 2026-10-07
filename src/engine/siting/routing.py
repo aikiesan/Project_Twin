@@ -8,7 +8,8 @@ and builds origin × destination matrices in batches.
 - :func:`od_matrix` — batched matrix for any number of origins/destinations.
 - :func:`haversine_km` — great-circle distance, **only** for QA (detour ratio diagnostics) or as an
   explicitly-requested fallback via :func:`fallback_road_km` with a detour factor you must supply
-  and cite (no default: the SP-specific factor is an open question, docs/21).
+  and cite (no default; SP medians by distance band are in ``parameters.csv`` as
+  ``road_detour_factor_*``, flag D, from 5,000 OSM road-graph pairs).
 
 Coordinates are (lat, lon) in EPSG:4674/4326 degrees (the ~1 m datum difference is irrelevant at
 routing scale). OSRM itself expects ``lon,lat`` order — handled here.

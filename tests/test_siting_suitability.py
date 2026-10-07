@@ -86,3 +86,13 @@ def test_one_at_a_time_reports_each_criterion_both_ways():
     assert len(out) == 4
     assert set(out["change"]) == {"-20%", "+20%"}
     assert out["top_k_kept"].between(0, 1).all()
+
+
+def test_spaced_selection_skips_close_neighbours():
+    from engine.siting.suitability import spaced_selection
+
+    # 0 and 1 are ~11 km apart (0.1 deg latitude); 2 is ~111 km from both.
+    lat, lon = [-22.0, -22.1, -23.0], [-48.0, -48.0, -48.0]
+    assert spaced_selection(lat, lon, [0, 1, 2], min_km=30, n=5) == [0, 2]
+    assert spaced_selection(lat, lon, [1, 0, 2], min_km=5, n=2) == [1, 0]
+    assert spaced_selection(lat, lon, [2, 0, 1], min_km=200, n=5) == [2]

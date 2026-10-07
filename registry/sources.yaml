@@ -590,6 +590,57 @@ sources:
     module: spatial
     status: get
     confidence: K
+  - id: esd_fl_espacial_outputs
+    name: CP2b FL espacial outputs (road-network catchments, detour ratios, straw-to-mill distances), ESD resubmission work
+    publisher: CP2B / NIPE-UNICAMP (internal; user's folder Reposicionamento_Submissão_ESD/Metodo_CP2b/fl_espacial)
+    url: local
+    module: spatial
+    provides: [road_detour_ratio_by_distance_band, straw_to_mill_road_distance_percentiles]
+    spatial: SP
+    temporal: OSM extract jan/2026
+    format: CSV (tortuosidade_resumo.csv, palha_usinas_calibracao.csv)
+    access: internal
+    license: internal (CP2B)
+    status: have
+    confidence: D
+    local_path: data/interim/esd_fl_espacial/
+    sha256: 15e23e4a6456f2c3d360d6e509c3e48cc76d86e3ef20d3a59eec35f2d99e1432   # tortuosidade_resumo.csv
+    accessed: '2026-10-07'
+    notes: >-
+      Derived from osm_sudeste (Geofabrik gis_osm_roads_free_1.shp, jan/2026) by the FL espacial
+      pipeline (fl_comum.Roteador, Dijkstra; config_fl.yaml n_pares 5000; EPSG:5880). Hashes from
+      the inventory pushed in commit 44fe9ef (docs/inbox/esd_inventory.md,
+      registry/inbox/esd_datasets.csv): tortuosidade_resumo.csv 15e23e4a…1432,
+      palha_usinas_calibracao.csv 4dd8b53604fdb57b0695766762c5637ce39037f90ce63d490d9d6b90b1c38931.
+      Column headers were not copied with the values; low/high of the detour factor follow the
+      inventory's reading (P10/P90). Values in parameters.csv as road_detour_factor_* and
+      straw_mill_road_km_* (flag D). The straw inputs come from the CP2b N3 cascade; no GEDAVE
+      or other personal data enters these two summary files.
+  - id: mapbiomas_federal_uc_integral
+    name: Federal protected areas, integral protection (MapBiomas 10.1 auxiliary layer FEDERAL_PROTECTED_AREAS_INTEGRAL_PROTECTION_v2)
+    publisher: MapBiomas (compiling the federal protected-area registry)
+    url: https://mapbiomas.org
+    module: siting
+    provides: [exclusion_federal_integral_protection_uc]
+    spatial: Brazil (polygons)
+    format: ESRI Shapefile (.shp .shx .dbf .prj .cpg)
+    access: open
+    license: TODO not written next to the file; check MapBiomas terms
+    status: have
+    confidence: S
+    local_path: data/raw/mapbiomas_federal_uc_integral/
+    sha256: c42be75850886eec7915915e9355ae62f8a800bca773071c284b2378eeb6beb8   # .shp only
+    accessed: '2026-10-07'
+    notes: >-
+      Held in the user's ESD folder at 00_Primary_Data_Sources_PILAR2b/SHAPEFILES_MAPBIOMAS_10.1/
+      (inventory commit 44fe9ef; URL from README_DICIONARIO_ILUC_PIPELINE.md:168, only the site
+      root). Used by scripts/siting/score_grid_v0.py --exclude federal_uc_integral=<shp> to close
+      the gap in the v0 exclusions (state UCs and indigenous lands only). The run records the
+      file's sha256 in suitability_score_v0_meta.json. Layer date and source registry version not
+      recorded; seade_geo_ambiente_transporte also carries federal protected areas (MMA 2024)
+      and is the cross-check. The municipal layer
+      MUNICIPAL_PROTECTED_AREAS_INTEGRAL_PROTECTION_v1 (sha256 6efb1afc222505f52178839c29a80d66728dd6842a31abe5f354449e1d493c37)
+      sits beside it, not used yet.
   - id: zaa_sucro_sp
     name: Zoneamento Agroambiental do Setor Sucroenergético SP (SAD-69)
     publisher: Governo do Estado de SP (hosted by CIIAGRO)

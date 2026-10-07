@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aptidão Biometano SP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/h3-js@4.1.0/dist/h3-js.umd.js"></script>
+<style>
+:root{
+  --bg:#f4f2ec; --panel:#fbfaf6; --fg:#1f2a22; --muted:#5d6a60; --line:#d8d4c8;
+  --accent:#2f6b3a; --accent-fg:#ffffff; --warn-bg:#f6e7c4; --warn-fg:#5a4310;
+  --map-bg:#e9e6dc; --excl:#b5483b; --nan:#c9c4b6; --hl:#111111;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141a16; --panel:#1b221d; --fg:#e4e8e2; --muted:#9aa79d; --line:#2e3a31;
+  --accent:#7cc48a; --accent-fg:#0f1a12; --warn-bg:#3d3216; --warn-fg:#f1d993;
+  --map-bg:#0f1411; --excl:#e0705f; --nan:#3a433c; --hl:#ffffff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141a16; --panel:#1b221d; --fg:#e4e8e2; --muted:#9aa79d; --line:#2e3a31;
+  --accent:#7cc48a; --accent-fg:#0f1a12; --warn-bg:#3d3216; --warn-fg:#f1d993;
+  --map-bg:#0f1411; --excl:#e0705f; --nan:#3a433c; --hl:#ffffff; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45}
+.app{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:16px;height:100%;padding-inline:16px;padding-block:12px;box-sizing:border-box}
+aside{overflow-y:auto;display:flex;flex-direction:column;gap:14px;min-width:0;padding-right:4px}
+main{position:relative;min-width:0;min-height:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--map-bg)}
+canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+h1{font-size:18px;font-weight:600;margin:0;text-wrap:balance}
+h2{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+p{margin:0}
+.sub{color:var(--muted);font-size:12.5px}
+.banner{background:var(--warn-bg);color:var(--warn-fg);border-radius:4px;padding:8px 10px;font-size:12.5px}
+section{display:flex;flex-direction:column;gap:6px}
+.file{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,.btn{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:4px;padding:5px 10px;cursor:pointer}
+button.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+button:disabled{opacity:.5;cursor:default}
+input[type=file]{font-size:12px;max-width:100%}
+.w{display:grid;grid-template-columns:minmax(0,1fr) 92px 44px;gap:8px;align-items:center;font-size:13px}
+.w input{width:100%;accent-color:var(--accent)}
+.w .pct{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.seg button{border:0;border-radius:0}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-fg)}
+label.num{display:flex;flex-direction:column;font-size:11.5px;color:var(--muted);gap:2px}
+label.num input{width:70px;font:inherit;font-size:13px;padding:3px 5px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--fg)}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{padding:3px 6px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+td.n,th.n{text-align:right;font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--panel)}
+.legend{position:absolute;left:10px;bottom:10px;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:6px 8px;font-size:11.5px;display:flex;flex-direction:column;gap:4px;max-width:calc(100% - 20px)}
+.ramp{height:10px;width:180px;max-width:100%;border-radius:2px}
+.ramp-lab{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:4px}
+.zoom{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:4px}
+.zoom button{width:30px;padding:3px 0}
+.tip{position:absolute;right:10px;bottom:10px;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:6px 8px;font-size:11.5px;max-width:min(300px,calc(100% - 20px));font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;white-space:pre-wrap}
+.status{font-size:12px;color:var(--muted);font-family:"IBM Plex Mono",ui-monospace,monospace}
+details summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
+details p,details li{font-size:12.5px;color:var(--muted)}
+details ul{margin:4px 0;padding-left:18px}
+code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px}
+@media (max-width:800px){
+  html,body{height:auto}
+  .app{grid-template-columns:minmax(0,1fr);height:auto}
+  main{height:65vh;order:-1}
+  aside{overflow:visible}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside>
+    <header style="display:flex;flex-direction:column;gap:4px">
+      <h1>Aptidão para plantas de biometano, SP</h1>
+      <p class="sub">Triagem v0 em grade H3 (ADR-0016): exclusões, critérios normalizados 0–1, soma ponderada e robustez a pesos. Triagem, não escolha final de local; o ranking final vem do custo (LCOB).</p>
+    </header>
+
+    <div class="banner" id="banner">DADOS SINTÉTICOS DE EXEMPLO. Carregue <code>suitability_map_v0.csv</code> (gerado pela célula S1) para ver a grade real.</div>
+
+    <section>
+      <h2>Dados</h2>
+      <div class="file">
+        <input type="file" id="file" accept=".csv,text/csv">
+        <button id="demo">Exemplo</button>
+      </div>
+      <p class="status" id="status">—</p>
+    </section>
+
+    <section>
+      <h2>Pesos dos critérios</h2>
+      <div id="weights" style="display:flex;flex-direction:column;gap:6px"></div>
+      <div class="row"><button id="eq">Pesos iguais</button><span class="sub">0 = critério fora da soma</span></div>
+    </section>
+
+    <section>
+      <h2>Camada</h2>
+      <div class="seg" role="group">
+        <button data-mode="score" aria-pressed="true">Pontuação</button>
+        <button data-mode="robust" aria-pressed="false">Robustez</button>
+        <button data-mode="excl" aria-pressed="false">Exclusões</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Robustez (Dirichlet)</h2>
+      <div class="row">
+        <label class="num">sorteios<input id="nd" type="number" min="20" max="2000" step="10" value="300"></label>
+        <label class="num">top-k<input id="topk" type="number" min="1" max="5000" value="100"></label>
+        <label class="num">concentração<input id="conc" type="number" min="0.1" max="100" step="0.1" value="1"></label>
+        <label class="num">semente<input id="seed" type="number" value="20261007"></label>
+      </div>
+      <div class="row"><button class="primary" id="run">Rodar robustez</button><span class="status" id="rstat"></span></div>
+      <p class="sub">Sorteia pesos ao redor dos atuais; mostra a fração dos sorteios em que cada célula fica no top-k. Concentração 1 com pesos iguais = qualquer ponderação igualmente provável.</p>
+    </section>
+
+    <section>
+      <h2>Melhores células</h2>
+      <div class="tbl"><table>
+        <thead><tr><th class="n">#</th><th>H3</th><th>IBGE</th><th class="n">nota</th><th class="n">p top-k</th></tr></thead>
+        <tbody id="top"></tbody>
+      </table></div>
+    </section>
+
+    <details>
+      <summary>Formato do CSV e ressalvas</summary>
+      <ul>
+        <li>Colunas: <code>h3_index</code>, <code>ibge_code</code>, <code>lat</code>, <code>lon</code>, <code>excluded</code> (0/1) e uma coluna <code>n_&lt;critério&gt;</code> por critério, já em 0–1 (1 = melhor). Demais colunas aparecem na dica do mapa.</li>
+        <li>Distâncias são em linha reta (geodésicas), não por estrada: servem só para triagem.</li>
+        <li>A rede de gás conhecida é um resumo de troncos (Q17); distâncias reais a dutos de distribuição podem ser menores.</li>
+        <li>Rebanhos e cana municipais foram espalhados por área (flag D).</li>
+        <li>Exclusões v0: UC estaduais e terras indígenas. Faltam área urbana, água, APP, declividade (próximas etapas).</li>
+      </ul>
+    </details>
+  </aside>
+
+  <main>
+    <canvas id="cv"></canvas>
+    <div class="zoom"><button id="zin" aria-label="Aproximar">+</button><button id="zout" aria-label="Afastar">−</button><button id="zfit" aria-label="Enquadrar">⤢</button></div>
+    <div class="legend" id="legend"></div>
+    <div class="tip" id="tip" hidden></div>
+  </main>
+</div>
+
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+const H3 = (typeof h3 !== "undefined" && h3.cellToBoundary) ? h3 : null;
+const LABELS = {gas:"Rede de gás", power:"Subestação", road:"Rodovia", cane:"Cana (30 km)",
+  swine:"Suínos (30 km)", poultry:"Aves (30 km)", cattle:"Bovinos (30 km)", demand:"População (30 km)"};
+const RAMP_STOPS = ["#440154","#3b528b","#21918c","#5ec962","#fde725"];
+const NB = 32;
+const RAMP = Array.from({length:NB}, (_, b) => mix(b / (NB - 1)));
+function hex(c){return [1,3,5].map(i => parseInt(c.slice(i, i + 2), 16));}
+function mix(t){
+  const p = t * (RAMP_STOPS.length - 1), i = Math.min(Math.floor(p), RAMP_STOPS.length - 2), f = p - i;
+  const a = hex(RAMP_STOPS[i]), b = hex(RAMP_STOPS[i + 1]);
+  return "rgb(" + a.map((v, k) => Math.round(v + (b[k] - v) * f)).join(",") + ")";
+}
+
+let D = null, W = [], score = null, ptop = null, ptopK = null, mode = "score";
+let paths = null, topPath = null, stretch = [0, 1], hover = -1;
+const view = {s:1, tx:0, ty:0};
+const cv = $("#cv"), ctx = cv.getContext("2d");
+let tok = {};
+function readTokens(){
+  const cs = getComputedStyle(document.documentElement);
+  for (const k of ["map-bg","excl","nan","hl","fg"]) tok[k] = cs.getPropertyValue("--" + k).trim();
+}
+
+// ---------- data ----------
+function parseCSV(text){
+  const lines = text.split(/\r?\n/).filter(l => l.length);
+  const head = lines[0].split(",").map(s => s.trim().replace(/^"|"$/g, ""));
+  const ix = n => head.indexOf(n);
+  const crit = head.filter(h => h.startsWith("n_")).map(h => h.slice(2));
+  if (ix("h3_index") < 0 && (ix("lat") < 0 || ix("lon") < 0)) throw new Error("o CSV precisa de h3_index (ou lat/lon)");
+  if (!crit.length) throw new Error("nenhuma coluna n_<critério> no CSV");
+  const base = ["h3_index","ibge_code","lat","lon","excluded"];
+  const rawCols = head.filter(h => !h.startsWith("n_") && !base.includes(h));
+  const n = lines.length - 1, m = crit.length;
+  const d = newData(n, crit, rawCols);
+  const ci = crit.map(c => ix("n_" + c)), rc = rawCols.map(ix);
+  const ih = ix("h3_index"), ib = ix("ibge_code"), ila = ix("lat"), ilo = ix("lon"), iex = ix("excluded");
+  for (let i = 0; i < n; i++){
+    const f = lines[i + 1].split(",");
+    d.h3[i] = ih >= 0 ? f[ih] : "";
+    d.ibge[i] = ib >= 0 ? f[ib] : "";
+    if (ila >= 0 && f[ila] !== "") { d.lat[i] = +f[ila]; d.lon[i] = +f[ilo]; }
+    else if (H3 && d.h3[i]) { const [la, lo] = H3.cellToLatLng(d.h3[i]); d.lat[i] = la; d.lon[i] = lo; }
+    const e = iex >= 0 ? f[iex].trim().toLowerCase() : "0";
+    d.excl[i] = (e === "1" || e === "true") ? 1 : 0;
+    for (let a = 0; a < m; a++){ const v = f[ci[a]]; d.X[i * m + a] = (v === undefined || v === "") ? NaN : +v; }
+    for (let a = 0; a < rc.length; a++){ const v = f[rc[a]]; d.raw[i * rc.length + a] = (v === undefined || v === "") ? NaN : +v; }
+  }
+  d.synthetic = false;
+  return d;
+}
+function newData(n, crit, rawCols){
+  return {n, crit, rawCols, h3:new Array(n), ibge:new Array(n), lat:new Float64Array(n), lon:new Float64Array(n),
+    excl:new Uint8Array(n), X:new Float32Array(n * crit.length), raw:new Float32Array(n * rawCols.length)};
+}
+
+function demo(){
+  // Synthetic fields over a plain rectangle: for trying the controls only.
+  const crit = ["gas","power","road","cane","swine","poultry","cattle","demand"];
+  let cells = [];
+  if (H3){
+    cells = H3.polygonToCells([[-23.4,-50.6],[-23.4,-46.6],[-20.9,-46.6],[-20.9,-50.6]], 6);
+  } else {
+    for (let la = -23.4; la < -20.9; la += 0.06) for (let lo = -50.6; lo < -46.6; lo += 0.06) cells.push([la, lo]);
+  }
+  const d = newData(cells.length, crit, []);
+  const bump = (la, lo, cla, clo, r) => Math.exp(-((la - cla) ** 2 + ((lo - clo) * 0.93) ** 2) / (2 * r * r));
+  for (let i = 0; i < cells.length; i++){
+    let la, lo;
+    if (H3){ d.h3[i] = cells[i]; [la, lo] = H3.cellToLatLng(cells[i]); } else { [la, lo] = cells[i]; d.h3[i] = ""; }
+    d.lat[i] = la; d.lon[i] = lo; d.ibge[i] = "exemplo";
+    const v = [
+      0.15 + 0.8 * Math.max(bump(la, lo, -22.9, -47.1, 0.6), bump(la, lo, -22.0, -49.2, 0.35)),
+      0.5 + 0.45 * Math.sin(la * 4.1) * Math.cos(lo * 3.3),
+      0.6 + 0.35 * Math.cos(la * 2.7 + lo * 1.9),
+      0.1 + 0.85 * bump(la, lo, -21.6, -48.4, 0.8),
+      0.05 + 0.9 * bump(la, lo, -22.3, -47.6, 0.3),
+      0.05 + 0.9 * bump(la, lo, -22.7, -48.9, 0.35),
+      0.1 + 0.8 * bump(la, lo, -21.4, -50.0, 0.7),
+      0.05 + 0.9 * bump(la, lo, -23.0, -46.9, 0.45),
+    ];
+    for (let a = 0; a < 8; a++) d.X[i * 8 + a] = Math.min(1, Math.max(0, v[a]));
+    d.excl[i] = (bump(la, lo, -22.4, -49.7, 0.18) > 0.5 || bump(la, lo, -23.2, -47.9, 0.12) > 0.5) ? 1 : 0;
+  }
+  d.synthetic = true;
+  d.r = 0.03;
+  return d;
+}
+
+// ---------- geometry ----------
+function buildGeom(d){
+  let s = 0; for (let i = 0; i < d.n; i++) s += d.lat[i];
+  d.lat0 = s / d.n; d.k = Math.cos(d.lat0 * Math.PI / 180);
+  const useH3 = H3 && d.h3[0];
+  if (!d.r) d.r = 0.012;
+  const off = new Uint32Array(d.n + 1), pts = [];
+  for (let i = 0; i < d.n; i++){
+    off[i] = pts.length / 2;
+    if (useH3 && d.h3[i]){
+      for (const [la, lo] of H3.cellToBoundary(d.h3[i])) pts.push((lo - d.lon[0]) * d.k, -la);
+    } else {
+      const x = (d.lon[i] - d.lon[0]) * d.k, y = -d.lat[i], r = d.r;
+      pts.push(x - r * d.k, y - r, x + r * d.k, y - r, x + r * d.k, y + r, x - r * d.k, y + r);
+    }
+  }
+  off[d.n] = pts.length / 2;
+  d.off = off; d.pts = new Float32Array(pts);
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (let j = 0; j < d.pts.length; j += 2){
+    x0 = Math.min(x0, d.pts[j]); x1 = Math.max(x1, d.pts[j]); y0 = Math.min(y0, d.pts[j + 1]); y1 = Math.max(y1, d.pts[j + 1]);
+  }
+  d.bbox = [x0, y0, x1, y1];
+  d.res = useH3 ? H3.getResolution(d.h3[0]) : null;
+  d.index = new Map(); if (useH3) d.h3.forEach((h, i) => d.index.set(h, i));
+}
+function addPoly(p, i){
+  const a = D.off[i], b = D.off[i + 1];
+  p.moveTo(D.pts[2 * a], D.pts[2 * a + 1]);
+  for (let j = a + 1; j < b; j++) p.lineTo(D.pts[2 * j], D.pts[2 * j + 1]);
+  p.closePath();
+}
+
+// ---------- scoring ----------
+function weightsNorm(){
+  const sum = W.reduce((a, b) => a + b, 0);
+  return sum > 0 ? W.map(w => w / sum) : W.map(() => 0);
+}
+function computeScore(){
+  const m = D.crit.length, w = weightsNorm(), act = [];
+  w.forEach((v, a) => { if (v > 0) act.push(a); });
+  score = new Float32Array(D.n).fill(NaN);
+  if (!act.length) return;
+  for (let i = 0; i < D.n; i++){
+    if (D.excl[i]) continue;
+    let s = 0, ok = true;
+    for (const a of act){ const x = D.X[i * m + a]; if (x !== x){ ok = false; break; } s += w[a] * x; }
+    if (ok) score[i] = s;
+  }
+}
+function quantile(arr, q){
+  const v = Array.from(arr).filter(x => x === x).sort((a, b) => a - b);
+  return v.length ? v[Math.min(v.length - 1, Math.floor(q * (v.length - 1)))] : NaN;
+}
+function topIdx(vals, k){
+  const ids = [];
+  for (let i = 0; i < D.n; i++) if (vals[i] === vals[i]) ids.push(i);
+  ids.sort((a, b) => vals[b] - vals[a]);
+  return ids.slice(0, k);
+}
+
+// ---------- robustness (Dirichlet around current weights) ----------
+function mulberry32(a){ return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function normal(rng){ let u = 0; while (u === 0) u = rng(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rng()); }
+function gamma(alpha, rng){
+  if (alpha < 1){ let u = 0; while (u === 0) u = rng(); return gamma(alpha + 1, rng) * Math.pow(u, 1 / alpha); }
+  const d = alpha - 1 / 3, c = 1 / Math.sqrt(9 * d);
+  for (;;){
+    let x, v; do { x = normal(rng); v = 1 + c * x; } while (v <= 0);
+    v = v * v * v; const u = rng();
+    if (u < 1 - 0.0331 * x ** 4 || Math.log(u) < 0.5 * x * x + d * (1 - v + Math.log(v))) return d * v;
+  }
+}
+let running = false;
+async function runRobust(){
+  if (running || !D) return;
+  const nd = Math.max(20, Math.min(2000, +$("#nd").value | 0));
+  const K = Math.max(1, +$("#topk").value | 0);
+  const conc = Math.max(0.1, +$("#conc").value || 1);
+  const rng = mulberry32(+$("#seed").value | 0);
+  const m = D.crit.length, w = weightsNorm(), act = [];
+  w.forEach((v, a) => { if (v > 0) act.push(a); });
+  if (!act.length){ $("#rstat").textContent = "todos os pesos são 0"; return; }
+  const V = [];
+  for (let i = 0; i < D.n; i++) if (score[i] === score[i]) V.push(i);
+  if (K >= V.length){ $("#rstat").textContent = "top-k maior que o nº de células válidas"; return; }
+  running = true; $("#run").disabled = true;
+  const alpha = act.map(a => w[a] * act.length * conc);
+  const counts = new Uint16Array(D.n), buf = new Float32Array(V.length);
+  for (let t = 0; t < nd; t++){
+    const g = alpha.map(al => gamma(al, rng)), gs = g.reduce((x, y) => x + y, 0);
+    const wd = g.map(x => x / gs);
+    for (let j = 0; j < V.length; j++){
+      const base = V[j] * m; let s = 0;
+      for (let q = 0; q < act.length; q++) s += wd[q] * D.X[base + act[q]];
+      buf[j] = s;
+    }
+    const thr = buf.slice().sort()[V.length - K];
+    for (let j = 0; j < V.length; j++) if (buf[j] >= thr) counts[V[j]]++;
+    if (t % 10 === 9){ $("#rstat").textContent = (t + 1) + "/" + nd; await new Promise(r => setTimeout(r)); }
+  }
+  ptop = new Float32Array(D.n).fill(NaN);
+  for (const i of V) ptop[i] = counts[i] / nd;
+  ptopK = K;
+  let robust = 0; for (const i of V) if (ptop[i] >= 0.5) robust++;
+  $("#rstat").textContent = robust + " células no top-" + K + " em ≥50 % dos sorteios";
+  running = false; $("#run").disabled = false;
+  setMode("robust");
+}
+
+// ---------- render ----------
+function rebuild(){
+  paths = Array.from({length:NB}, () => new Path2D());
+  paths.excl = new Path2D(); paths.nan = new Path2D(); paths.ok = new Path2D();
+  const vals = mode === "robust" ? ptop : score;
+  if (mode === "score") stretch = [quantile(score, 0.02), quantile(score, 0.98)];
+  else stretch = [0, 1];
+  const [lo, hi] = stretch, span = (hi - lo) || 1;
+  for (let i = 0; i < D.n; i++){
+    if (D.excl[i]){ addPoly(paths.excl, i); continue; }
+    if (mode === "excl"){ addPoly(paths.ok, i); continue; }
+    const v = vals ? vals[i] : NaN;
+    if (v !== v){ addPoly(paths.nan, i); continue; }
+    const b = Math.max(0, Math.min(NB - 1, Math.floor((v - lo) / span * NB)));
+    addPoly(paths[b], i);
+  }
+  topPath = new Path2D();
+  for (const i of topIdx(score, 20)) addPoly(topPath, i);
+  legend();
+}
+function resize(){
+  const r = cv.getBoundingClientRect(), dpr = devicePixelRatio || 1;
+  cv.width = Math.max(1, r.width * dpr); cv.height = Math.max(1, r.height * dpr);
+  draw();
+}
+function fit(){
+  if (!D) return;
+  const r = cv.getBoundingClientRect(), [x0, y0, x1, y1] = D.bbox, pad = 20;
+  view.s = Math.min((r.width - 2 * pad) / (x1 - x0), (r.height - 2 * pad) / (y1 - y0));
+  view.tx = (r.width - (x1 - x0) * view.s) / 2 - x0 * view.s;
+  view.ty = (r.height - (y1 - y0) * view.s) / 2 - y0 * view.s;
+  draw();
+}
+function draw(){
+  const dpr = devicePixelRatio || 1;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = tok["map-bg"]; ctx.fillRect(0, 0, cv.width, cv.height);
+  if (!D || !paths) return;
+  ctx.setTransform(dpr * view.s, 0, 0, dpr * view.s, dpr * view.tx, dpr * view.ty);
+  if (mode === "excl"){ ctx.fillStyle = tok.nan; ctx.fill(paths.ok); }
+  else {
+    for (let b = 0; b < NB; b++){ ctx.fillStyle = RAMP[b]; ctx.fill(paths[b]); }
+    ctx.fillStyle = tok.nan; ctx.fill(paths.nan);
+  }
+  ctx.fillStyle = tok.excl; ctx.fill(paths.excl);
+  if (mode !== "excl"){ ctx.strokeStyle = tok.hl; ctx.lineWidth = 1.6 / view.s; ctx.stroke(topPath); }
+  if (hover >= 0){ const p = new Path2D(); addPoly(p, hover); ctx.strokeStyle = tok.fg; ctx.lineWidth = 2.5 / view.s; ctx.stroke(p); }
+}
+function legend(){
+  const el = $("#legend"), f = v => v === v ? v.toFixed(2) : "–";
+  const grad = "linear-gradient(90deg," + RAMP_STOPS.join(",") + ")";
+  const excl = '<span><span class="sw" style="background:var(--excl)"></span>excluída (UC estadual / TI)</span>';
+  if (mode === "excl"){ el.innerHTML = excl + '<span><span class="sw" style="background:var(--nan)"></span>apta à triagem</span>'; return; }
+  const title = mode === "score" ? "Nota ponderada (escala 2–98 %)" : "Fração dos sorteios no top-" + (ptopK ?? "k");
+  el.innerHTML = '<strong style="font-weight:600">' + title + '</strong><div class="ramp" style="background:' + grad + '"></div>' +
+    '<div class="ramp-lab"><span>' + f(stretch[0]) + '</span><span>' + f(stretch[1]) + '</span></div>' + excl +
+    '<span><span class="sw" style="background:var(--nan)"></span>sem valor</span>' +
+    (mode === "score" ? '<span><span class="sw" style="border:1.5px solid var(--hl)"></span>20 melhores</span>' : "");
+}
+
+// ---------- UI ----------
+function buildWeights(){
+  const box = $("#weights"); box.innerHTML = "";
+  W = D.crit.map(() => 5);
+  D.crit.forEach((c, a) => {
+    const row = document.createElement("div"); row.className = "w";
+    row.innerHTML = '<span>' + (LABELS[c] || c) + '</span><input type="range" min="0" max="10" step="1" value="5" aria-label="peso ' + (LABELS[c] || c) + '"><span class="pct"></span>';
+    row.querySelector("input").addEventListener("input", e => { W[a] = +e.target.value; changed(); });
+    box.appendChild(row);
+  });
+  showPct();
+}
+function showPct(){
+  const w = weightsNorm();
+  document.querySelectorAll("#weights .w").forEach((r, a) => {
+    r.querySelector(".pct").textContent = (w[a] * 100).toFixed(1) + " %";
+    r.querySelector("input").value = W[a];
+  });
+}
+let pending = false;
+function changed(){
+  showPct();
+  if (ptop){ ptop = null; ptopK = null; $("#rstat").textContent = "pesos mudaram: rode de novo"; if (mode === "robust") mode = "score"; syncSeg(); }
+  if (pending) return; pending = true;
+  requestAnimationFrame(() => { pending = false; computeScore(); rebuild(); table(); draw(); });
+}
+function table(){
+  const tb = $("#top"); tb.innerHTML = "";
+  topIdx(score, 15).forEach((i, r) => {
+    const tr = document.createElement("tr");
+    const h = D.h3[i] ? D.h3[i].slice(0, 9) + "…" : D.lat[i].toFixed(3) + "," + D.lon[i].toFixed(3);
+    tr.innerHTML = '<td class="n">' + (r + 1) + '</td><td><code>' + h + '</code></td><td>' + (D.ibge[i] || "–") +
+      '</td><td class="n">' + score[i].toFixed(3) + '</td><td class="n">' + (ptop ? ptop[i].toFixed(2) : "–") + "</td>";
+    tr.title = D.h3[i] || "";
+    tr.addEventListener("click", () => centerOn(i));
+    tb.appendChild(tr);
+  });
+}
+function centerOn(i){
+  const r = cv.getBoundingClientRect(), x = (D.lon[i] - D.lon[0]) * D.k, y = -D.lat[i];
+  view.s = Math.max(view.s, 4 / (D.r * 2 + 0.02) * 3);
+  view.tx = r.width / 2 - x * view.s; view.ty = r.height / 2 - y * view.s;
+  hover = i; showTip(i); draw();
+}
+function syncSeg(){ document.querySelectorAll(".seg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === mode)); }
+function setMode(m){
+  if (m === "robust" && !ptop){ $("#rstat").textContent = "rode a robustez primeiro"; return; }
+  mode = m; syncSeg(); rebuild(); table(); draw();
+}
+function showTip(i){
+  const tip = $("#tip");
+  if (i < 0){ tip.hidden = true; return; }
+  const m = D.crit.length, f = v => v === v ? (Math.abs(v) >= 1000 ? Math.round(v).toLocaleString("pt-BR") : v.toFixed(3)) : "–";
+  let s = (D.h3[i] || "") + "\nIBGE " + (D.ibge[i] || "–") + (D.excl[i] ? "   EXCLUÍDA" : "") +
+    "\nnota " + f(score[i]) + (ptop ? "   p top-" + ptopK + " " + f(ptop[i]) : "") + "\n";
+  D.crit.forEach((c, a) => { s += "\n" + (LABELS[c] || c).padEnd(18) + f(D.X[i * m + a]); });
+  if (D.rawCols.length){ s += "\n"; D.rawCols.forEach((c, a) => { s += "\n" + c + " " + f(D.raw[i * D.rawCols.length + a]); }); }
+  tip.textContent = s; tip.hidden = false;
+}
+function pick(ev){
+  if (!D || !D.res) return -1;
+  const r = cv.getBoundingClientRect();
+  const wx = (ev.clientX - r.left - view.tx) / view.s, wy = (ev.clientY - r.top - view.ty) / view.s;
+  const lat = -wy, lon = wx / D.k + D.lon[0];
+  const i = D.index.get(H3.latLngToCell(lat, lon, D.res));
+  return i === undefined ? -1 : i;
+}
+function load(d, label){
+  D = d; ptop = null; ptopK = null; mode = "score"; hover = -1; syncSeg();
+  buildGeom(D); buildWeights(); computeScore(); rebuild(); table(); fit(); showTip(-1);
+  let ex = 0; for (let i = 0; i < D.n; i++) ex += D.excl[i];
+  $("#banner").hidden = !D.synthetic;
+  $("#status").textContent = label + ": " + D.n.toLocaleString("pt-BR") + " células, " + ex.toLocaleString("pt-BR") +
+    " excluídas, " + D.crit.length + " critérios" + (D.res !== null ? ", H3 res " + D.res : (H3 ? "" : " (h3-js indisponível: quadrados)"));
+  $("#rstat").textContent = "";
+}
+
+$("#file").addEventListener("change", e => {
+  const f = e.target.files[0]; if (!f) return;
+  $("#status").textContent = "lendo " + f.name + "…";
+  f.text().then(t => load(parseCSV(t), f.name)).catch(err => { $("#status").textContent = "erro: " + err.message; });
+});
+$("#demo").addEventListener("click", () => load(demo(), "exemplo sintético"));
+$("#eq").addEventListener("click", () => { W = W.map(() => 5); changed(); });
+$("#run").addEventListener("click", runRobust);
+document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+const zoomAt = (fx, cx, cy) => { view.tx = cx - (cx - view.tx) * fx; view.ty = cy - (cy - view.ty) * fx; view.s *= fx; draw(); };
+const mid = () => { const r = cv.getBoundingClientRect(); return [r.width / 2, r.height / 2]; };
+$("#zin").addEventListener("click", () => zoomAt(1.5, ...mid()));
+$("#zout").addEventListener("click", () => zoomAt(1 / 1.5, ...mid()));
+$("#zfit").addEventListener("click", fit);
+cv.addEventListener("wheel", e => { e.preventDefault(); const r = cv.getBoundingClientRect(); zoomAt(Math.exp(-e.deltaY * 0.0015), e.clientX - r.left, e.clientY - r.top); }, {passive:false});
+let drag = null;
+cv.addEventListener("pointerdown", e => { drag = {x:e.clientX, y:e.clientY, moved:false}; cv.setPointerCapture(e.pointerId); cv.style.cursor = "grabbing"; });
+cv.addEventListener("pointermove", e => {
+  if (drag){
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (Math.abs(dx) + Math.abs(dy) > 2) drag.moved = true;
+    view.tx += dx; view.ty += dy; drag.x = e.clientX; drag.y = e.clientY; draw(); return;
+  }
+  const i = pick(e); if (i !== hover){ hover = i; showTip(i); draw(); }
+});
+cv.addEventListener("pointerup", e => {
+  if (drag && !drag.moved && !D?.res){ /* no picking without h3 */ }
+  else if (drag && !drag.moved){ const i = pick(e); hover = i; showTip(i); draw(); }
+  drag = null; cv.style.cursor = "grab";
+});
+new ResizeObserver(resize).observe(cv);
+const retheme = () => { readTokens(); draw(); };
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", retheme);
+new MutationObserver(retheme).observe(document.documentElement, {attributes:true, attributeFilter:["data-theme"]});
+readTokens();
+load(demo(), "exemplo sintético");
+requestAnimationFrame(fit);
+})();
+</script>
+</body>
+</html>

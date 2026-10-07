@@ -74,16 +74,40 @@ def _bounds(values: pd.Series, c: Criterion) -> tuple[float, float]:
     return lo, hi
 
 
+NORMALIZATIONS = ("linear", "percentile")
+
+
+def _percentile(v: pd.Series, ref: pd.Series) -> pd.Series:
+    """Mid-rank share of ``ref`` values below each ``v`` (ties count half), in ``[0, 1]``."""
+    r = np.sort(ref.to_numpy(float))
+    a = v.to_numpy(float)
+    below = np.searchsorted(r, a, side="left")
+    upto = np.searchsorted(r, a, side="right")
+    out = (below + upto) / (2.0 * len(r))
+    return pd.Series(np.where(np.isnan(a), np.nan, out), index=v.index)
+
+
 def normalize(
-    df: pd.DataFrame, criteria: Sequence[Criterion], *, exclude_col: str | None = "excluded"
+    df: pd.DataFrame,
+    criteria: Sequence[Criterion],
+    *,
+    exclude_col: str | None = "excluded",
+    method: str = "linear",
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Normalised criteria in ``[0, 1]`` (1 = best) and the bounds used.
+
+    ``method="linear"`` maps ``lo``..``hi`` to 0..1 (ADR-0016). ``method="percentile"`` gives
+    each cell its mid-rank share among the non-excluded cells, so a criterion concentrated in a
+    few cells (herds, population) does not leave the rest of the state near 0; ``lo``/``hi``
+    are then reported but not used.
 
     Returns:
         ``(norm, bounds)``: ``norm`` has one column per criterion name, same index as ``df``;
         ``bounds`` has one row per criterion with ``column``, ``direction``, ``lo``, ``hi`` and
         ``bounds_from`` (``"criterion"`` or ``"data"``).
     """
+    if method not in NORMALIZATIONS:
+        raise ValueError(f"method must be one of {NORMALIZATIONS}, got {method!r}")
     _check_unique(criteria)
     keep = _kept(df, exclude_col)
     norm = {}
@@ -93,7 +117,11 @@ def normalize(
             raise KeyError(f"{c.name}: column {c.column!r} not in the table")
         v = pd.to_numeric(df[c.column], errors="raise").astype(float)
         lo, hi = _bounds(v[keep].dropna(), c)
-        if hi == lo:
+        if method == "percentile":
+            x = _percentile(v, v[keep].dropna())
+            if c.direction == "lower_better":
+                x = 1 - x
+        elif hi == lo:
             x = pd.Series(np.where(v.isna(), np.nan, 1.0), index=df.index)
         else:
             x = ((v - lo) / (hi - lo)).clip(0, 1)
@@ -108,6 +136,7 @@ def normalize(
                 "lo": lo,
                 "hi": hi,
                 "bounds_from": "criterion" if c.lo is not None and c.hi is not None else "data",
+                "method": method,
                 "note": c.note,
             }
         )

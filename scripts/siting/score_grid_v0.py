@@ -17,6 +17,10 @@ PILAR-2b export + EPE layers, cells at H3 res 7) and writes, next to it:
 Run:  uv run python scripts/siting/score_grid_v0.py <folder holding suitability_grid_v0.parquet>
           [--exclude federal_uc_integral=<FEDERAL_PROTECTED_AREAS_INTEGRAL_PROTECTION_v2.shp>]
 
+``--normalization percentile`` ranks each criterion among non-excluded cells instead of the
+linear 0..p99 scale (ADR-0017); outputs then carry ``_per`` (e.g. ``suitability_map_v0_per.csv``)
+so the linear run is kept for comparison.
+
 ``--exclude label=path`` (repeatable) adds a hard exclusion: cells whose centre lies in a polygon
 of the layer (``engine.siting.exclusions``; needs shapely, pyproj, pyogrio). Use only layers
 with a legal basis and a ``sources.yaml`` entry.
@@ -34,6 +38,7 @@ import h3
 import pandas as pd
 
 from engine.siting.suitability import (
+    NORMALIZATIONS,
     Criterion,
     equal_weights,
     normalize,
@@ -70,7 +75,14 @@ def sha256(p: Path) -> str:
     return h.hexdigest()
 
 
-def main(folder: Path, exclude: dict[str, Path], spacing_km: float, n_sites: int) -> None:
+def main(
+    folder: Path,
+    exclude: dict[str, Path],
+    spacing_km: float,
+    n_sites: int,
+    normalization: str = "linear",
+) -> None:
+    tag = "" if normalization == "linear" else f"_{normalization[:3]}"
     src = folder / "suitability_grid_v0.parquet"
     g = pd.read_parquet(src).set_index("h3_index")
     g["gas_network_km"] = g[GAS_COLS].min(axis=1)
@@ -95,7 +107,7 @@ def main(folder: Path, exclude: dict[str, Path], spacing_km: float, n_sites: int
     for name, col, d in SPEC:
         hi = float(g.loc[keep, col].quantile(P_HI))
         crit.append(Criterion(name, col, d, lo=0.0, hi=hi, note=NOTE))
-    norm, bounds = normalize(g, crit)
+    norm, bounds = normalize(g, crit, method=normalization)
     w = equal_weights(crit)
 
     per_row, draws = weight_sensitivity(
@@ -110,14 +122,14 @@ def main(folder: Path, exclude: dict[str, Path], spacing_km: float, n_sites: int
     oat = one_at_a_time(norm, w, delta=0.2, top_k=TOP_K, excluded=g["excluded"])
 
     out = pd.concat([g[["ibge_code", "excluded"]], norm.add_prefix("n_"), per_row], axis=1)
-    out.to_parquet(folder / "suitability_score_v0.parquet")
-    bounds.to_csv(folder / "suitability_bounds_v0.csv", index=False)
-    oat.to_csv(folder / "suitability_oat_v0.csv", index=False)
-    draws.to_csv(folder / "suitability_draws_v0.csv", index=False)
+    out.to_parquet(folder / f"suitability_score_v0{tag}.parquet")
+    bounds.to_csv(folder / f"suitability_bounds_v0{tag}.csv", index=False)
+    oat.to_csv(folder / f"suitability_oat_v0{tag}.csv", index=False)
+    draws.to_csv(folder / f"suitability_draws_v0{tag}.csv", index=False)
 
     raw_cols = [c for _, c, _ in SPEC]
     top = out.dropna(subset=["rank_base"]).sort_values("rank_base").head(200)
-    top.join(g[raw_cols]).to_csv(folder / "suitability_top_cells_v0.csv")
+    top.join(g[raw_cols]).to_csv(folder / f"suitability_top_cells_v0{tag}.csv")
 
     ok = out.dropna(subset=["score_base"])
     best = ok.loc[ok.groupby("ibge_code")["score_base"].idxmax()]
@@ -131,7 +143,9 @@ def main(folder: Path, exclude: dict[str, Path], spacing_km: float, n_sites: int
     mun["best_cell_h3"] = best.index
     in_top = ok[ok["rank_base"] <= 1000].groupby("ibge_code").size()
     mun["cells_in_top_1000"] = mun["ibge_code"].map(in_top).fillna(0).astype(int)
-    mun.sort_values("best_cell_rank").to_csv(folder / "suitability_municipal_v0.csv", index=False)
+    mun.sort_values("best_cell_rank").to_csv(
+        folder / f"suitability_municipal_v0{tag}.csv", index=False
+    )
 
     # Distinct sites: best cells at least spacing_km apart, by score and by robustness.
     pos = pd.Series(range(len(out)), index=out.index)
@@ -147,7 +161,7 @@ def main(folder: Path, exclude: dict[str, Path], spacing_km: float, n_sites: int
         sel["lat"], sel["lon"] = [lat[i] for i in pick], [lon[i] for i in pick]
         sites.append(sel)
     sites = pd.concat(sites)
-    sites.to_csv(folder / "suitability_sites_spaced_v0.csv")
+    sites.to_csv(folder / f"suitability_sites_spaced_v0{tag}.csv")
 
     # Map input: n_* in [0, 1] + raw values for the tooltip, rounded to keep the file small.
     m = pd.DataFrame(
@@ -163,7 +177,7 @@ def main(folder: Path, exclude: dict[str, Path], spacing_km: float, n_sites: int
         m[f"n_{c}"] = norm[c].round(3).to_numpy()
     for c in raw_cols:
         m[c] = g[c].round(1).to_numpy()
-    m.round({"lat": 5, "lon": 5}).to_csv(folder / "suitability_map_v0.csv", index=False)
+    m.round({"lat": 5, "lon": 5}).to_csv(folder / f"suitability_map_v0{tag}.csv", index=False)
 
     params = {
         "criteria": bounds.to_dict("records"),
@@ -173,13 +187,14 @@ def main(folder: Path, exclude: dict[str, Path], spacing_km: float, n_sites: int
         "seed": SEED,
         "concentration": 1.0,
         "oat_delta": 0.2,
+        "normalization": normalization,
         "spacing_km": spacing_km,
         "n_sites": n_sites,
         "extra_exclusions": {k: v["sha256"] for k, v in extra.items()},
     }
     phash = hashlib.sha256(json.dumps(params, sort_keys=True, default=str).encode()).hexdigest()
     meta = {
-        "run_id": "suitability_v0_" + datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ"),
+        "run_id": f"suitability_v0{tag}_" + datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ"),
         "param_hash": phash,
         "input": {"file": src.name, "sha256": sha256(src)},
         "cells": int(len(g)),
@@ -198,7 +213,9 @@ def main(folder: Path, exclude: dict[str, Path], spacing_km: float, n_sites: int
             + " (cell centre inside)",
         ],
     }
-    (folder / "suitability_score_v0_meta.json").write_text(json.dumps(meta, indent=2, default=str))
+    (folder / f"suitability_score_v0{tag}_meta.json").write_text(
+        json.dumps(meta, indent=2, default=str)
+    )
     print(json.dumps({k: v for k, v in meta.items() if k != "params"}, indent=2))
     print(oat.to_string(index=False))
     cols = ["ibge_code", "score_base", "rank_median", "rank_p05", "rank_p95", "p_top_k"]
@@ -215,6 +232,7 @@ if __name__ == "__main__":
     ap.add_argument("--exclude", action="append", default=[], metavar="LABEL=PATH")
     ap.add_argument("--spacing-km", type=float, default=30.0)
     ap.add_argument("--n-sites", type=int, default=30)
+    ap.add_argument("--normalization", choices=NORMALIZATIONS, default="linear")
     a = ap.parse_args()
     excl = dict(e.split("=", 1) for e in a.exclude)
-    main(a.folder, {k: Path(v) for k, v in excl.items()}, a.spacing_km, a.n_sites)
+    main(a.folder, {k: Path(v) for k, v in excl.items()}, a.spacing_km, a.n_sites, a.normalization)

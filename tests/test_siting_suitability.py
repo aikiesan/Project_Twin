@@ -96,3 +96,17 @@ def test_spaced_selection_skips_close_neighbours():
     assert spaced_selection(lat, lon, [0, 1, 2], min_km=30, n=5) == [0, 2]
     assert spaced_selection(lat, lon, [1, 0, 2], min_km=5, n=2) == [1, 0]
     assert spaced_selection(lat, lon, [2, 0, 1], min_km=200, n=5) == [2]
+
+
+def test_percentile_normalization_uses_mid_ranks_of_kept_cells():
+    norm, bounds = normalize(table(), CRIT, method="percentile")
+    # gas kept values 0, 5, 50, 100 (d excluded); a = 0 has mid-rank 0.5 of 4 -> 0.125
+    assert norm.loc["a", "gas"] == pytest.approx(1 - 0.125)
+    assert norm.loc["c", "gas"] == pytest.approx(1 - 3.5 / 4)
+    # cane kept values 0, 100, 200; the excluded d is placed on the same scale
+    assert norm.loc["c", "cane"] == pytest.approx(2.5 / 3)
+    assert norm.loc["d", "cane"] == pytest.approx(2.5 / 3)
+    assert np.isnan(norm.loc["e", "cane"])
+    assert set(bounds["method"]) == {"percentile"}
+    with pytest.raises(ValueError):
+        normalize(table(), CRIT, method="log")

@@ -379,3 +379,15 @@ The Crossref columns of `papers_for_claude.csv` (fetched on the lead's PC; Cross
   - Cited molasses vinasse COD 82–130 g/L (C29).
 
 **Next:** Fuess 2018 (was still uploading); Melo 2024, Leite 2015, Janke 2016 WM, Kiyuna 2017, Ferraz 2016 when in hand; use `papers_for_claude.csv` to find PDFs behind other `S`/`K` parameters.
+
+### Part 2 — Fuess 2018 and the local data inventory
+
+**Fuess, Garcia & Zaiat 2018 STOTEN** (`fuess2018`, 26 rows):
+- Identity: PDF p. 1 + Buller et al. 2021 reference list (new `buller2021`, identity via PDF p. 1 + Crossref). DOI 10.1016/j.scitotenv.2018.03.326 filled.
+- One annexed SP mill (9.3 Mt cane/harvest), May–Dec 2014. No COD concentration is printed, so `vin_cod` 30 stays `S` (C31).
+- K 2720–4175 mg/L (elemental) with an internal inconsistency (C30); SO₄ 1044–2079 mg/L.
+- Table 1 values 10 L/L, 0.301 and 0.234 Nm³/kg COD removed are cited from Moraes 2014, Fuess 2017a and Ferraz Jr. 2016.
+- TS, VS and vinasse pH not reported.
+
+**Local data inventory (user side, metadata only).** Cell 1 listed 35,594 files in eight data folders (ILUC_NIPE, CP2B, Pilar2b, ArcGIS, …); personal, admin, finance and backup folders were skipped, partner-named paths listed by name only. The kernel lacked `pyogrio`/`rasterio`, so rasters and vector layers were not yet described.
+

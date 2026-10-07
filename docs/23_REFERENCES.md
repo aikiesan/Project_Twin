@@ -22,7 +22,8 @@ Flags: **V** read · **S** seen in search/abstract · **K** prior knowledge. **V
 
 ## Feedstock & supply
 - Moraes, B.S., Zaiat, M., Bonomi, A. (2015). Anaerobic digestion of vinasse from sugarcane ethanol production in Brazil: Challenges and perspectives. *Renewable and Sustainable Energy Reviews* 44:888-903. doi:10.1016/j.rser.2015.01.023 `moraes2015` [two_sources] DOI confirmed through three reference lists; PILAR-2b's .022 is wrong (docs/21 C14). Publisher PDF read twice (ADR-0015, 2026-10-07).
-- Fuess, L.T., Garcia, M.L., Zaiat, M. (2018). Seasonal characterization of sugarcane vinasse: Assessing environmental impacts from fertirrigation and the bioenergy recovery potential through biodigestion. *Science of the Total Environment* 634:29-40. `fuess2018` [one_source]
+- Fuess, L.T., Garcia, M.L., Zaiat, M. (2018). Seasonal characterization of sugarcane vinasse: Assessing environmental impacts from fertirrigation and the bioenergy recovery potential through biodigestion. *Science of the Total Environment* 634:29-40. doi:10.1016/j.scitotenv.2018.03.326 `fuess2018` [two_sources] Publisher PDF read twice (ADR-0015, 2026-10-07); identity also from the reference list of Buller et al. 2021.
+- Buller, L.S. et al. (2021). A spatially explicit assessment of sugarcane vinasse as a sustainable by-product. *Science of the Total Environment* 765:142717. doi:10.1016/j.scitotenv.2020.142717 `buller2021` [two_sources] So far used only as the second identity source for `fuess2018`.
 - de Melo, L.R. et al. (2024). Methane Production from Sugarcane Vinasse Biodigestion: An Efficient Bioenergy and Environmental Solution for the State of São Paulo, Brazil. *Methane* 3(2). doi:10.3390/methane3020017 `melo2024` [one_source]
 - Zheng, Y. et al. (2022). Sugarcane harvest-area maps for Brazil. *ESSD* 14:2065. doi:10.5194/essd-14-2065-2022 [S]
 - Di Tommaso, S. et al. (2024). 10 m sugarcane maps. *ESSD* 16:4931. doi:10.5194/essd-16-4931-2024 [S]

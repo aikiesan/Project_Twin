@@ -91,4 +91,10 @@ Module: `engine.supply.residues`. It is the supply step of the walking skeleton 
 - **Vinasse is generated with the ethanol of the same month.** There is no vinasse storage or lag.
 - **No filter-cake storage.** Off-season months get zero residues; storage belongs to strategy S1 (docs/10 §3), which waits on φ_store (lab E1).
 
-**Not yet implemented:** Steps 1–3 and 6, the manure base-load (PPM herds), Monte Carlo over the coefficients, and the UNICA profile.
+**Manure base-load v0 (2026-10-07):** `engine.supply.manure.manure_potential` turns PPM herds (long table, unit `head`; PILAR-2b `municipality_timeseries`, source `ibge_ppm`) into manure (t FM/yr), VS (t/yr) and CH₄ (Nm³/yr):
+- head × rate per head per day × 365, where a rate in litres is converted with the slurry density;
+- VS = manure × TS × VS/TS; CH₄ theoretical = VS × BMP; CH₄ collectable = theoretical × `collect_frac`.
+
+The collectable share has no default. A species runs only when all its coefficients are in the registry; `missing_coefficients()` lists the gaps (docs/21 Q16). Today swine lacks a slurry density, poultry a per-bird rate, and cattle a herd-average rate. BMP is a laboratory maximum; plant conversion is applied later (docs/10).
+
+**Not yet implemented:** Steps 1–3 and 6, Monte Carlo over the coefficients, and the UNICA profile.

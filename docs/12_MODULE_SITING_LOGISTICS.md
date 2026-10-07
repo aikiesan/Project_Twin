@@ -14,6 +14,13 @@ Choose plant **locations, scales, feedstock contracts, storage and gas-delivery 
 - Soft criteria (score): distance to gas network/city gate, road class, distance to feedstock clusters, land price (IEA-SP VTN), digestate land (cane area within radius, P4.231 capacity).
 - AHP weights optional (for comparison with Paulino et al. 2024) — main model uses explicit costs instead of weights.
 
+#### Screening v0 and the suitability screen (2026-10-07, ADR-0016)
+- **Screening v0** was run on the user's PC from the PILAR-2b SP export (`pilar2b_export_2026-10-07`). Per ethanol mill it computes the straight-line geodesic distance (GRS80, nearest search in EPSG:31983) to gas delivery points, gas pipelines, substations, transmission lines, highways, biogas and biomass thermal plants, protected areas, indigenous territories and INCRA settlements, plus the number of other mills within 30 km. It writes `data/processed/screening_v0/` (mills table, municipal panel, attribute keys, `run_meta.json` with input and output sha256).
+  - These are **not** road distances and are not used for haul costs (Step 3).
+  - First results (160 SP mill records, one of them a duplicate): within 25 km of a gas delivery point 22, of a transport pipeline 34, of a substation 54. The median mill is 0.7 km from a biomass thermal plant (its own cogeneration).
+  - Data issues: gas pipeline layer partial (docs/21 Q17), a Paraná mill labelled SP (C32), a duplicate mill (C33).
+- **Suitability screen** (`engine.siting.suitability`): normalise each criterion to [0, 1] with recorded bounds, weighted linear score, equal weights as baseline, Dirichlet random-weight ranks (median, 5–95 %, share in top k) and a one-at-a-time ±20 % weight check. Hard exclusions need a cited basis; INCRA settlements are a constraint, not an exclusion. The score narrows candidates; Step 5 decides.
+
 ### Step 3 — Routing & OD matrices
 - Graph: OSM Sudeste + DER-SP/DNIT attributes (surface, class) → Valhalla truck costing (weight/axle) or OSRM truck profile.
 - Matrices: feedstock cells/points → candidate sites; sites → injection points/city gates/CNG stations.

@@ -1,0 +1,53 @@
+{
+  "run_id": "suitability_v0_20261007T162025Z",
+  "param_hash": "9d31bcff5be6d0bf0ae601de2556a46c8013b95b794245a31efcc5b6a7552c15",
+  "input": {
+    "file": "suitability_grid_v0.parquet",
+    "sha256": "b744d3ba415f651373b1e46df78fe7da98a81a875008be06ef0407f2492f9073"
+  },
+  "cells": 47273,
+  "excluded": 1884,
+  "scored": 45389,
+  "robust_top_k_cells_p50": 31,
+  "oat_min_top_k_kept": 0.88,
+  "caveats": [
+    "straight-line distances, not road network",
+    "gas layer is a trunk summary (docs/21 Q17)",
+    "municipal cane and herds spread uniformly by area (flag D)",
+    "exclusions v0: state protected areas and indigenous territories only"
+  ]
+}
+criterion change   weight  top_k_kept
+      gas   -20% 0.102564        0.98
+      gas   +20% 0.146341        0.99
+    power   -20% 0.102564        0.99
+    power   +20% 0.146341        0.97
+     road   -20% 0.102564        0.97
+     road   +20% 0.146341        0.97
+     cane   -20% 0.102564        0.97
+     cane   +20% 0.146341        0.96
+    swine   -20% 0.102564        0.88
+    swine   +20% 0.146341        0.95
+  poultry   -20% 0.102564        0.97
+  poultry   +20% 0.146341        0.94
+   cattle   -20% 0.102564        0.98
+   cattle   +20% 0.146341        0.96
+   demand   -20% 0.102564        0.99
+   demand   +20% 0.146341        1.00
+                ibge_code  score_base  rank_median  rank_p05  rank_p95  p_top_k
+h3_index                                                                       
+87a811031ffffff   3554508    0.692757         27.0       1.0   1526.95    0.640
+87a811004ffffff   3554508    0.692262         34.0       2.0   1377.45    0.657
+87a811005ffffff   3554508    0.689750         46.0       4.0   1275.00    0.627
+87a811028ffffff   3554508    0.689139         42.5       1.0   1199.75    0.628
+87a81102bffffff   3554508    0.687671         47.5       2.0   1191.20    0.620
+87a811035ffffff   3554508    0.686986         45.0       2.0   1690.10    0.606
+87a811018ffffff   3554508    0.686445         50.0       2.0   1564.25    0.589
+87a81100effffff   3554508    0.686020         61.0       8.0   1314.00    0.591
+87a811000ffffff   3554508    0.685971         53.0       7.0   1545.10    0.612
+87a81101dffffff   3554508    0.685248         60.0       8.0   1439.75    0.597
+87a81102affffff   3554508    0.684856         59.0       8.0   1253.25    0.585
+87a811001ffffff   3554508    0.684110         65.0      12.0   1402.75    0.579
+87a811006ffffff   3554508    0.683843         59.0       3.0   1690.35    0.569
+87a81101affffff   3542107    0.683225         65.5       1.0   1607.95    0.553
+87a811076ffffff   3554508    0.682533         51.0       2.0   1351.80    0.589

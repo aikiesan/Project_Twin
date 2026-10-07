@@ -39,7 +39,7 @@ Tick boxes as you go. Each phase ends with a **gate** — don't move on until it
 
 ### Weeks 4–6 — Verification led by sensitivity
 - [x] Morris screening (SALib) on the skeleton, for annual CH₄, capacity factor and LCOB — `python -m engine.sensitivity morris` (docs/13 §7, ADR-0014, 2026-10-06); first ranking on a labelled synthetic case, re-run per mill once cane is sourced
-- [ ] Add columns `page, quote, verified_by, verified_on, conditions, price_year, currency` to `parameters.csv`
+- [x] Add columns `page, quote, verified_by, verified_on, conditions, price_year, currency` to `parameters.csv` — done 2026-10-06; value statements per paper in `registry/value_evidence.csv` (ADR-0015)
 - [ ] Verify the top-ranked parameters (target: top 15), in the order of `08_VERIFICATION_PROTOCOL.md` §5 within that set
 - [ ] Normalize `projects_capex.csv` (capacity basis, scope, price year)
 - [ ] Resolve/log all conflicts in `21_RISKS_AND_OPEN_QUESTIONS.md`

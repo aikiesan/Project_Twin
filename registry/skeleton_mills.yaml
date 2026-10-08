@@ -48,3 +48,13 @@ mills:
       ANP reports about zero until Jul 2025, then 30-49 % including off-season months (docs/21
       C6). Expected to be S1-like (stored filter cake): run S0 first to show the gap, then
       --strategy S1 once the storage block is filled.
+      Company annual figures (primary text read 2026-10-08, R11 round 2; docs/21 C40) are the
+      calibration targets: biogas 23.4 / 30.5 / 27.7 / 32.7 M Nm3 and biomethane 4.3 / 7.9 /
+      8.1 / 10.6 M Nm3 in safras 2022/23-2025/26 (Cocal RAS 2022/23 p.52, 2023/24 p.15,
+      2024/25 p.22, 2025/26 p.19; the last page does not name the plant). Feed processed:
+      filter cake 130 / 118 / 155.2 kt and vinasse 1.2 / 1.1 / 1.3 M m3 (2023/24-2025/26,
+      RAS 2023/24 p.24, 2024/25 p.29, 2025/26 p.19); Geo RS 2022/23 p.30 gives 91 / 124 kt and
+      889 / 1,294 k m3 for calendar 2022 / 2023. Co-feeds: cattle manure 5.1 kt, chicken
+      manure 1.9 kt, other waste 4.1 -> 41.7 kt. No straw in any operating report (C36).
+      Flare 2.2 / 5.9 M Nm3 biogas (2024/25, 2025/26). Cane: only group totals (both mills,
+      RAS 2025/26 p.79), so cane_t stays TODO.

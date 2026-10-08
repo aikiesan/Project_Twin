@@ -258,3 +258,42 @@ OUTPUT FORMAT
 - A list of attached files: file name, what it is, URL it came from, SHA-256 if available.
 - Do not write a narrative summary that adds values not in the tables.
 ```
+
+## Triage of the second-round answers (2026-10-08)
+
+**What came in.** A shortened round: Q2–Q5 answered, Q1 and Q6–Q11 returned "not found" (the run stopped before extraction, so "not found" says nothing about the portals). Raw answers, the short report (`00-short-report.md`) and the researcher's `SHA256SUMS.txt` are in `research_notes/raw/2026-10-08_round2/`. The user also uploaded `pdftotext -layout` extractions of the primary PDFs. Pages below are form-feed pages of those texts; they match the printed page numbers. The texts are not committed (whole corporate reports; the IFAMR text carries a download stamp with an IP address). Their SHA-256 are in `research_notes/raw/2026-10-08_round2/SOURCE_TEXTS.sha256`.
+
+**Checks on the package.**
+- The two ANP CSVs in the package have the same SHA-256 as `evidence/` (6cd432e1…852bf75, 1f40f437…3e04a4), and the quoted rows (Narandiba 08/2026 "11596,000"; SP 08/2026 BIOMETANO 5505729.718) are in our files.
+- `cocal_sustainability_2023_2024.pdf` and `cocal_ras_2023-24.pdf` are one file (same SHA-256; the texts are identical). The three Paques PDFs are one file. `geo_sustainability_2022_2023.pdf` = `GEO_RS2022-23_EN_VFinal_11jun24_web.pdf`.
+- The Greenlane PDF hash differs between `SHA256SUMS.txt` (0f8ce451…cbe53426a50a3c…) and the short report's table (0f8ce451…e54c26a50a3c…). One is a transcription error; `SHA256SUMS.txt` is machine output, so it is the one to trust.
+
+**Values read here in the primary text (page + quote recorded).** The reference rows are in `registry/references.csv` but none is double-checked yet (`one_source` or `pending`), so these values carry a caveat in any paper until a second identity source is recorded.
+
+| Value | Basis, period | Source, page | Quote |
+|---|---|---|---|
+| 23.4 M Nm³ biogas, 4.3 M Nm³ biomethane | Narandiba, first year of operation, safra 2022/23 | Cocal RAS 2022/23, p. 52 (also p. 10) | "Em seu primeiro ano de operação, nossa planta gerou 23,4 milhões de normal-metros cúbicos de biogás e 4,3 milhões de normal-metros cúbicos de biometano" |
+| 30.5 M Nm³ biogas, 7.9 M Nm³ biomethane | Cocal, safra 2023/24 (Narandiba is the only biogas plant then) | Cocal RAS 2023/24, p. 15 and p. 26 | "BIOGÁS 30,5 milhões de Nm³" / "BIOMETANO 7,9 milhões de Nm³" |
+| Inputs 130 kt filter cake, 1.2 M m³ vinasse, 1.9 kt chicken manure, 5.1 kt cattle manure, 4.1 kt other waste; outputs 565 k Nm³ pipeline, 4.1 M Nm³ road, 2.4 M Nm³ industrial use, 29.3 k MWh DG, 667 k Nm³ fleet, 40 kt biofertiliser | Narandiba, safra 2023/24 | Cocal RAS 2023/24, p. 24 | "Torta de filtro 130 mil t" … "Vinhaça 1,2 milhão m3" … "Esterco bovino 5,1 mil t" … "PRODUÇÃO DE BIOMETANO 7,9 milhões/Nm3" |
+| 27.66 M Nm³ biogas, 8.1 M Nm³ biomethane ("recorde histórico") | Cocal, safra 2024/25 | Cocal RAS 2024/25, p. 22; p. 32 names Narandiba ("8,10 milhões de Nm3") | "Biogás: 27,66 milhões de Nm³ produzidos" / "Biometano: 8,1 milhões de Nm³ purificados" |
+| Inputs 118 kt filter cake, 1.1 M m³ vinasse, 5.1 kt cattle manure, 1.88 kt chicken manure, 23.7 kt other waste | Narandiba, safra 2024/25 | Cocal RAS 2024/25, p. 29 | "118 mil t Torta de filtro" / "1,1 milhão m³ Vinhaça" |
+| Biogas 27.7 / 32.7 M Nm³; biomethane 8.1 / 10.6 M Nm³; filter cake 118.0 / 155.2 kt; vinasse 1.1 / 1.3 M m³; other waste 23.7 / 41.7 kt; chicken manure 1.9 / 4.0 kt; cattle manure 5.1 kt / 0 t; biogas flared 2.2 / 5.9 M Nm³ | safra 2024/25 / 2025/26; the page does not name the plant | Cocal RAS 2025/26, p. 19 ("Fluxo produtivo do biometano") | "25/26: 10,6 milhões" / "25/26: 32,7 milhões de Nm3" / "25/26: 155,2 mil t" |
+| Paraguaçu Paulista: 127,200 Nm³/d biogas potential, 60,000 Nm³/d biomethane, R$ 216 M (BNDES) | new plant, inaugurated 2025 | Cocal RAS 2025/26, p. 20 | "potencial para gerar 127.200 Nm³/dia de biogás, resultando em uma produção de 60.000 Nm³/dia de biometano" |
+| Cane milled 8,868,098.20 t (2023), 7,689,738.28 t (2024), 8,692,843.82 t (2025) | Cocal group, both mills, calendar years | Cocal RAS 2025/26, p. 79 | "8.868.098,20 t de cana moída; em 2024: … 7.689.738,28 t de cana moída; e, em 2025: … 8.692.843,82 t de cana moída" |
+| 120 k Nm³/d biogas capacity, 26 k Nm³/d biomethane, 5 MW; feed "cake filter and vinasse" | Narandiba, 2022/23 report | Geo RS 2022/23, p. 29 | "Processes waste as cake filter and vinasse in its two vertical and four horizontal biodigestors. The installed capacity is 5 MW of electricity and 26 thousand Nm3/day of biomethane. It has the capacity to generate 120 thousand Nm³/day of biogas." |
+| 3,276 CBIOs in 2023; certification Aug 2023 | Narandiba | Geo RS 2022/23, p. 29 | "In August 2023, after RenovaBio program certification, the plant started issuing CBIOS … In 2023, 3,276 CBIOS were generated." |
+| Biogas 22 / 29 M Nm³; biomethane 3.7 / 7.5 M Nm³; electricity 21 / 27 k MWh; filter cake 91 / 124 kt; vinasse 889 / 1,294 k m³; other waste 2 / 9 kt | Narandiba, calendar 2022 / 2023 | Geo RS 2022/23, p. 30 | "Cocal Performance – Narandiba Unit (SP) in 2022 and 2023" (infographic) |
+| 25,000 m³/day biomethane, 5 MW; feed "vinasse, filter cake and straw"; "5 million tons of cane milled annually" | Narandiba, case study | Franco Martinez et al. 2023, IFAMR 26(2), p. 346 | "installed capacity for 5 MW of electricity and 25,000 m3/day of biomethane. They are used as raw materials: vinasse, filter cake and straw" |
+| PSA upgrading, US$ 1.8 M contract | Grupo Cocal, 7 Jul 2020; Narandiba not named as the site | Greenlane news release, p. 1 | "Greenlane will supply its Pressure Swing Adsorption (“PSA”) biogas upgrading system" |
+| Biogas factory start "início de 2022" | Narandiba | Cocal results 2021/22, p. 3 | "ressaltamos o início de operação da fábrica de Biogás no início de 2022 na unidade de Narandiba" |
+
+**Values relayed but not read here (stay S):** Paques case page (5,200 Nm³/h biogas, 12,000 → < 80 ppmV H₂S, 25,000 Nm³/day biomethane; the Paques PDF text was not uploaded); Geo plant page (26 k Nm³/d, 2 × 8,000 m³ vertical + 4 × 18,000 m³ horizontal digesters, 50 t/d biogenic CO₂); Cocal CO₂ page (16 kt "CO2 verde", no scope or period); ANP SIMP manual (monthly declaration by the 15th; kg at 20 °C and 1 atm, field 9).
+
+**What it changes.**
+1. **The plant produced from 2022.** Company reports give 4.3 M Nm³ biomethane in safra 2022/23 and 7.9 M in 2023/24. ANP's Narandiba series, even ×1000, sums to 0.39 M m³ and 4.2 M m³ of "processed biogas" over the same safras. The thousand-unit hypothesis cannot explain Aug 2022–Aug 2023 (1–3 m³/d) and explains only about half of 2023/24. See docs/21 C40.
+2. **The ANP "processed biogas" field behaves like biomethane at Narandiba.** Safra 2024/25: ANP ×1000 sums to 8.39 M m³ against 8.1 M Nm³ biomethane and 27.7 M Nm³ biogas reported by Cocal. From Aug 2025 (no rescaling needed) the field runs at 11.6–25.4 k m³/d, below the 27,112 m³/d biomethane authorisation and far below the 90 k Nm³/d that 32.7 M Nm³/yr of biogas implies. The yield proxy of docs/13 §8 (×0.525) would then undercount Narandiba. Logged as C40; the ANP unit question (Q9) now has two parts.
+3. **Feed.** Narandiba takes small amounts of manure (cattle 5.1 kt, chicken 1.9 kt in 2023/24) and growing "other waste" (4.1 → 23.7 → 41.7 kt). Vinasse and filter cake dominate. No company report lists straw; the IFAMR case study does. C36 updated.
+4. **Capacity.** ANP's Paraguaçu row (60,000 / 127,200) equals Cocal's Nm³/d figures, which suggests the ANP capacity m³ are on the company's Nm³ basis, at least for authorised capacity. For Narandiba the Geo biogas capacity (120 k Nm³/d) is 2.3× the ANP biogas processing capacity (51,600 m³/d). C37/C39 updated.
+5. **Calibration targets for Narandiba exist now:** annual biogas, biomethane, flare and feed tonnages per safra 2022/23–2025/26. They are better targets than the ANP months before Aug 2025.
+
+**Still open:** Q1 (ANP acts), Q6 (CETESB), Q8 detail (certificate, CI, eligible fraction), Q9 (LRCAP result), Q10 (minimum scale), Q11 (mandate path), and whether the RAS 2025/26 flow chart (p. 19) is Narandiba only (Paraguaçu reports zero to ANP until Apr 2026, so probably yes).

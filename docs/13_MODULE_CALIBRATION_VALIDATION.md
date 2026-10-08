@@ -182,3 +182,10 @@ The rescaled series fits better in most months. It overshoots in Jun–Sep 2024 
 **Rule until ANP answers (Q9).** Keep the flagged months out of the calibration metrics (§6). Report a sensitivity run with them ×1000, labelled as such. Never mix the two in one metric.
 
 Run: `PYTHONPATH=src python -m engine.calibrate.anp_units evidence/anp_biometano_dadosabertos_capacidade_2026-08.csv evidence/anp_biometano_dadosabertos_producao_2026-08.csv --rescale NARANDIBA --start 2023-09 --end 2025-07`.
+
+**Plant-level check against company reports (2026-10-08, R11 round 2).** Cocal and Geo publish Narandiba's annual biogas and biomethane (docs/21 C40). Summed per safra, the ANP field "Volume Processado de Biogás" (flagged months ×1000) gives 0.39, 4.23, 8.39 and 7.61 M m³ for 2022/23–2025/26. The reports give biogas 23.4, 30.5, 27.7, 32.7 M Nm³ and biomethane 4.3, 7.9, 8.1, 10.6 M Nm³. Two consequences:
+
+1. The thousand-unit reading fixes the scale only from about 2024. Aug 2022–Aug 2023 stays about ten times too low even ×1000.
+2. At Narandiba the field tracks biomethane, not biogas. The ×0.525 yield proxy in step 2 then undercounts Narandiba, so the good state-level fit of the rescaled series may be partly a coincidence of two errors. The state check stays a diagnostic, not a proof.
+
+**Rule added.** For Narandiba, calibrate against the company's annual figures (biogas, biomethane, flare, feed tonnages per safra; `registry/skeleton_mills.yaml` notes) and use ANP months only for the seasonal shape from Aug 2025, labelled. Utilisation shares computed as ANP "processed biogas" / biogas capacity (§4 target series) mix bases at Narandiba until ANP answers Q9.

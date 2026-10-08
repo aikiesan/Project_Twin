@@ -34,6 +34,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -241,6 +242,7 @@ def main(
 
 
 if __name__ == "__main__":
+    sys.stdout.reconfigure(encoding="utf-8")  # names with accents survive "> file" on Windows
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("folder", type=Path)
     ap.add_argument("--exclude", action="append", default=[], metavar="LABEL=PATH")

@@ -9,6 +9,39 @@ Choose plant **locations, scales, feedstock contracts, storage and gas-delivery 
 - Default candidates: **every active mill** (annexed plants are the realistic case), plus H3 cells passing suitability for hub plants (manure/sludge/OFMSW clusters).
 - Hub candidates: H3 res 8 centroids filtered by exclusions.
 
+#### Hub coverage: greedy selection with a minimum scale (2026-10-08, ADR-0018)
+- **Question:** how many hubs, and where, collect a given share of the N3 supply if each hub must collect at least q_min? The answer narrows the candidates and gives the coverage curve; Step 5 decides with costs.
+- **Method** (`engine.siting.coverage`): port of the ESD "FL espacial" hub selection (`fl_comum.cobertura_gulosa`, variant B), as described in `docs/inbox/esd_inventory.md` §2 M1. It is a greedy heuristic for the maximal covering location problem (Church & ReVelle 1974, `church1974`).
+  - A source at road distance d from a hub counts with w(d) = 1 up to r1, falling linearly to 0 at r2. The radii are set per material class (liquid, wet solid, dry solid).
+  - Rules (ADR-0018):
+    - each source counts once, at its best open hub;
+    - a hub opens only if it adds at least q_min;
+    - existing plants can be fixed first;
+    - hubs left below q_min after reallocation are closed (`prune`);
+    - a residue can be restricted to some candidate types (straw only to mills).
+  - Outputs of the method:
+    - the curve (hubs for 25–95 % of the supply), read from the greedy trace before pruning;
+    - the upper bound: every candidate whose own catchment reaches q_min (ESD variant A).
+- **Inputs with no default** (docs/21 Q20, Q23): the material class of each residue, r1 and r2 per class, q_min, and the detour factor. The ESD values are in `registry/inbox/esd_parameters.csv` (`fl_r1_*`, `fl_r2_*`, `fl_qmin_*`, flag S, unsourced).
+- **Distances:** routed (`routing.od_matrix`, then `pairs_from_dense`) or the fallback: great-circle distance × a cited detour factor (`sphere_xyz_m`, `fallback_pairs_km`; the rule of `routing.fallback_road_km`).
+- **Script** `scripts/siting/hub_coverage_v0.py` (PC; needs pyogrio, shapely, pyproj). It reads `grade_oferta_1km.gpkg` (`esd_n3_supply_grid_1km`).
+  - Candidates: the non-excluded H3 res-7 cells of a grid parquet, plus the 456 facility points of the gpkg (mills, sewage plants, juice factories).
+  - Supply is summed into 2 km squares (`--source-cell-km`) to bound memory; this moves supply by at most about 1.4 km.
+  - Run `--list` first for the residue names and facility types, then pass `--classes`, `--radius CLASS=R1:R2`, `--q-min`, `--detour-factor` and, for straw, `--only-to PALHA=<mill tipo>`.
+  - Writes `hub_coverage_v0_<scenario><tag>_hubs.csv`: per hub, step, position and collected supply by class.
+  - Writes `_meta.json`: run_id, parameter hash, input sha256, coverage curve, covered shares, upper bound and caveats.
+- **LGPD:** nothing is written per supply cell.
+  - Farm-register residues (poultry, swine, dairy and feedlot cattle) appear only per hub.
+  - A hub's farm part, total and gain are withheld when 1–2 farm cells feed it (k = 3, `withhold_small_counts`).
+  - The state covered share is withheld unless the withheld hubs hold no farm cells or at least 3 together (`cells_behind`).
+- **Limits:**
+  - heuristic (a test case covers 7 where the best pair covers 8);
+  - depends on the candidate grid;
+  - fallback distances only;
+  - existing biogas plants are not in the gpkg and cannot be fixed yet;
+  - not compared with the ESD `mclp.csv` (455 hubs; 16 and 114 hubs for 50 and 80 % with straw at mills) until both run on the same inputs on the PC.
+- **Tests:** `tests/test_siting_coverage.py` (26).
+
 ### Step 2 — Exclusions & suitability (GIS)
 - Hard exclusions (have): protected areas (UC), APP buffers, water bodies, urban areas, steep slopes, flood zones, ZAA "unsuitable".
 - Soft criteria (score): distance to gas network/city gate, road class, distance to feedstock clusters, land price (IEA-SP VTN), digestate land (cane area within radius, P4.231 capacity).

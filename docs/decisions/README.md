@@ -22,3 +22,4 @@ Status values: Proposed · Accepted · Superseded by ADR-XXXX.
 | [0015](ADR-0015-value-evidence-from-pdf-double-read.md) | Value evidence: page and quote per value, read twice from the publisher PDF, audited by a person | Accepted |
 | [0016](ADR-0016-suitability-screen-weighted-with-sensitivity.md) | Suitability screen: hard exclusions, normalised criteria, weighted score, weight sensitivity | Proposed |
 | [0017](ADR-0017-percentile-normalisation-for-skewed-criteria.md) | Feedstock in the suitability screen: one CH₄ criterion, percentile normalisation as an option | Accepted with pending items |
+| [0018](ADR-0018-greedy-hub-coverage-min-scale.md) | Hub coverage: greedy selection with a minimum scale, each source counted once | Proposed |

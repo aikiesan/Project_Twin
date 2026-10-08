@@ -110,7 +110,7 @@ Tick boxes as you go. Each phase ends with a **gate** — don't move on until it
 
 ## PHASE 4 — Siting & supply curve (weeks 20–25)
 
-- [ ] Candidate sites (mills + hub cells) after exclusions
+- [ ] Candidate sites (mills + hub cells) after exclusions — hub coverage v0 (greedy with a minimum scale, ADR-0018, docs/12 Step 1) is built and tested; it runs on the PC once the residue classes, radii and q_min are chosen (docs/21 Q20, Q23)
 - [ ] OD matrices for feedstock and gas delivery; mode costs (grid/TUSD-Verde, CNG, LNG)
 - [ ] Multi-period MILP with storage and process constraints (Pyomo/linopy + HiGHS)
 - [ ] Baseline comparison with Paulino et al. 2024 criteria

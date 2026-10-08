@@ -153,7 +153,8 @@ code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px}
 const $ = s => document.querySelector(s);
 const H3 = (typeof h3 !== "undefined" && h3.cellToBoundary) ? h3 : null;
 const LABELS = {gas:"Rede de gás", power:"Subestação", road:"Rodovia", cane:"Cana (30 km)",
-  swine:"Suínos (30 km)", poultry:"Aves (30 km)", cattle:"Bovinos (30 km)", demand:"População (30 km)"};
+  swine:"Suínos (30 km)", poultry:"Aves (30 km)", cattle:"Bovinos (30 km)", demand:"População (30 km)",
+  ch4:"CH₄ N3 (30 km)"};
 const RAMP_STOPS = ["#440154","#3b528b","#21918c","#5ec962","#fde725"];
 const NB = 32;
 const RAMP = Array.from({length:NB}, (_, b) => mix(b / (NB - 1)));

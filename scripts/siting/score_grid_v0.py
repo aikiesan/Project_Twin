@@ -24,6 +24,9 @@ so the linear run is kept for comparison.
 ``--names <csv|shp>`` adds a ``municipio`` column (IBGE code -> name, e.g. from
 ``municipal_panel_v0.csv``) to the tables, the printout and the map CSV.
 
+``--ch4 <n3_ch4_30km_med.parquet>`` (from ``n3_ch4_30km.py``) replaces the four feedstock
+criteria with one, N3 CH₄ within 30 km (ADR-0017); outputs then carry ``_ch4``.
+
 ``--exclude label=path`` (repeatable) adds a hard exclusion: cells whose centre lies in a polygon
 of the layer (``engine.siting.exclusions``; needs shapely, pyproj, pyogrio). Use only layers
 with a legal basis and a ``sources.yaml`` entry.
@@ -64,6 +67,9 @@ SPEC = [
     ("cattle", "cattle_head_30km", "higher_better"),
     ("demand", "population_30km", "higher_better"),
 ]
+# ADR-0017: with --ch4 these four are replaced by one criterion, N3 CH4 within 30 km.
+FEEDSTOCK = ("cane", "swine", "poultry", "cattle")
+CH4_COL = "ch4_n3_nm3_d_30km"
 GAS_COLS = ["gas_delivery_point_km", "gas_pipeline_transport_km", "gas_pipeline_distribution_km"]
 # Upper bound = 99th percentile of non-excluded cells, so outliers don't flatten the scale.
 P_HI = 0.99
@@ -87,11 +93,17 @@ def main(
     n_sites: int,
     normalization: str = "linear",
     names: Path | None = None,
+    ch4: Path | None = None,
 ) -> None:
-    tag = "" if normalization == "linear" else f"_{normalization[:3]}"
+    tag = ("" if normalization == "linear" else f"_{normalization[:3]}") + ("_ch4" if ch4 else "")
     src = folder / "suitability_grid_v0.parquet"
     g = pd.read_parquet(src).set_index("h3_index")
     g["gas_network_km"] = g[GAS_COLS].min(axis=1)
+    spec = SPEC
+    if ch4 is not None:
+        c = pd.read_parquet(ch4, columns=["h3_index", CH4_COL]).set_index("h3_index")
+        g = g.join(c, how="left")
+        spec = [t for t in SPEC if t[0] not in FEEDSTOCK] + [("ch4", CH4_COL, "higher_better")]
     lat, lon = zip(*(h3.cell_to_latlng(c) for c in g.index), strict=True)
     g["excluded"] = g["excluded"].astype(bool)
     ids = ["ibge_code"]
@@ -115,7 +127,7 @@ def main(
     keep = ~g["excluded"]
 
     crit = []
-    for name, col, d in SPEC:
+    for name, col, d in spec:
         hi = float(g.loc[keep, col].quantile(P_HI))
         crit.append(Criterion(name, col, d, lo=0.0, hi=hi, note=NOTE))
     norm, bounds = normalize(g, crit, method=normalization)
@@ -138,7 +150,7 @@ def main(
     oat.to_csv(folder / f"suitability_oat_v0{tag}.csv", index=False)
     draws.to_csv(folder / f"suitability_draws_v0{tag}.csv", index=False)
 
-    raw_cols = [c for _, c, _ in SPEC]
+    raw_cols = [c for _, c, _ in spec]
     top = out.dropna(subset=["rank_base"]).sort_values("rank_base").head(200)
     top.join(g[raw_cols]).to_csv(folder / f"suitability_top_cells_v0{tag}.csv")
 
@@ -202,6 +214,7 @@ def main(
         "normalization": normalization,
         "spacing_km": spacing_km,
         "n_sites": n_sites,
+        "ch4": None if ch4 is None else sha256(Path(ch4)),
         "extra_exclusions": {k: v["sha256"] for k, v in extra.items()},
     }
     phash = hashlib.sha256(json.dumps(params, sort_keys=True, default=str).encode()).hexdigest()
@@ -215,6 +228,7 @@ def main(
         "names": (
             None if names is None else {"file": Path(names).name, "sha256": sha256(Path(names))}
         ),
+        "ch4": None if ch4 is None else {"file": Path(ch4).name, "sha256": sha256(Path(ch4))},
         "scored": int(out["score_base"].notna().sum()),
         "robust_top_k_cells_p50": int((per_row["p_top_k"] >= 0.5).sum()),
         "oat_min_top_k_kept": float(oat["top_k_kept"].min()),
@@ -222,7 +236,12 @@ def main(
         "caveats": [
             "straight-line distances, not road network",
             "gas layer is a trunk summary (docs/21 Q17)",
-            "municipal cane and herds spread uniformly by area (flag D)",
+            (
+                "feedstock = N3 CH4 within 30 km, CP2b v5.1 (flag D; farm part withheld where"
+                " fewer than k farm cells)"
+                if ch4
+                else "municipal cane and herds spread uniformly by area (flag D)"
+            ),
             "exclusions: state protected areas and indigenous territories"
             + "".join(f", {k}" for k in extra)
             + " (cell centre inside)",
@@ -254,6 +273,11 @@ if __name__ == "__main__":
         type=Path,
         help="IBGE code + name table (e.g. municipal_panel_v0.csv or the IBGE mesh shp)",
     )
+    ap.add_argument(
+        "--ch4",
+        type=Path,
+        help="n3_ch4_30km_<scenario>.parquet: replaces the 4 feedstock criteria (ADR-0017)",
+    )
     a = ap.parse_args()
     excl = dict(e.split("=", 1) for e in a.exclude)
     main(
@@ -263,4 +287,5 @@ if __name__ == "__main__":
         a.n_sites,
         a.normalization,
         a.names,
+        a.ch4,
     )

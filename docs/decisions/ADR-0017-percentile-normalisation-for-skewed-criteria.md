@@ -52,3 +52,14 @@
   - Compresses the peaks, but the transform is an arbitrary choice with no source.
 - **Raise the p99 bound for cane.**
   - Removes the saturation, but leaves the 1-vs-3 structure.
+
+## Notes
+- **2026-10-08, implementation of point 1.** Two pieces:
+  - `engine.siting.catchment.disc_sums`: sums within the radius by convolving the 1 km raster with a disc. It is exact on cell centres, checked against brute force.
+  - `scripts/siting/n3_ch4_30km.py`: reads `grade_oferta_1km.gpkg` (`esd_n3_supply_grid_1km`, both layers, one scenario). It writes `n3_ch4_30km_<scenario>.parquet` with one row per H3 cell.
+- **LGPD in that script.**
+  - The five farm-register residues enter only as 30 km sums.
+  - Where fewer than 3 one-km cells with a farm value fall in the radius, the farm part is withheld and only the non-farm part counts (`farm_suppressed`).
+- **Scoring.** `score_grid_v0.py --ch4 <parquet>` replaces cane, swine, poultry and cattle with the one criterion `ch4`; outputs carry `_ch4`.
+- **Weights.** With equal weights the screen has 5 criteria. Feedstock then weighs 1/5, against 4/8 before, and gas, power and road together weigh 3/5. That baseline is a choice to review with the first real run; the WebGIS sliders show the alternatives.
+

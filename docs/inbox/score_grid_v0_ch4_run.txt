@@ -1,6 +1,6 @@
 {
-  "run_id": "suitability_v0_ch4_20261008T114642Z",
-  "param_hash": "5d31b955ee422dc1c400b95ccc17dc2aa6e7e867b021387953de49cd623909b0",
+  "run_id": "suitability_v0_ch4_20261008T115330Z",
+  "param_hash": "fa902f06dbc82390e62c27895444f64ad0d080c4858b927dbed2dd8cd3ede4de",
   "input": {
     "file": "suitability_grid_v0.parquet",
     "sha256": "b744d3ba415f651373b1e46df78fe7da98a81a875008be06ef0407f2492f9073"
@@ -99,6 +99,44 @@ h3_index
 87a811c2affffff    13   3552205               Sorocaba    0.654781       1972.0    420.90  17675.20    0.015
 87a8183adffffff    14   3538105              Pindorama    0.591979       9216.5    334.45  34894.90    0.014
 87a813345ffffff    15   3530805             Mogi Mirim    0.674066       1996.5    324.95   7812.65    0.009
+
+Score contributions (weight x normalised value) at the spaced sites:
+-- equal_weights
+                 site              municipio  score_base    gas  power   road  demand    ch4
+h3_index                                                                                    
+87a810729ffffff     1              São Paulo       0.849  0.198  0.199  0.197   0.200  0.055
+87a810062ffffff     2              São Paulo       0.825  0.196  0.189  0.197   0.200  0.042
+87a81019dffffff     3            Santo André       0.817  0.194  0.188  0.193   0.200  0.042
+87a810212ffffff     4                Cajamar       0.764  0.194  0.180  0.199   0.163  0.027
+87a811614ffffff     5  Santa Bárbara d'Oeste       0.763  0.199  0.189  0.197   0.038  0.139
+87a810453ffffff     6        Mogi das Cruzes       0.744  0.199  0.191  0.199   0.131  0.025
+87a81ed70ffffff     7          Cordeirópolis       0.715  0.196  0.179  0.184   0.021  0.135
+87a81abb4ffffff     8         Ribeirão Preto       0.712  0.122  0.168  0.198   0.025  0.200
+87a811153ffffff     9              Cerquilho       0.707  0.199  0.193  0.199   0.008  0.108
+87a818caeffffff    10             Araraquara       0.704  0.197  0.195  0.199   0.009  0.105
+87a813b50ffffff    11               Paulínia       0.703  0.198  0.192  0.198   0.063  0.053
+87a81aa63ffffff    12           Pitangueiras       0.697  0.120  0.172  0.199   0.007  0.200
+87a811290ffffff    13             Piracicaba       0.679  0.198  0.163  0.198   0.014  0.106
+87a813361ffffff    14             Mogi Mirim       0.679  0.193  0.193  0.193   0.015  0.085
+87a811420ffffff    15             Indaiatuba       0.672  0.200  0.191  0.199   0.035  0.048
+-- robust
+                 site              municipio  score_base    gas  power   road  demand    ch4
+h3_index                                                                                    
+87a810729ffffff     1              São Paulo       0.849  0.198  0.199  0.197   0.200  0.055
+87a810315ffffff     2                Barueri       0.818  0.198  0.195  0.200   0.200  0.026
+87a81abb4ffffff     3         Ribeirão Preto       0.712  0.122  0.168  0.198   0.025  0.200
+87a81aa63ffffff     4           Pitangueiras       0.697  0.120  0.172  0.199   0.007  0.200
+87a8116c4ffffff     5           Iracemápolis       0.757  0.199  0.187  0.197   0.028  0.147
+87a810184ffffff     6  São Bernardo do Campo       0.809  0.200  0.186  0.198   0.200  0.025
+87a811153ffffff     7              Cerquilho       0.707  0.199  0.193  0.199   0.008  0.108
+87a8184f0ffffff     8                Guariba       0.664  0.153  0.110  0.195   0.009  0.196
+87a818caeffffff     9             Araraquara       0.704  0.197  0.195  0.199   0.009  0.105
+87a81ec2bffffff    10                 Araras       0.709  0.200  0.189  0.198   0.016  0.106
+87a81a345ffffff    11            Morro Agudo       0.650  0.083  0.171  0.197   0.004  0.194
+87a810160ffffff    12             Embu-Guaçu       0.784  0.194  0.197  0.195   0.187  0.012
+87a811c2affffff    13               Sorocaba       0.655  0.200  0.199  0.200   0.031  0.025
+87a8183adffffff    14              Pindorama       0.592  0.130  0.061  0.200   0.006  0.195
+87a813345ffffff    15             Mogi Mirim       0.674  0.196  0.199  0.196   0.013  0.071
 
 N3 CH4 within 30 km (Nm3/d) and shares by residue group (%):
 -- equal_weights

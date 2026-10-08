@@ -99,6 +99,7 @@ def main(
     ch4: Path | None = None,
     drop: tuple[str, ...] = (),
     ch4_scope: str = "all",
+    ch4_gate_q: float | None = None,
 ) -> None:
     given = {f"--exclude {k}": v for k, v in exclude.items()} | {"--names": names, "--ch4": ch4}
     missing = [
@@ -107,8 +108,12 @@ def main(
     if missing:  # an empty shell variable turns into "." or ""
         raise SystemExit("not a file (empty shell variable?): " + "; ".join(missing))
     tag = ("" if normalization == "linear" else f"_{normalization[:3]}") + ("_ch4" if ch4 else "")
-    tag += ("_agro" if ch4 and ch4_scope == "agro" else "") + "".join(
-        f"_no-{d}" for d in sorted(drop)
+    if ch4_gate_q is not None and (ch4 is None or not 0 < ch4_gate_q < 1):
+        raise SystemExit("--ch4-gate-q needs --ch4 and a quantile strictly between 0 and 1")
+    tag += (
+        ("_agro" if ch4 and ch4_scope == "agro" else "")
+        + (f"_gate{round(ch4_gate_q * 100)}" if ch4_gate_q is not None else "")
+        + "".join(f"_no-{d}" for d in sorted(drop))
     )
     src = folder / "suitability_grid_v0.parquet"
     g = pd.read_parquet(src).set_index("h3_index")
@@ -150,6 +155,21 @@ def main(
             "newly_excluded": int((hit & ~g["excluded"]).sum()),
         }
         g["excluded"] |= hit
+    if ch4_gate_q is not None:
+        # Feedstock is a necessary condition, not a tradeable criterion: cells whose CH4
+        # within 30 km is below this quantile (of the cells not yet excluded) are not
+        # candidates. A rank cut-off, not a plant scale: no sourced minimum exists (docs/21 Q19).
+        ch4_col = spec[-1][1]
+        cut = float(g.loc[~g["excluded"], ch4_col].quantile(ch4_gate_q))
+        gate = (g[ch4_col].fillna(0.0) < cut) & ~g["excluded"]
+        g["excl_ch4_gate"] = gate
+        extra["ch4_gate"] = {
+            "column": ch4_col,
+            "quantile": ch4_gate_q,
+            "threshold_nm3_ch4_d_30km": round(cut, 1),
+            "newly_excluded": int(gate.sum()),
+        }
+        g["excluded"] |= gate
     keep = ~g["excluded"]
 
     crit = []
@@ -177,6 +197,8 @@ def main(
     draws.to_csv(folder / f"suitability_draws_v0{tag}.csv", index=False)
 
     raw_cols = [c for _, c, _ in spec] + info
+    if ch4 is not None and CH4_COL not in raw_cols:  # --ch4-scope agro scores another column
+        raw_cols.append(CH4_COL)
     top = out.dropna(subset=["rank_base"]).sort_values("rank_base").head(200)
     top.join(g[raw_cols]).to_csv(folder / f"suitability_top_cells_v0{tag}.csv")
 
@@ -243,7 +265,8 @@ def main(
         "ch4": None if ch4 is None else sha256(Path(ch4)),
         "dropped": sorted(drop),
         "ch4_scope": ch4_scope if ch4 else None,
-        "extra_exclusions": {k: v["sha256"] for k, v in extra.items()},
+        "ch4_gate_q": ch4_gate_q,
+        "extra_exclusions": {k: v.get("sha256", v) for k, v in extra.items()},
     }
     phash = hashlib.sha256(json.dumps(params, sort_keys=True, default=str).encode()).hexdigest()
     meta = {
@@ -332,6 +355,11 @@ if __name__ == "__main__":
         help="agro: leave urban residues (RSU, sewage sludge, prunings) out of the CH4 criterion",
     )
     ap.add_argument(
+        "--ch4-gate-q",
+        type=float,
+        help="cells below this quantile of the CH4 criterion are not candidates (e.g. 0.5)",
+    )
+    ap.add_argument(
         "--drop",
         action="append",
         default=[],
@@ -350,4 +378,5 @@ if __name__ == "__main__":
         a.ch4,
         tuple(a.drop),
         a.ch4_scope,
+        a.ch4_gate_q,
     )

@@ -98,3 +98,19 @@ Module: `engine.supply.residues`. It is the supply step of the walking skeleton 
 The collectable share has no default. A species runs only when all its coefficients are in the registry; `missing_coefficients()` lists the gaps (docs/21 Q16). Today swine lacks a slurry density, poultry a per-bird rate, and cattle a herd-average rate. BMP is a laboratory maximum; plant conversion is applied later (docs/10).
 
 **Not yet implemented:** Steps 1–3 and 6, Monte Carlo over the coefficients, and the UNICA profile.
+## 6. Urban-residue ceiling (2026-10-08)
+- **Why.** The project lead framed urban residues (RSU, sewage sludge) as follows:
+  - they are the fast start: landfill gas capture is already being built in SP;
+  - they have a ceiling and weak long-term stability;
+  - plants rely mainly on agro-industrial residues (ADR-0017 notes).
+  - The question is how large that ceiling is and how few places hold it.
+- **Script.** `scripts/supply/urban_ceiling.py <grade_oferta_1km.gpkg> <grid folder> [--names …]`.
+  - Statewide N3 per residue and scenario for all 16 residues, with the share held by the urban group (RSU_ORGANICO, PODA_URBANA, LODO_ETE).
+  - Urban N3 per municipality, with rank and cumulative share.
+  - The number of municipalities that hold 50, 80 and 90 % of urban N3 med (`engine.supply.concentration`).
+  - Point facilities use their `ibge` field. 1 km cells get the IBGE code of the H3 grid cell of their centroid. Any unassigned urban N3 is reported.
+  - Farm-register residues appear only in the statewide totals (LGPD).
+- **Reading it.** N3 is the CP2b mobilisable CH₄ potential (flag D), in Nm³ CH₄/d.
+  - It is not landfill-gas recovery from existing landfills, which depends on waste age, decay and collection efficiency.
+  - It is not biomethane plant capacity either.
+  - Landfill projects in SP listed in `research_notes/R07_projects_costs_update_2026.md` are news-level (S) and quote biomethane capacity: Orizon Tremembé, Guatapará, Itapevi, the Estre "Piratininga" landfill, and Onebio Paulínia. Compare them with the ceiling as an order of magnitude only, after converting biomethane to CH₄ with a sourced CH₄ content.

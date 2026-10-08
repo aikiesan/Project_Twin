@@ -101,3 +101,160 @@
 > 10. **Minimum viable plant scale (Germany, Sweden)**: peer-reviewed papers or official statistics (DBFZ, Fachverband Biogas, dena biogas register, Energigas Sverige, Swedish Energy Agency) giving the size distribution of biomethane upgrading plants (Nm³/h raw gas or biomethane) and the smallest plants that operate without feed-in support; give DOI, authors, journal, year for every paper.
 >
 > Output: one table per question (columns: value | unit | basis | period | source title | publisher | date | URL | page/table | verbatim quote | PRIMARY/SECONDARY), a conflicts list, a not-found list, and the list of attached files.
+
+## Second-round prompt, self-contained version (2026-10-08)
+
+Supersedes the short second-round prompt above. It carries its own rules and context, so it can be pasted into a tool that has never seen this project.
+
+```text
+ROLE AND PURPOSE
+You are a research assistant collecting evidence for a peer-reviewed techno-economic and
+spatial study of biomethane production in São Paulo State (SP), Brazil (CP2B / NIPE-UNICAMP).
+The study uses the Cocal biomethane plant at the Narandiba sugarcane mill (Narandiba, SP) as its
+reference plant and calibrates a plant model against ANP monthly data. Every number you return
+may end up in a scientific paper, so traceability matters more than coverage. A short answer
+with verifiable sources is better than a long answer with guesses.
+
+RULES (breaking any of them makes the answer unusable)
+1. Never invent or estimate a number, date, name, URL, DOI or document number. If you cannot
+   find something, write "not found" and list the places you searched (sites, portals, queries).
+2. For every value give: value; unit; basis (see rule 4); period; source title; publisher or
+   author; publication date; full URL; page, table, section or paragraph; and a VERBATIM QUOTE
+   in the original language (Portuguese, English, German or Swedish as published).
+3. Mark each value PRIMARY (the regulator, the operator, the supplier or the official
+   statistics body speaking about its own act, plant or data, read in the original document)
+   or SECONDARY (press, association, blog, aggregator or a site reproducing someone else's
+   document). A search-engine snippet or AI summary is never a source: open the document.
+4. Keep these apart and state which one each source means:
+   - biogas (raw, about 50-60 % CH4) vs CH4 vs biomethane (upgraded to the ANP specification);
+   - nameplate / authorised / design capacity vs actual production or throughput;
+   - per day during the harvest vs annual average vs per year;
+   - m³ vs Nm³; give the reference temperature and pressure when stated.
+5. When two sources disagree, report BOTH values with both sources. Do not average, round or
+   choose. Put each disagreement in the conflicts list.
+6. Date every statement. Keep plans and announcements apart from operation.
+7. DOWNLOAD AND ATTACH every primary document you use (PDF, CSV, XLSX, saved HTML), with file
+   name and, if you can compute it, its SHA-256. If a document cannot be downloaded (paywall,
+   HTTP 403, login), say so and give the exact URL and how it can be obtained.
+8. For scientific papers give DOI, all authors (or first author + "et al." if more than six),
+   title, journal, year, volume, pages. Check the DOI resolves to that title.
+9. Do not use or return personal data of private individuals (names of employees, CPFs,
+   personal phone numbers or e-mails). Company names, CNPJs and official acts are fine.
+
+WHAT IS ALREADY KNOWN (to be confirmed or contradicted, not repeated without a source)
+- Operator: COCAL ENERGIA S.A., CNPJ 14.788.495/0001-70, Narandiba-SP. Second plant: COCAL
+  ENERGIA PPT PARTICIPAÇÕES LTDA, CNPJ 44.191.268/0001-23, Paraguaçu Paulista-SP (from the ANP
+  open-data file, read directly).
+- ANP open data ("Biometano_DadosAbertos_CSV_Capacidade.csv", ZIP members dated 2026-09-17),
+  Narandiba: authorised biomethane capacity 27,112.00 m³/d; biogas processing capacity
+  51,600 m³/d; column "Volume Processado de Biogás (m³/d)" = 0-30 every month from Jul 2022 to
+  Jul 2025 (for example 2 in Aug 2022, 14-30 from Sep 2023), then 23,913 in Aug 2025 and
+  11,596 in Aug 2026. Hypothesis under test: the early months were reported in THOUSAND m³/d.
+  Similar small values appear for Biometano Santa Cruz (Américo Brasiliense) and Biometano
+  Verde Paulínia in 2025-2026.
+- Capacity statements that disagree: Cocal "até 25 mil m³/dia"; Geo "26 thousand Nm³/day
+  BIOMETHANE"; ANP act 422/2022 relayed by atosoficiais.com.br as 27,112.8 m³/d (not read).
+- Start dates that disagree: Copersucar (Jul 2021) "começou a operar, em junho", biomethane
+  expected Aug 2021; Cocal "entrou em atividade no final de 2021"; Geo "Opened in 2022";
+  ANP authorisation 422 dated 30/06/2022; ANP authorisation 547/2022 dated 11/08/2022 (relayed).
+- Feedstock: Cocal names vinasse and filter cake; Copersucar (2021) lists 1.5 million m³
+  vinasse, 135 thousand t filter cake and 10 thousand t straw as planned feed; manure and
+  effluent from Granja Shida are stated for the Paraguaçu plant, not Narandiba.
+- CAPEX: Copersucar (2021) R$ 139 million; Cocal later R$ 150 million (Cocal) + R$ 30 million
+  (GasBrasiliano/Necta pipeline, about 65 km).
+- Technology (relayed, not read): Geo, 2 x 8,000 m³ vertical + 4 x 18,000 m³ horizontal
+  digesters; Paques THIOPAQ desulfurisation, H2S 12,000 ppmV in, < 80 ppmV out, biogas flow
+  5,200 Nm³/h (= 124,800 Nm³/d, which is far above ANP's 51,600 m³/d biogas capacity).
+  Upgrading technology unknown. CO2: Cocal sells "CO2 verde" from Narandiba since 2021;
+  Geo states 50 t/day biogenic CO2.
+- LRCAP 2026 (relayed): two plants of 4.6 MW each, UTE COCAL BIOMETANO NRD and UTE COCAL
+  BIOMETANO PPT; NRD in Narandiba with 5 MW installed. The CCEE result PDF returned HTTP 403.
+- Mandate (relayed, not read): Lei 14.993/2024 sets a biomethane participation target for
+  natural gas producers and importers, "base 1 % (2026), up to 10 %"; CNPE Resolução 4/2026 set
+  0.5 % for 2026 (about 181.7 million m³ for 2026/27); the 2027 target is due by 1 Nov 2026.
+  The project lead understands that the target grows gradually to a 10 % maximum in 2035.
+
+QUESTIONS (answer each separately; questions 1, 2, 7 and 11 have priority)
+
+1. ANP authorisations. Full text of Autorização SPC-ANP nº 422, de 30/06/2022 (Cocal Energia
+   S.A.) from the Diário Oficial da União (in.gov.br): DOU section, edition, page, and the
+   authorised capacity with all its decimals and its unit. Do the same for Autorização ANP
+   nº 547/2022, for any later act that changes the Narandiba authorisation, and for the act(s)
+   authorising Cocal Energia PPT Participações Ltda. in Paraguaçu Paulista.
+
+2. ANP reporting unit and definitions. Find any ANP document that defines the fields of the
+   biomethane open data: a data dictionary or metadata file for "Biometano_DadosAbertos_CSV_
+   Capacidade.csv" and "Biometano_DadosAbertos_CSV_Producao.csv", the methodology or FAQ of the
+   "Painel Dinâmico de Produtores de Biometano", or the reporting rules for producers (the
+   regulation that requires the monthly report, the form or system used, e.g. under Resolução
+   ANP nº 734/2018 or its replacement, Resolução ANP nº 987/2025). Report: the unit of "Volume
+   Processado de Biogás (m³/d)"; whether it is a monthly average per day; the reference
+   temperature and pressure of the m³; whether operators ever reported in thousand m³/d; any
+   correction or revision of past months; the unit and basis of "Produção (m³)" in the state
+   file. If nothing is published, give the ANP channel (e-mail, Fala.BR / e-SIC) through which
+   the question can be asked.
+
+3. Paques case page "Cocal Energia" (paquesglobal.com): the complete parameter box, with each
+   label and unit as printed, and whether the biogas flow is a design value or measured; the
+   date of the page or project.
+
+4. Geo Biogás page "Cocal Geo Biogás" (geobiogas.tech), and any Geo presentation or paper on
+   the Narandiba and Paraguaçu units: every number with its label (capacity and its basis,
+   digester number and volumes, reactor type, retention time, organic loading rate, operating
+   temperature, feedstock and its storage, straw pre-treatment, CO2, investment, start date).
+
+5. Upgrading and CO2 recovery at Narandiba: technology (membranes, PSA, water scrubbing, amine,
+   cryogenic) and supplier; methane slip if published; supplier and capacity of the CO2
+   recovery plant; who buys the CO2.
+
+6. CETESB licences of Cocal Energia in Narandiba: type (LP, LI, LO), number, date, validity,
+   licensed capacity and main conditions, from the CETESB licensing portal
+   (licenciamento.cetesb.sp.gov.br) or the Diário Oficial do Estado de São Paulo. The old
+   query URL returned "404 - File or directory not found"; try the current portal search by
+   CNPJ 14.788.495/0001-70 and by municipality.
+
+7. Cane and residues at the Narandiba mill: cane crushed (t) per crop year 2019/20 to 2025/26;
+   ethanol produced (m³, anhydrous and hydrated); vinasse generated (m³) and how much goes to
+   fertirrigation vs to the digesters; filter cake (t); straw recovered from the field (t) and
+   how. Good places: the mill's RenovaBio certification report (public consultation documents
+   of the certifier, ANP RenovaBio panel), Cocal annual or sustainability reports, credit
+   rating reports (Fitch, S&P, Moody's, Austin), debenture or CRA prospectuses, UNICA, MAPA
+   SAPCANA. Keep mill data (Narandiba unit) apart from group totals.
+
+8. RenovaBio certification of the biomethane: certifier, certificate number and dates, route,
+   carbon-intensity score (gCO2e/MJ), eligible volume fraction, validity, renewals, and CBIOs
+   issued if public; the public consultation report if it exists (attach it).
+
+9. CCEE / MME, LRCAP 2026: the official result (CCEE PDF or spreadsheet) listing UTE COCAL
+   BIOMETANO NRD and UTE COCAL BIOMETANO PPT with power offered (MW), fuel, start of supply,
+   contract length and price if public; the MME portaria granting each plant its outorga, with
+   installed power and location.
+
+10. Minimum viable plant scale in Germany and Sweden. Peer-reviewed papers or official
+    statistics that give (a) the size distribution of biogas upgrading / biomethane plants
+    (raw biogas Nm³/h or biomethane Nm³/h) and its change over time; (b) the smallest plants
+    that operate commercially, and whether they rely on feed-in tariffs or other support;
+    (c) cost against scale curves for upgrading and grid injection. Sources to check: DBFZ
+    (Deutsches Biomasseforschungszentrum) reports and the "Biogas-Messprogramm", dena
+    Biogaspartner / biogas register, Fachverband Biogas statistics, Bundesnetzagentur
+    (biomethane injection), Energigas Sverige, Energimyndigheten (Swedish Energy Agency,
+    "Produktion och användning av biogas och rötrester"), IEA Bioenergy Task 37 country reports,
+    and peer-reviewed literature. Give full bibliographic data and DOI for every paper (rule 8).
+
+11. Biomethane mandate path. From the primary texts (Planalto / DOU): Lei nº 14.993/2024
+    ("Combustível do Futuro") — the article(s) on the biomethane participation target for
+    natural gas producers and importers: starting percentage and year, maximum percentage, the
+    year or rule for reaching it, who sets each year's target and how. Decreto nº 12.614/2025 —
+    target setting, allocation and compliance. CNPE Resolução nº 4/2026 — the 2026 target and
+    the volume it implies. Any CNPE resolution or MME consultation setting the 2027 or later
+    targets (published on or after 2026-10-01). Quote the article numbers verbatim.
+
+OUTPUT FORMAT
+- One table per question with columns:
+  value | unit | basis | period | source title | publisher/author | date | URL |
+  page/table/section | verbatim quote | PRIMARY/SECONDARY
+- A conflicts list: each conflict with both values and both sources.
+- A not-found list: what was not found and where you searched.
+- A list of attached files: file name, what it is, URL it came from, SHA-256 if available.
+- Do not write a narrative summary that adds values not in the tables.
+```

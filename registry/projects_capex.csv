@@ -1,7 +1,7 @@
 id,project,location,uf,feedstock,capacity_value,capacity_unit,capacity_basis,investment_total_R$M,bndes_R$M,year,status,source,confidence,notes
 1,Onebio / Biometano Verde Paulínia (Edge + Orizon),Paulínia,SP,landfill gas,225000,Nm3/d,nominal,,449.7,2025-2026,operating (Mar 2026),canalsolar.com.br; eixos.com.br; brasil61,S,BNDES loan only; total CAPEX unknown
 2,Essencis Biometano Caieiras,Caieiras,SP,landfill gas,68000,m3/d,nominal,,93.8,2023,operating,abrema.org.br; eixos.com.br,S,CNG by truck
-3,Cocal plant 1,Narandiba,SP,vinasse + filter cake + straw,25000,m3/d,unclear,150,,2021,operating,forbes.com.br; jornalcana; novacana,S,+R$30M distribution pipeline; ANP cap 27112 m3/d
+3,Cocal plant 1,Narandiba,SP,vinasse + filter cake (straw planned 2021; unconfirmed),25000,m3/d,unclear,150,,2021,operating,cocal.com.br; copersucar.com.br; forbes.com.br; jornalcana; novacana,S,"+R$30M distribution pipeline (65 km); ANP authorised 27112 m3/d biomethane, 51600 m3/d biogas; Geo 26000 Nm3/d; R$139M in Jul 2021 (C37, C38)"
 4,Cocal plant 2,Paraguaçu Paulista,SP,vinasse + filter cake + poultry manure,60000,m3/d,harvest,216,135,2025,operating (Sep 2025),agfeed.com.br; abrema.org.br; cocal.com.br,S,
 5,Raízen Costa Pinto,Piracicaba,SP,vinasse + filter cake,26000000,m3/yr,annual,300,,2022-2025,operating,novacana; revistarpanews,S,ANP lists 130368 m3/d — check basis
 6,São Martinho Santa Cruz,Américo Brasiliense,SP,vinasse,63000,m3/d,harvest (Apr-Nov),250,,2025,start 2H2025,eixos.com.br; jornalcana; argusmedia,S,IFC loan US$165M

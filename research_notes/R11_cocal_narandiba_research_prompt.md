@@ -57,3 +57,30 @@
 > - A separate **conflicts** list: each conflict with both values and both sources.
 > - A **not found** list with the places searched.
 > - A list of primary documents that exist but could not be opened (e.g. paywalled or requiring a request), with how to obtain them.
+
+## Triage of the first answer (2026-10-08)
+
+- **Raw answer:** `research_notes/raw/2026-10-08_cocal_narandiba_deep_research.md`, saved unchanged. It did not have this file, so it did not reconcile the repository table line by line.
+- **Data that came with it:** the ANP open-data CSVs, now in `evidence/` and registered as `anp_biometano_dados_abertos` (V for what the file says). They were read here directly; the CSV quotes in the answer match the file.
+- **Everything else stays S.** The answer quotes web pages (Cocal, Copersucar, Geo, Paques, Necta, eixos, MegaWhat, ABEMA, atosoficiais). None was opened in this repo, and none is a scientific reference, so nothing goes to `references.csv`. A value moves up only after someone opens the page and records the quote.
+
+| Topic | What the answer adds | Where it went |
+|---|---|---|
+| Identity | Cocal Energia S.A., CNPJ 14.788.495/0001-70 (ANP file, V). Paraguaçu: Cocal Energia PPT Participações Ltda., 44.191.268/0001-23 (V). Address Fazenda Gênesis, Estrada Municipal NRD 267 (Cocal contact page, uploaded). No coordinates. | here |
+| Feedstock | Vinasse + filter cake (Cocal). Straw planned in 2021 (10 kt), not confirmed. Manure stated for Paraguaçu, not Narandiba. | docs/21 C36; `projects_capex.csv` row 3 |
+| Capacity | 25,000 m³/d (Cocal), 26,000 Nm³/d (Geo), 27,112 m³/d (ANP file, V), 27,112.8 (act, relayed) | docs/21 C37 |
+| ANP series | Plant series is processed biogas, not biomethane (V). "Zero" months are 1–30 m³/d, probably thousand m³/d. | docs/21 C6, Q9; docs/13 §8 |
+| Digesters | 2 × 8,000 m³ vertical + 4 × 18,000 m³ horizontal (Geo, S). No HRT, OLR or reactor type. | here; candidate for `skeleton_mills.yaml` once read |
+| Gas treatment | Paques THIOPAQ desulfurisation, 12,000 → < 80 ppmV H₂S, 5,200 Nm³/h biogas (S). Upgrading technology not found. | docs/21 C39 |
+| CAPEX | R$ 139 M (2021) vs R$ 150 M + R$ 30 M pipeline | docs/21 C38 |
+| Offtake | Necta/GasBrasiliano isolated pipeline (~65 km), industrial users in Presidente Prudente, Narandiba, Pirapozinho; first client Liane; trucks also mentioned. Paraguaçu ships CNG in cylinders by truck. | here; ADR-0017 market routes |
+| LRCAP | Two UTEs of 4.6 MW, NRD and PPT; NRD in Narandiba, 5 MW installed | docs/21 Q11 |
+| CO₂ | "CO2 verde" from biogas purification at Narandiba since 2021, sold to beverage industry (Cocal); 50 t/d (Geo, basis unclear) | here |
+| Certification | RenovaBio certificate announced 2023, one-year validity; current status not found | here |
+| Not found | Cane crushed, vinasse split, HRT/OLR, straw pre-treatment, storage losses, upgrading technology, annual biomethane output, CBIOs, CETESB licences | stays open |
+
+**Two points for the screen (ADR-0017).**
+- Off-grid is real in this region: Paraguaçu Paulista sells CNG in cylinders by truck. Paraguaçu is also in both robust lists of the no-gas run.
+- Narandiba sells through a dedicated 65 km pipeline built by the distributor. A plant far from the trunk line can still reach a grid if a distributor builds a spur, so distance to the trunk line overstates the barrier.
+
+**Next questions for a second round:** the act 422/2022 text in the DOU; the Paques and Geo pages read directly; CETESB licence numbers (the old endpoint returned 404); the ANP unit used before Aug 2025.

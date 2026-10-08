@@ -158,3 +158,27 @@ Its central outputs are 7.48 × 10⁶ Nm³/yr per 10⁶ t cane, a capacity facto
 - `ts_max_frac`;
 - the S1 storage inputs.
 
+
+## 8. ANP reporting scale check (2026-10-08)
+
+**Why.** The ANP plant series for Cocal Narandiba shows 1–30 m³/d of processed biogas from Aug 2022 to Jul 2025, against a biogas processing capacity of 51,600 m³/d, then 23,913 m³/d in Aug 2025 (C6). §6 drops those months as near zero. If they were reported in thousand m³/d, they are 2–58 % utilisation and hold two more harvests for calibration.
+
+**What the series is.** The capacity file header says "Volume Processado de Biogás (m³/d)" and "Volume Processado/Capacidade (%)". The plant series is processed biogas against biogas processing capacity, which is the basis the skeleton runner already uses (§6). It is not biomethane output. Biomethane production is published only per state and product, in m³ per month.
+
+**Method** (`engine.calibrate.anp_units`, data `anp_biometano_dados_abertos`):
+1. Flag plant-months with 0 < processed biogas < 1 % of biogas capacity.
+2. Convert each SP plant's processed biogas to biomethane with its ratio of authorised biomethane capacity to biogas capacity (Narandiba 27,112 / 51,600 = 0.525). This yield proxy is an assumption (D).
+3. Multiply by the days in the month and sum over SP plants. Compare with the SP "BIOMETANO" production for that month, as published and with the flagged Narandiba months ×1000.
+
+**Result, Sep 2023–Jul 2025 (23 months).**
+
+| | Median ratio to state production | P10–P90 | Mean abs log ratio |
+|---|---|---|---|
+| As published | 0.69 | 0.61–0.92 | 0.33 |
+| Narandiba ×1000 | 1.04 | 0.87–1.53 | 0.19 |
+
+The rescaled series fits better in most months. It overshoots in Jun–Sep 2024 (1.43–1.64), which the yield proxy or other plants may explain. Reading: the thousand-unit hypothesis is supported, not proven. Santa Cruz (16–91 m³/d of 152,440) and Paulínia (18–274 of 480,000) show the same pattern in 2025–2026.
+
+**Rule until ANP answers (Q9).** Keep the flagged months out of the calibration metrics (§6). Report a sensitivity run with them ×1000, labelled as such. Never mix the two in one metric.
+
+Run: `PYTHONPATH=src python -m engine.calibrate.anp_units evidence/anp_biometano_dadosabertos_capacidade_2026-08.csv evidence/anp_biometano_dadosabertos_producao_2026-08.csv --rescale NARANDIBA --start 2023-09 --end 2025-07`.

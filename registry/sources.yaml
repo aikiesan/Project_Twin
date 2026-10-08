@@ -398,6 +398,32 @@ sources:
       ANP open-data files vendored in PILAR-2b; 05c-05f are PILAR-2b derivatives
       (analysis/build_anp_biometano_dataset.py). The URL is the ANP page that script cites; the
       exact open-data dataset URL is not recorded there. All files git-tracked at Pilar-2b 1d24ada5.
+  - id: anp_biometano_dados_abertos
+    name: ANP biomethane open data — plant capacity and processed biogas (monthly), state production (monthly)
+    publisher: ANP (Dados Abertos)
+    url: https://www.gov.br/anp/pt-br/assuntos/producao-e-fornecimento-de-biocombustiveis/biometano/biometano-dados-abertos.zip
+    also: [https://www.gov.br/anp/pt-br/centrais-de-conteudo/paineis-dinamicos-da-anp/paineis-e-mapa-dinamicos-de-produtores-de-combustiveis-e-derivados/painel-dinamico-de-produtores-de-biometano]
+    module: calibrate
+    local_path: evidence/anp_biometano_dadosabertos_capacidade_2026-08.csv
+    sha256: 6cd432e1ca14e831dc8b2673b286cc2df86d60e7f349819f88c11972a852bf75
+    also_files:
+      evidence/anp_biometano_dadosabertos_producao_2026-08.csv: 1f40f43779849623abe7cd0f1838813798920bd2616fbc4cd943902c1c3e04a4
+    accessed: '2026-10-08'
+    spatial: per plant (capacity file); per state (production file)
+    temporal: monthly 2020-01 to 2026-08
+    access: open
+    license: TODO verify ANP open-data license
+    status: have
+    confidence: V
+    notes: >-
+      Downloaded by the project lead on 2026-10-08 from the ZIP named in the deep-research output
+      (research_notes/raw/2026-10-08_cocal_narandiba_deep_research.md; the output says the ZIP members
+      are dated 2026-09-17). The ZIP URL is as relayed there; the panel page URL is from the saved
+      gov.br page. Capacity file: 22 plants, header "Volume Processado de Biogás (m³/d)" and
+      "Volume Processado/Capacidade (%)", so the plant series is processed biogas against biogas
+      processing capacity, not biomethane output. Decimal comma in the capacity file, decimal dot
+      in the production file. Same structure as the PILAR-2b vendored copy (anp_biomethane_plants),
+      newer by four months. Reporting-scale check: engine.calibrate.anp_units (docs/13 §8).
   - id: mme_boletim_gn
     name: MME Boletim Mensal de Acompanhamento da Indústria de Gás Natural
     publisher: MME

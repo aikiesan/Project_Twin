@@ -27,9 +27,12 @@ def read_names(path: Path) -> pd.DataFrame:
     """``ibge_code`` (int, SP only) and ``name``, one row per municipality.
 
     Raises:
+        FileNotFoundError: ``path`` is not a file (e.g. an empty variable gave ".").
         KeyError: no code or no name column among :data:`CODE_COLS` / :data:`NAME_COLS`.
     """
     path = Path(path)
+    if not path.is_file():
+        raise FileNotFoundError(f"names file not found: {str(path)!r} (empty shell variable?)")
     if path.suffix.lower() == ".csv":
         df = pd.read_csv(path, dtype=str)
     else:

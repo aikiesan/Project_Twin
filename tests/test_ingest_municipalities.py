@@ -25,3 +25,8 @@ def test_missing_name_column_is_explicit(tmp_path):
     pd.DataFrame({"ibge_code": ["3554508"], "label": ["x"]}).to_csv(p, index=False)
     with pytest.raises(KeyError, match="name column"):
         read_names(p)
+
+
+def test_read_names_missing_file(tmp_path):
+    with pytest.raises(FileNotFoundError):
+        read_names(tmp_path)

@@ -114,3 +114,29 @@ The collectable share has no default. A species runs only when all its coefficie
   - It is not landfill-gas recovery from existing landfills, which depends on waste age, decay and collection efficiency.
   - It is not biomethane plant capacity either.
   - Landfill projects in SP listed in `research_notes/R07_projects_costs_update_2026.md` are news-level (S) and quote biomethane capacity: Orizon Tremembé, Guatapará, Itapevi, the Estre "Piratininga" landfill, and Onebio Paulínia. Compare them with the ceiling as an order of magnitude only, after converting biomethane to CH₄ with a sourced CH₄ content.
+- **First run (2026-10-08, `docs/inbox/urban_ceiling_run.txt`; gpkg sha256 c4bfbc72…).** All values are N3 in Nm³ CH₄/d (flag D).
+
+  | | min | med | max |
+  |---|---:|---:|---:|
+  | Urban (RSU + sludge + prunings) | 123,235 | **652,196** | 2,412,750 |
+  | All residues | 7,731,272 | 19,183,201 | 43,872,898 |
+  | Urban share | 1.6 % | **3.4 %** | 5.5 % |
+
+  - Urban med by residue: RSU_ORGANICO 442,516, LODO_ETE 140,906, PODA_URBANA 68,774.
+  - Concentration (med):
+    - São Paulo alone holds 141,147, which is 21.7 % of the urban total;
+    - 21 municipalities hold 50 %, 104 hold 80 % and 193 hold 90 %, out of 645 with urban N3.
+    - 1,846 of the med total could not be assigned to a municipality.
+  - For comparison, cane residues give 15.5 M med: straw 8.25 M, filter cake 2.58 M, vinasse 2.42 M, bagasse 2.24 M. That is about 24 times the urban ceiling.
+- **Order-of-magnitude check against announced landfill projects in SP.**
+  - Biomethane capacities, all S (news), from `R07`:
+    - Onebio Paulínia: 180,000 initially, up to 300,000 (docs/21 lists the 180k/225k/300k conflict);
+    - Tremembé: 32,400;
+    - Itapevi: ≥ 25,000 (offtake minimum);
+    - "Piratininga": about 25,000;
+    - Guatapará: not split from a 170,000 total shared with a PR plant.
+  - Without Guatapará, these add to about 262,000–382,000 Nm³/d of biomethane. That is roughly 40–60 % of the urban N3 med, before converting biomethane to CH₄ (needs a sourced CH₄ content).
+  - The two numbers measure different things:
+    - a landfill draws on the waste stock of past decades and on a catchment of many municipalities;
+    - N3 is today's mobilisable flow.
+  - So the comparison supports the project lead's reading only as an order of magnitude: the urban ceiling is small (3.4 % of N3) and the announced landfill projects already cover a large part of it.

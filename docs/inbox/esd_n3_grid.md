@@ -37,11 +37,11 @@ An older copy, `outputs_v5.0_bak/grade_oferta_1km.gpkg` (63,725,568 bytes), is t
 |---|---:|---:|---:|
 | `celulas` | 4,830,862 | 11,691,311 | 27,662,312 |
 | `pontos` | 2,900,410 | 7,491,890 | 16,210,586 |
-| **Both** | 7,731,272 | **19,183,201** | 44,872,898 |
+| **Both** | 7,731,272 | **19,183,201** | 43,872,898 |
 
 The med total matches N3 med = 19.183 M Nm³ CH₄/d in `outputs_v5/artigo/T1_state_levels.csv`.
 
-`BOV_PASTO_MISTO` is not in the grid. `config_fl.yaml` line 102 marks it `ignorar`: N3 = 0 in min and med, and the max keeps the yaml FL. So the max total above is 87,771 Nm³/d short of T1's 44,960,669.
+`BOV_PASTO_MISTO` is not in the grid. `config_fl.yaml` line 102 marks it `ignorar`: N3 = 0 in min and med, and the max keeps the yaml FL. So the max total above is 1,087,771 Nm³/d short of T1's 44,960,669. *Correction 2026-10-08:* this note first gave the max total as 44,872,898 and the gap as 87,771. 27,662,312 + 16,210,586 = 43,872,898, and `urban_ceiling.py` sums the gpkg max to 43,872,898.1 (`docs/inbox/urban_ceiling_run.txt`). Whether `BOV_PASTO_MISTO` alone explains the 1.09 M gap in T1's max has not been checked.
 
 ## 3. What feeds each residue (from `config_fl.yaml` lines 88–105 and `02_oferta.py`)
 

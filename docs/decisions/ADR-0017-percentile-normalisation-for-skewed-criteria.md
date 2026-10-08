@@ -116,3 +116,17 @@
   - **Input from the project lead (2026-10-08).** Sewage sludge and urban organic waste (RSU) are the fastest, most practical start; covering a landfill and capturing the gas it already makes is simple. But they are weak on long-term stability, planning and solid structures. The project depends mainly on the flow of agro-industrial residues.
     - `score_grid_v0.py --ch4-scope agro` scores CH₄ without the urban group (RSU, sludge, prunings). Outputs carry `_agro`.
   - **Proposed default, pending the agro runs:** CH₄ scope `agro`, linear scale, `demand` out of the default weighting (kept as a map layer and as an option).
+- **2026-10-08, agro scope and feedstock gate (`docs/inbox/score_grid_v0_ch4_agro*_run.txt`).**
+  - **`--ch4-scope agro` with `demand`.** The metro still leads (São Paulo, Barueri, São Bernardo, Guarulhos), with agro CH₄ contributing 0.000–0.002. Under a compensatory weighted sum, a cell with no feedstock can rank first on infrastructure and population alone.
+  - **`--ch4-scope agro --drop demand`.** The equal-weight list is agro-industrial. But the robust list still holds infrastructure-only cells (Sorocaba, Cruzeiro, Jandira, Cubatão, Aparecida, agro CH₄ ≤ 0.02): Dirichlet draws sometimes give CH₄ almost no weight. OAT minimum 0.64.
+  - **Feedstock as a necessary condition: `--ch4-gate-q 0.5`.** Cells below the median of agro CH₄ within 30 km are not candidates.
+    - The threshold is 187,498 Nm³/d. The gate removes 22,663 cells and leaves 22,664 scored.
+    - Both spaced lists are now agro-industrial: Iracemápolis, Pitangueiras, Cerquilho, Ribeirão Preto, Araraquara, Araras, Mogi Mirim, then Birigui, Salto, Macatuba, Jaboticabal, Lençóis Paulista and Andradina.
+    - OAT minimum 0.59: the top 100 is a plateau, but the regions are stable across lists.
+    - The quantile is a rank cut-off, not a plant scale: no sourced minimum scale exists (Q_min in the ESD is unsourced, docs/21 Q19).
+  - **Recommended default for the project lead to confirm:**
+    - CH₄ scope `agro`;
+    - `demand` out of the score (map layer only);
+    - feedstock gate at the median, with 0.25 and 0.75 as sensitivity;
+    - linear scale.
+  - The urban ceiling is quantified separately (docs/09 §6).

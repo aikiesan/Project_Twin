@@ -152,3 +152,12 @@
     1. Straw: run `--ch4-scope agro_no_straw` as sensitivity and compare the lists.
     2. Gas weight: the gas layer is incomplete (Q17) and the off-grid route does not need it, so run `--drop gas` as sensitivity before fixing its weight.
     3. Minimum scale: replace the rank gate by a sourced minimum CH₄ within 30 km once Q20 has an answer.
+- **2026-10-08, sensitivity runs of the default (`docs/inbox/score_agro*_run.txt`).**
+  - **Default re-run** (`--ch4-scope agro --drop demand --ch4-gate-q 0.5`): same output as the earlier gated run apart from the run_id; the screen is reproducible.
+  - **Pending item 1, straw (`agro_no_straw`): not run.** The CH₄ parquet predates the straw split, so the script stopped with "re-run n3_ch4_30km.py" as designed.
+  - **Pending item 2, gas (`--drop gas`):** run `suitability_v0_ch4_agro_gate50_no-demand_no-gas_20261008T131338Z`.
+    - Robustness rises: robust top-k cells 47 (25 with gas), OAT minimum 0.88 (0.59).
+    - The lists move to the cane core. Morro Agudo first (p_top_k 0.98), then Ribeirão Preto, Jaboticabal, Macatuba, Assis, Paraguaçu Paulista and Lençóis Paulista. Iracemápolis, Cerquilho, Araraquara and Araras stay in the top 15, lower down.
+    - With gas, the gas criterion gives the cane core 0.136–0.193 (Pitangueiras, Ribeirão Preto, Macatuba, Jaboticabal) against about 0.25 on the Piracicaba–Campinas–Sorocaba axis. The axis leads partly because the trunk-line layer passes there (docs/21 Q17).
+    - Paraguaçu Paulista, where Cocal runs its second plant, is in both robust lists (R07 row 4). This is a plausibility check, not validation.
+    - Reading: the gas weight decides which of the two agro regions leads. Grid access favours the axis, the off-grid route the core. The project lead considers both routes plausible, so both lists are kept until the gas layer is improved or the market route is fixed per region.

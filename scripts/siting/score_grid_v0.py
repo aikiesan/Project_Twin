@@ -95,6 +95,12 @@ def main(
     names: Path | None = None,
     ch4: Path | None = None,
 ) -> None:
+    given = {f"--exclude {k}": v for k, v in exclude.items()} | {"--names": names, "--ch4": ch4}
+    missing = [
+        f"{k} {str(v)!r}" for k, v in given.items() if v is not None and not Path(v).is_file()
+    ]
+    if missing:  # an empty shell variable turns into "." or ""
+        raise SystemExit("not a file (empty shell variable?): " + "; ".join(missing))
     tag = ("" if normalization == "linear" else f"_{normalization[:3]}") + ("_ch4" if ch4 else "")
     src = folder / "suitability_grid_v0.parquet"
     g = pd.read_parquet(src).set_index("h3_index")

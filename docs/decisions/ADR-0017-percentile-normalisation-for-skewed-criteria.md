@@ -84,3 +84,18 @@
     - Urban land is not yet an exclusion.
     - Open question 19 in `docs/21`.
   - Follow-up in code: `n3_ch4_30km.py` now also writes the non-farm part split into cane, urban and other agro groups. `score_grid_v0.py --ch4` prints the shares for the spaced sites. Status stays Proposed until the metro question is settled.
+- **2026-10-08, residue-group breakdown (`docs/inbox/score_grid_v0_ch4_run.txt`, commit 58b4ef7).** This refutes the urban-CH₄ hypothesis above.
+  - Metro sites (São Paulo, Santo André, Barueri, São Bernardo, Cajamar, Mogi das Cruzes, Embu-Guaçu):
+    - N3 CH₄ within 30 km is 44,000–202,000 Nm³/d;
+    - 87–100 % of it is urban residue;
+    - that is near or below the grid median of 181,750.
+  - Cane-belt sites (Ribeirão Preto, Pitangueiras, Guariba, Morro Agudo, Pindorama):
+    - 716,000–924,000 Nm³/d, 94–97 % cane;
+    - several are above the P99 bound (728,931), so the CH₄ criterion **saturates again** in the belt, as cane did.
+  - The metro therefore leads on the other four criteria: gas, power, road and population.
+    - Under equal weights over 5 criteria, these four carry 4/5.
+    - A full CH₄ score in the belt cannot offset them.
+  - New tools to measure this:
+    - `score_grid_v0.py` now prints each criterion's contribution (weight × normalised value) at the spaced sites;
+    - `--drop <criterion>` runs the screen without one criterion (outputs carry `_no-<criterion>`).
+  - Next runs to compare: with and without `demand`, and with `--normalization percentile`, which removes the P99 cap.

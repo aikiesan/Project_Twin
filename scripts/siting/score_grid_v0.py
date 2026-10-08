@@ -94,6 +94,7 @@ def main(
     normalization: str = "linear",
     names: Path | None = None,
     ch4: Path | None = None,
+    drop: tuple[str, ...] = (),
 ) -> None:
     given = {f"--exclude {k}": v for k, v in exclude.items()} | {"--names": names, "--ch4": ch4}
     missing = [
@@ -102,6 +103,7 @@ def main(
     if missing:  # an empty shell variable turns into "." or ""
         raise SystemExit("not a file (empty shell variable?): " + "; ".join(missing))
     tag = ("" if normalization == "linear" else f"_{normalization[:3]}") + ("_ch4" if ch4 else "")
+    tag += "".join(f"_no-{d}" for d in sorted(drop))
     src = folder / "suitability_grid_v0.parquet"
     g = pd.read_parquet(src).set_index("h3_index")
     g["gas_network_km"] = g[GAS_COLS].min(axis=1)
@@ -112,6 +114,10 @@ def main(
         info = [k for k in c.columns if k.startswith("ch4_n3_") and k != CH4_COL]
         g = g.join(c[[CH4_COL, *info]], how="left")
         spec = [t for t in SPEC if t[0] not in FEEDSTOCK] + [("ch4", CH4_COL, "higher_better")]
+    unknown = set(drop) - {t[0] for t in spec}
+    if unknown or len(drop) >= len(spec):
+        raise SystemExit(f"--drop: unknown criteria {sorted(unknown)} or none left")
+    spec = [t for t in spec if t[0] not in drop]
     lat, lon = zip(*(h3.cell_to_latlng(c) for c in g.index), strict=True)
     g["excluded"] = g["excluded"].astype(bool)
     ids = ["ibge_code"]
@@ -223,6 +229,7 @@ def main(
         "spacing_km": spacing_km,
         "n_sites": n_sites,
         "ch4": None if ch4 is None else sha256(Path(ch4)),
+        "dropped": sorted(drop),
         "extra_exclusions": {k: v["sha256"] for k, v in extra.items()},
     }
     phash = hashlib.sha256(json.dumps(params, sort_keys=True, default=str).encode()).hexdigest()
@@ -266,6 +273,15 @@ def main(
     for name in orders:
         sub = sites[sites["list"] == name].head(15)
         print(f"-- {name}\n" + sub[["site", *cols]].to_string())
+    # What each criterion adds to the score of the spaced sites: weight x normalised value.
+    contrib = norm.mul(pd.Series(w, index=norm.columns)).round(3)
+    print("\nScore contributions (weight x normalised value) at the spaced sites:")
+    for name in orders:
+        sub = sites[sites["list"] == name].head(15)
+        tab = pd.concat(
+            [sub[["site", *ids[1:], "score_base"]].round(3), contrib.loc[sub.index]], axis=1
+        )
+        print(f"-- {name}\n" + tab.to_string())
     if info:
         parts = [k for k in info if k != "ch4_n3_nonfarm_nm3_d_30km"]
         short = [k.removeprefix("ch4_n3_").removesuffix("_nm3_d_30km") + "_%" for k in parts]
@@ -296,6 +312,13 @@ if __name__ == "__main__":
         type=Path,
         help="n3_ch4_30km_<scenario>.parquet: replaces the 4 feedstock criteria (ADR-0017)",
     )
+    ap.add_argument(
+        "--drop",
+        action="append",
+        default=[],
+        metavar="CRITERION",
+        help="leave a criterion out (sensitivity run); outputs carry _no-<criterion>",
+    )
     a = ap.parse_args()
     excl = dict(e.split("=", 1) for e in a.exclude)
     main(
@@ -306,4 +329,5 @@ if __name__ == "__main__":
         a.normalization,
         a.names,
         a.ch4,
+        tuple(a.drop),
     )

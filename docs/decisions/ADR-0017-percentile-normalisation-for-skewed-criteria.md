@@ -1,6 +1,6 @@
 # ADR-0017 — Feedstock in the suitability screen: one CH₄ criterion, percentile normalisation as an option
 
-- **Status:** Proposed
+- **Status:** Accepted with pending items (2026-10-08)
 - **Date:** 2026-10-07
 - **Deciders:** project lead
 
@@ -130,3 +130,25 @@
     - feedstock gate at the median, with 0.25 and 0.75 as sensitivity;
     - linear scale.
   - The urban ceiling is quantified separately (docs/09 §6).
+- **2026-10-08, decision by the project lead: accepted with pending items.**
+  - **Provisional default:**
+    - CH₄ scope `agro`, straw included;
+    - `demand` out of the score (map layer only);
+    - feedstock gate at the median of agro CH₄ within 30 km (`--ch4-gate-q 0.5`), with 0.25 and 0.75 as sensitivity;
+    - linear scale.
+  - **Straw dominates the agro scope.** Statewide N3, medium scenario: agro scope (total minus urban) is 18,531,005 Nm³ CH₄/d.
+    - Straw (PALHA) is 44.5 %, filter cake 13.9 %, vinasse 13.1 %, bagasse 12.1 %.
+    - Cane residues are 83.6 %, and straw is 53.3 % of them.
+    - Lignocellulosic residues (cane straw, bagasse, maize and soy straw) are 63.8 %; vinasse plus filter cake 27.0 %; farm residues 8.3 %.
+    - `n3_ch4_30km.py` now writes straw, vinasse + cake and bagasse as separate groups, so site-level shares can be read after a re-run.
+  - **The project lead's inputs** (expert judgement, not yet sourced; each needs a reference before it enters a paper):
+    - Straw is lignocellulosic. It needs co-digestion with liquid residues and is hard to haul, but baling and storage can make it worth it. Pre-treatment is basic, like the CSTR itself: it secures quality and potential, it is not an obstacle. Straw therefore stays in the default.
+    - Bagasse and straw are also used for cogeneration. But Brazil has an electricity surplus, with curtailment at peak hours, so cogeneration does not rule out the biogas route.
+    - Reference plant: Cocal Narandiba. A deep-research prompt for every detail of the plant is in `research_notes/R11_cocal_narandiba_research_prompt.md`.
+    - Both market routes are plausible: grid (injection points, city gates, pipelines replacing transport fuel) and off-grid (cylinders, local use in agro-industry, local and regional use of the CO₂).
+    - No access to a more detailed gas network than the layers already held (docs/21 Q17).
+    - No minimum plant scale is defined; German and Swedish references are needed to bound a real viable minimum (docs/21 Q20).
+  - **Pending items:**
+    1. Straw: run `--ch4-scope agro_no_straw` as sensitivity and compare the lists.
+    2. Gas weight: the gas layer is incomplete (Q17) and the off-grid route does not need it, so run `--drop gas` as sensitivity before fixing its weight.
+    3. Minimum scale: replace the rank gate by a sourced minimum CH₄ within 30 km once Q20 has an answer.

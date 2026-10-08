@@ -71,8 +71,9 @@ SPEC = [
 FEEDSTOCK = ("cane", "swine", "poultry", "cattle")
 CH4_COL = "ch4_n3_nm3_d_30km"
 URBAN_COL = "ch4_n3_urban_nm3_d_30km"
+STRAW_COL = "ch4_n3_straw_nm3_d_30km"
 AGRO_COL = "ch4_n3_agro_nm3_d_30km"  # all residues minus the urban group (RSU, sludge, prunings)
-CH4_SCOPES = ("all", "agro")
+CH4_SCOPES = ("all", "agro", "agro_no_straw")
 GAS_COLS = ["gas_delivery_point_km", "gas_pipeline_transport_km", "gas_pipeline_distribution_km"]
 # Upper bound = 99th percentile of non-excluded cells, so outliers don't flatten the scale.
 P_HI = 0.99
@@ -111,7 +112,7 @@ def main(
     if ch4_gate_q is not None and (ch4 is None or not 0 < ch4_gate_q < 1):
         raise SystemExit("--ch4-gate-q needs --ch4 and a quantile strictly between 0 and 1")
     tag += (
-        ("_agro" if ch4 and ch4_scope == "agro" else "")
+        (f"_{ch4_scope.replace('_', '-')}" if ch4 and ch4_scope != "all" else "")
         + (f"_gate{round(ch4_gate_q * 100)}" if ch4_gate_q is not None else "")
         + "".join(f"_no-{d}" for d in sorted(drop))
     )
@@ -125,11 +126,12 @@ def main(
         info = [k for k in c.columns if k.startswith("ch4_n3_") and k != CH4_COL]
         g = g.join(c[[CH4_COL, *info]], how="left")
         col = CH4_COL
-        if ch4_scope == "agro":  # project lead 2026-10-08: agro-industrial residues carry the plant
-            if URBAN_COL not in g:
-                raise SystemExit(f"--ch4-scope agro needs {URBAN_COL}: re-run n3_ch4_30km.py")
-            g[AGRO_COL] = g[CH4_COL] - g[URBAN_COL]
-            col = AGRO_COL
+        if ch4_scope != "all":  # project lead 2026-10-08: agro-industrial residues carry the plant
+            need = [URBAN_COL] + ([STRAW_COL] if ch4_scope == "agro_no_straw" else [])
+            if any(k not in g for k in need):
+                raise SystemExit(f"--ch4-scope {ch4_scope} needs {need}: re-run n3_ch4_30km.py")
+            col = AGRO_COL if ch4_scope == "agro" else f"ch4_n3_{ch4_scope}_nm3_d_30km"
+            g[col] = g[CH4_COL] - g[need].sum(axis=1)
         spec = [t for t in SPEC if t[0] not in FEEDSTOCK] + [("ch4", col, "higher_better")]
     unknown = set(drop) - {t[0] for t in spec}
     if unknown or len(drop) >= len(spec):
@@ -352,7 +354,8 @@ if __name__ == "__main__":
         "--ch4-scope",
         choices=CH4_SCOPES,
         default="all",
-        help="agro: leave urban residues (RSU, sewage sludge, prunings) out of the CH4 criterion",
+        help="agro: leave urban residues (RSU, sewage sludge, prunings) out of the CH4 criterion; "
+        "agro_no_straw: also leave cane straw out (sensitivity)",
     )
     ap.add_argument(
         "--ch4-gate-q",

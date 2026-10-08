@@ -39,7 +39,9 @@ from engine.siting.catchment import disc_sums
 FARM = ("AVES_CORTE", "AVES_POSTURA", "SUINOS", "BOV_LEITE", "BOV_CONFINADO")
 # Non-farm residue groups for the breakdown columns; a residue in no group goes to "other".
 GROUPS = {
-    "cane": ("BAGACO", "PALHA", "TORTA_FILTRO", "VINHACA"),
+    "straw": ("PALHA",),  # lignocellulosic, needs pre-treatment and co-digestion
+    "vinasse_cake": ("VINHACA", "TORTA_FILTRO"),
+    "bagasse": ("BAGACO",),
     "urban": ("RSU_ORGANICO", "LODO_ETE", "PODA_URBANA"),
 }
 CELL_M = 1000.0  # grade.celula_oferta_m in the ESD config_fl.yaml

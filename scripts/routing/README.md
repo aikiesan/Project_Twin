@@ -24,3 +24,6 @@ Limits/caveats
 - `max-table-size` in `docker-compose.routing.yml` must match `od_matrix(max_table_size=...)`.
 - SP statewide H3 res-8 cells with cane × all mills is large: compute per mill within a
   buffer (e.g. the Huff `d_max`) rather than the full matrix.
+- Fallback detour factor (`road_detour_factor_*`, ESD): its denominator may be the EPSG:5880
+  straight line rather than the great circle. `python scripts/routing/polyconic_vs_great_circle.py`
+  (with `PYTHONPATH=src`) estimates the gap in SP (docs/21 Q24).

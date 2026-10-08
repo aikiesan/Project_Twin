@@ -67,7 +67,7 @@ Choose plant **locations, scales, feedstock contracts, storage and gas-delivery 
 - Matrices: feedstock cells/points → candidate sites; sites → injection points/city gates/CNG stations.
 - Cost per t·km by material (vinasse/digestate liquid tanker; filter cake/manure solid; CNG/LNG trailers) from ANTT cost methodology + ESALQ-LOG freight; payloads from CONTRAN 882/2021.
 
-- **Road/straight-line detour factor (SP).** Median 1.295 (P10 1.152, P90 1.641) over 5,000 OD pairs on the OSM Sudeste road graph, falling from 1.442 at 1–5 km to 1.267 at 40–60 km (`road_detour_factor_*`, flag D, source `esd_fl_espacial_outputs`). Use it only where `engine.siting.routing.fallback_road_km` is explicitly allowed; routed distances stay the rule.
+- **Road/straight-line detour factor (SP).** Median 1.295 (P10 1.152, P90 1.641) over 5,000 OD pairs on the OSM Sudeste road graph, falling from 1.442 at 1–5 km to 1.267 at 40–60 km (`road_detour_factor_*`, flag D, source `esd_fl_espacial_outputs`). Use it only where `engine.siting.routing.fallback_road_km` is explicitly allowed; routed distances stay the rule. Its denominator (EPSG:5880 straight line or great circle) is open: docs/21 Q24 estimates the gap at 0.1 % (median) to 1.3 % in SP.
 
 ### Step 4 — Delivery mode
 | Mode | Cost elements |

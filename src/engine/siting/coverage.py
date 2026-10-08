@@ -79,7 +79,8 @@ def sphere_xyz_m(lat_deg: np.ndarray, lon_deg: np.ndarray) -> np.ndarray:
     ``s`` of :func:`engine.siting.routing.haversine_km` times sin(x)/x, x = s / 2R: shorter by
     less than 4e-6 (relative) up to 60 km. Pass them to :func:`fallback_pairs_km` so that the
     detour factor multiplies the distance it was measured against (``road_detour_factor_*``:
-    road km per great-circle km).
+    road km per great-circle km as registered; the ESD denominator may be the EPSG:5880 straight
+    line, docs/21 Q24).
     """
     lat = np.radians(np.asarray(lat_deg, float))
     lon = np.radians(np.asarray(lon_deg, float))

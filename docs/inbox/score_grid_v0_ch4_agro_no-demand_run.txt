@@ -1,5 +1,5 @@
 {
-  "run_id": "suitability_v0_ch4_agro_no-demand_20261008T120050Z",
+  "run_id": "suitability_v0_ch4_agro_no-demand_20261008T121946Z",
   "param_hash": "a4ddc52b8bb914a69bb805f06d9c5c3fe1309936782dc12060912b64a65b9bd3",
   "input": {
     "file": "suitability_grid_v0.parquet",

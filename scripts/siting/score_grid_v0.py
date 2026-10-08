@@ -70,6 +70,9 @@ SPEC = [
 # ADR-0017: with --ch4 these four are replaced by one criterion, N3 CH4 within 30 km.
 FEEDSTOCK = ("cane", "swine", "poultry", "cattle")
 CH4_COL = "ch4_n3_nm3_d_30km"
+URBAN_COL = "ch4_n3_urban_nm3_d_30km"
+AGRO_COL = "ch4_n3_agro_nm3_d_30km"  # all residues minus the urban group (RSU, sludge, prunings)
+CH4_SCOPES = ("all", "agro")
 GAS_COLS = ["gas_delivery_point_km", "gas_pipeline_transport_km", "gas_pipeline_distribution_km"]
 # Upper bound = 99th percentile of non-excluded cells, so outliers don't flatten the scale.
 P_HI = 0.99
@@ -95,6 +98,7 @@ def main(
     names: Path | None = None,
     ch4: Path | None = None,
     drop: tuple[str, ...] = (),
+    ch4_scope: str = "all",
 ) -> None:
     given = {f"--exclude {k}": v for k, v in exclude.items()} | {"--names": names, "--ch4": ch4}
     missing = [
@@ -103,7 +107,9 @@ def main(
     if missing:  # an empty shell variable turns into "." or ""
         raise SystemExit("not a file (empty shell variable?): " + "; ".join(missing))
     tag = ("" if normalization == "linear" else f"_{normalization[:3]}") + ("_ch4" if ch4 else "")
-    tag += "".join(f"_no-{d}" for d in sorted(drop))
+    tag += ("_agro" if ch4 and ch4_scope == "agro" else "") + "".join(
+        f"_no-{d}" for d in sorted(drop)
+    )
     src = folder / "suitability_grid_v0.parquet"
     g = pd.read_parquet(src).set_index("h3_index")
     g["gas_network_km"] = g[GAS_COLS].min(axis=1)
@@ -113,7 +119,13 @@ def main(
         c = pd.read_parquet(ch4).set_index("h3_index")
         info = [k for k in c.columns if k.startswith("ch4_n3_") and k != CH4_COL]
         g = g.join(c[[CH4_COL, *info]], how="left")
-        spec = [t for t in SPEC if t[0] not in FEEDSTOCK] + [("ch4", CH4_COL, "higher_better")]
+        col = CH4_COL
+        if ch4_scope == "agro":  # project lead 2026-10-08: agro-industrial residues carry the plant
+            if URBAN_COL not in g:
+                raise SystemExit(f"--ch4-scope agro needs {URBAN_COL}: re-run n3_ch4_30km.py")
+            g[AGRO_COL] = g[CH4_COL] - g[URBAN_COL]
+            col = AGRO_COL
+        spec = [t for t in SPEC if t[0] not in FEEDSTOCK] + [("ch4", col, "higher_better")]
     unknown = set(drop) - {t[0] for t in spec}
     if unknown or len(drop) >= len(spec):
         raise SystemExit(f"--drop: unknown criteria {sorted(unknown)} or none left")
@@ -230,6 +242,7 @@ def main(
         "n_sites": n_sites,
         "ch4": None if ch4 is None else sha256(Path(ch4)),
         "dropped": sorted(drop),
+        "ch4_scope": ch4_scope if ch4 else None,
         "extra_exclusions": {k: v["sha256"] for k, v in extra.items()},
     }
     phash = hashlib.sha256(json.dumps(params, sort_keys=True, default=str).encode()).hexdigest()
@@ -313,6 +326,12 @@ if __name__ == "__main__":
         help="n3_ch4_30km_<scenario>.parquet: replaces the 4 feedstock criteria (ADR-0017)",
     )
     ap.add_argument(
+        "--ch4-scope",
+        choices=CH4_SCOPES,
+        default="all",
+        help="agro: leave urban residues (RSU, sewage sludge, prunings) out of the CH4 criterion",
+    )
+    ap.add_argument(
         "--drop",
         action="append",
         default=[],
@@ -330,4 +349,5 @@ if __name__ == "__main__":
         a.names,
         a.ch4,
         tuple(a.drop),
+        a.ch4_scope,
     )

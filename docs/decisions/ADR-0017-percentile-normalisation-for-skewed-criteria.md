@@ -99,3 +99,20 @@
     - `score_grid_v0.py` now prints each criterion's contribution (weight × normalised value) at the spaced sites;
     - `--drop <criterion>` runs the screen without one criterion (outputs carry `_no-<criterion>`).
   - Next runs to compare: with and without `demand`, and with `--normalization percentile`, which removes the P99 cap.
+- **2026-10-08, three runs compared (`docs/inbox/score_grid_v0_ch4_run.txt`, `…_ch4_no-demand_run.txt`, `…_per_ch4_run.txt`; commit fd6bd16).** Contributions are weight × normalised value.
+  - **Default (linear, 5 criteria).** The metro leads on `demand`.
+    - São Paulo, Barueri and São Bernardo each get the full 0.200 from population.
+    - The cane belt gets 0.004–0.025 from population. It gets the full 0.200 from CH₄, against 0.025–0.055 in the metro.
+    - Gas, power and road are near 0.2 almost everywhere. Gas is lower only in the belt: 0.083–0.153 at Morro Agudo, Pitangueiras, Ribeirão Preto and Guariba.
+  - **Without `demand` (`--drop demand`).** The spaced lists turn agro-industrial:
+    - Iracemápolis or Santa Bárbara d'Oeste first, then Cerquilho, Araraquara, Araras, Pitangueiras and Ribeirão Preto;
+    - Jaboticabal, Guariba and Morro Agudo in the top 15;
+    - São Paulo falls to 12th (equal weights) and 7th (robust).
+    - Robustness drops: OAT minimum 0.72 (0.96 before), robust top-k cells 22 (49 before). The top is a flatter plateau.
+  - **Percentile (`--normalization percentile`).** The Piracicaba–Campinas–Sorocaba axis leads (Santa Bárbara d'Oeste, Araras, Cerquilho, Araraquara).
+    - Population in percentile gives mid-sized towns nearly the full 0.2.
+    - The cane belt does not gain: Ribeirão Preto ranks 11th and Pontal 14th, robust list.
+    - Percentile removes the P99 cap but rewards modest population. It does not help the belt.
+  - **Input from the project lead (2026-10-08).** Sewage sludge and urban organic waste (RSU) are the fastest, most practical start; covering a landfill and capturing the gas it already makes is simple. But they are weak on long-term stability, planning and solid structures. The project depends mainly on the flow of agro-industrial residues.
+    - `score_grid_v0.py --ch4-scope agro` scores CH₄ without the urban group (RSU, sludge, prunings). Outputs carry `_agro`.
+  - **Proposed default, pending the agro runs:** CH₄ scope `agro`, linear scale, `demand` out of the default weighting (kept as a map layer and as an option).

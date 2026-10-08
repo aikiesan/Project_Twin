@@ -140,3 +140,34 @@ The collectable share has no default. A species runs only when all its coefficie
     - a landfill draws on the waste stock of past decades and on a catchment of many municipalities;
     - N3 is today's mobilisable flow.
   - So the comparison supports the project lead's reading only as an order of magnitude: the urban ceiling is small (3.4 % of N3) and the announced landfill projects already cover a large part of it.
+
+## 7. Supply tiers against the mandate path (2026-10-08)
+
+**Question from the project lead.** The plants now starting take the fast, easy feedstocks: landfill gas, vinasse and filter cake. Those have a low ceiling. The mandate grows from 0.5 % (CNPE Res. 4/2026) towards the 10 % maximum of Lei 14.993/2024; the project lead dates the 10 % to 2035 (to verify in the law and its regulation, docs/21 Q21). Is the quick-win route enough, or does scale need lignocellulosic residues, cane straw above all?
+
+**Method.**
+- Supply: statewide N3, medium scenario, per residue (`docs/inbox/urban_ceiling_run.txt`), grouped into tiers by how easy the feedstock is to start with. N3 is the mobilisable CH₄ potential if every unit is collected and converted (flag D). It is a ceiling, not a forecast.
+- Mandate scale: CNPE Res. 4/2026 gives about 505,000 m³/d of biomethane for 0.5 % (docs/16 §1, S). That implies a national base of about 101 M m³/d of natural gas (D = 505,000 / 0.005). At a constant base, 10 % is about 10.1 M m³/d. The base will change with gas demand.
+- The two quantities are not on the same basis (Nm³ CH₄ against m³ of biomethane with unstated reference conditions). The comparison is an order of magnitude only.
+
+**Result.** SP N3 med by tier, cumulative, in M Nm³ CH₄/d and as % of the implied national base:
+
+| Tier (added in order) | Tier | Cumulative | Cumulative % of national base |
+|---|---|---|---|
+| Urban (RSU, sludge, prunings) | 0.65 | 0.65 | 0.6 |
+| Vinasse + filter cake | 5.00 | 5.65 | 5.6 |
+| Farm (poultry, cattle, swine) | 1.53 | 7.18 | 7.1 |
+| Citrus bagasse + coffee husk | 0.18 | 7.36 | 7.3 |
+| Cane bagasse (competes with cogeneration) | 2.24 | 9.60 | 9.5 |
+| Maize and soy straw | 1.33 | 10.94 | 10.8 |
+| Cane straw | 8.25 | 19.18 | 19.0 |
+
+**Reading.**
+- Even with every unit of the easy tiers captured (urban, vinasse, cake), SP reaches about 5.6 % of the national base. With farm residues, about 7 %. Reaching 10 % from SP alone needs bagasse and crop straws, and in practice cane straw, because full capture of the other tiers will not happen.
+- Cane straw is the largest single block (43 % of N3), and the one no SP plant is confirmed to digest yet (Narandiba: vinasse and filter cake only, docs/21 C36).
+- Actual SP biomethane production in Aug 2026 was 5.51 M m³ in the month, about 178,000 m³/d (ANP open data, V). That is about 0.9 % of N3 med, and about 0.18 % of the implied national base.
+- The mandate is national. SP's share of it is not fixed by any rule read so far, so the table says what SP could cover, not what it must.
+
+**Consequences for the model.**
+- Keep cane straw in the default supply and siting scope (ADR-0017), with straw logistics, pre-treatment and storage as explicit cost items (docs/10, docs/11). The no-straw run is the "quick-win ceiling" scenario.
+- The supply curve (docs/19 Phase 3) should show the tiers in the same order, so the mandate overlays (0.5 %, the 2027 target, 1 %, 10 %) show where each tier runs out.

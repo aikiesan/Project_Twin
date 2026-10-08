@@ -4,7 +4,8 @@ ANP open data (`anp_biometano_dados_abertos` in registry/sources.yaml) has two f
 
 - ``Biometano_DadosAbertos_CSV_Capacidade.csv``: per plant and month, authorised biomethane
   capacity (m³/d), biogas processing capacity (m³/d), **processed biogas** (m³/d) and
-  processed / capacity (%). It is a biogas figure, not biomethane output.
+  processed / capacity (%). The label says biogas; at Cocal Narandiba the annual sums track the
+  biomethane the company reports, not its biogas (docs/21 C40). No data dictionary defines it.
 - ``Biometano_DadosAbertos_CSV_Producao.csv``: biomethane production (m³ per month) per state
   and product. It does not name plants.
 
@@ -17,14 +18,25 @@ The conversion uses each plant's ratio of authorised biomethane capacity to biog
 capacity as its upgrading yield. That is an assumption (flag D), good for an order-of-magnitude
 test only. The result is evidence for or against a hypothesis; it does not correct ANP data.
 
-Run:
+A second check works plant by plant: :func:`plant_period_check` sums a plant's ANP months over
+each period that the owner reports (safra or calendar year, ``registry/plant_reported_annual.csv``)
+and compares the sums with the reported biogas and biomethane. ANP m³ have no stated reference
+conditions; the reports use Nm³ (0 °C). The ratios ignore that difference (about 7 % if ANP used
+20 °C).
+
+Run (plants keyed on CNPJ: Cocal Narandiba 14788495000170, Cocal Paraguaçu Paulista
+44191268000123):
     PYTHONPATH=src python -m engine.calibrate.anp_units CAPACIDADE.csv PRODUCAO.csv \
-        --uf "São Paulo" --rescale NARANDIBA --start 2023-09 --end 2025-07
+        --uf "São Paulo" --rescale NARANDIBA --start 2023-09 --end 2025-07 \
+        --reported registry/plant_reported_annual.csv \
+        --plant sp_cocal_narandiba=14788495000170 \
+        --plant sp_cocal_narandiba_paraguacu=14788495000170+44191268000123
 """
 
 from __future__ import annotations
 
 import argparse
+from collections.abc import Sequence
 from pathlib import Path
 
 import numpy as np
@@ -43,6 +55,9 @@ CAP_COLS = [
     "processed_pct",
 ]
 PROD_COLS = ["month", "region", "state", "product", "production_m3_month"]
+
+#: Reported gas quantities compared with the ANP sums (``plant_reported_annual.csv``, Nm³).
+REPORTED_GAS = ("biogas_produced", "biogas_to_upgrading", "biomethane_produced")
 
 
 def _br_number(s: pd.Series) -> pd.Series:
@@ -122,6 +137,102 @@ def state_check(
     return out
 
 
+def read_reported(path: Path | str) -> pd.DataFrame:
+    """``plant_reported_annual.csv`` with ``value`` as float and the months as periods."""
+    df = pd.read_csv(path, dtype=str, keep_default_na=False)
+    df["value"] = df["value"].astype(float)
+    for c in ("start_month", "end_month"):
+        df[c] = pd.PeriodIndex(df[c], freq="M")
+    return df
+
+
+def plant_rows(cap: pd.DataFrame, keys: str | Sequence[str]) -> pd.DataFrame:
+    """ANP rows of the plants named by ``keys``.
+
+    A key is a 14-digit CNPJ (the facility key, CLAUDE.md §3) or a municipality name. A
+    municipality is accepted only when all its ANP rows carry one CNPJ, so that it cannot mix
+    plants (in the 2026-08 file, CAMPOS NOVOS and SAO PAULO hold two each).
+
+    Raises:
+        ValueError: if a key has no ANP rows, or a municipality key holds several CNPJs.
+    """
+    keys = [keys] if isinstance(keys, str) else list(keys)
+    mask = np.zeros(len(cap), dtype=bool)
+    for k in keys:
+        if k.isdigit() and len(k) == 14:
+            m = (cap["cnpj"] == k).to_numpy()
+        else:
+            m = (cap["municipality"] == k).to_numpy()
+            n = cap.loc[m, "cnpj"].nunique()
+            if n > 1:
+                raise ValueError(
+                    f"municipality {k!r} has {n} CNPJs in ANP; key the plant on its CNPJ"
+                )
+        if not m.any():
+            raise ValueError(f"no ANP rows for {k!r}")
+        mask |= m
+    return cap[mask].copy()
+
+
+def plant_period_check(
+    cap: pd.DataFrame,
+    reported: pd.DataFrame,
+    plant_id: str,
+    plants: str | Sequence[str],
+    max_share: float = 0.01,
+) -> pd.DataFrame:
+    """ANP processed-biogas sums per reported period vs the owner's reported gas volumes.
+
+    ``plants`` names the plant's ANP rows (:func:`plant_rows`: CNPJs or municipalities). Pass
+    several when the owner reports one total for several plants (Cocal 2025/26: Narandiba +
+    Paraguaçu Paulista); their ANP volumes are summed. For each period that ``reported`` holds for
+    ``plant_id`` with a :data:`REPORTED_GAS` quantity, the ANP daily values are multiplied by
+    the days in the month and summed, as published and with the candidate thousand-scale
+    months (:func:`thousand_scale_months`) ×1000.
+
+    Returns one row per period: ``period_kind``, ``period``, ``months_in_period``,
+    ``anp_months`` (months with at least one ANP row), ``anp_m3_as_published``,
+    ``anp_m3_rescaled``, and for each reported gas quantity ``q``: ``reported_<q>_nm3`` and
+    ``ratio_rescaled_to_<q>`` (NaN when not reported).
+
+    Raises:
+        ValueError: if :func:`plant_rows` refuses a key, or two reported values for the same
+            period and quantity differ (log the conflict in docs/21 and drop one row by hand;
+            never average).
+    """
+    a = plant_rows(cap, plants)
+    small = a.index.isin(thousand_scale_months(a, max_share).index)
+    vol = a["biogas_processed_m3_d"] * a["month"].dt.days_in_month
+    a["vol_pub"] = vol
+    a["vol_resc"] = np.where(small, 1000 * vol, vol)
+    r = reported[(reported["plant_id"] == plant_id) & reported["quantity"].isin(REPORTED_GAS)]
+    keys = ["period_kind", "period", "start_month", "end_month"]
+    rows = []
+    for _, p in r[keys].drop_duplicates().sort_values(["start_month", "period_kind"]).iterrows():
+        win = a[(a["month"] >= p["start_month"]) & (a["month"] <= p["end_month"])]
+        row = {
+            "period_kind": p["period_kind"],
+            "period": p["period"],
+            "months_in_period": (p["end_month"] - p["start_month"]).n + 1,
+            "anp_months": win["month"].nunique(),
+            "anp_m3_as_published": float(win["vol_pub"].sum()),
+            "anp_m3_rescaled": float(win["vol_resc"].sum()),
+        }
+        in_period = r[(r["period_kind"] == p["period_kind"]) & (r["period"] == p["period"])]
+        for q in REPORTED_GAS:
+            vals = in_period.loc[in_period["quantity"] == q, "value"].unique()
+            if len(vals) > 1:
+                raise ValueError(
+                    f"{plant_id} {p['period']} {q}: reported values differ {list(vals)}; "
+                    "log the conflict in docs/21 and keep one row for this check"
+                )
+            v = float(vals[0]) if len(vals) else np.nan
+            row[f"reported_{q}_nm3"] = v
+            row[f"ratio_rescaled_to_{q}"] = row["anp_m3_rescaled"] / v if v > 0 else np.nan
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
 def summarise(t: pd.DataFrame) -> pd.DataFrame:
     """Median, P10, P90 and mean |log ratio| of both ratio columns (months with production)."""
     rows = {}
@@ -146,6 +257,20 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--rescale", nargs="*", default=[], help="municipalities to test x1000")
     ap.add_argument("--start", default=None, help="YYYY-MM")
     ap.add_argument("--end", default=None, help="YYYY-MM")
+    ap.add_argument(
+        "--reported", type=Path, default=None, help="plant_reported_annual.csv for the plant check"
+    )
+    ap.add_argument(
+        "--plant",
+        action="append",
+        default=[],
+        metavar="PLANT_ID=KEY[+KEY]",
+        help=(
+            "plant to check against --reported; KEY is a CNPJ or a municipality with one CNPJ, "
+            "e.g. sp_cocal_narandiba=14788495000170; join keys with + when the owner reports "
+            "one total for several plants"
+        ),
+    )
     a = ap.parse_args(argv)
     cap, prod = read_capacity(a.capacidade), read_production(a.producao)
     flagged = thousand_scale_months(cap)
@@ -164,6 +289,13 @@ def main(argv: list[str] | None = None) -> None:
     print(t.round(2).to_string())
     print("\nSummary")
     print(summarise(t).round(3).to_string())
+    if a.reported is not None:
+        reported = read_reported(a.reported)
+        for spec in a.plant:
+            plant_id, _, keys = spec.partition("=")
+            pc = plant_period_check(cap, reported, plant_id, keys.split("+"))
+            print(f"\n{plant_id} ({keys}): ANP sums vs owner-reported volumes")
+            print(pc.round(3).to_string(index=False))
 
 
 if __name__ == "__main__":

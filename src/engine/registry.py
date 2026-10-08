@@ -21,6 +21,8 @@ Quality tooling (added 2026-10, does not change the loaders):
   (``level`` = ``"error"`` | ``"warning"``)
 - :func:`load_references` -> ``list[dict]`` (scientific references, what each supports and the
   result of its double-check; docs/08 §8)
+- :func:`load_plant_reported` -> ``list[dict]`` (annual figures that plant owners publish, with
+  page and quote; :func:`validate_plant_reported` checks them; docs/13 §8)
 - :func:`summary_markdown` -> counts by module / confidence / status / feedstock
 - :func:`param_hash` -> short SHA-256 of ``parameters.csv`` or of an overrides dict
 - CLI: ``python -m engine.registry validate|summary|hash`` (:func:`main`)
@@ -51,6 +53,7 @@ SOURCES_YAML = REGISTRY_DIR / "sources.yaml"
 PROJECTS_CAPEX_CSV = REGISTRY_DIR / "projects_capex.csv"
 REFERENCES_CSV = REGISTRY_DIR / "references.csv"
 VALUE_EVIDENCE_CSV = REGISTRY_DIR / "value_evidence.csv"
+PLANT_REPORTED_CSV = REGISTRY_DIR / "plant_reported_annual.csv"
 
 CONFIDENCE_FLAGS = ("V", "S", "K", "D")
 
@@ -327,6 +330,66 @@ EVIDENCE_SUPPORTS = ("supports_central", "supports_range", "related_only", "diff
 #: read corrected the quote, page or value (``llm_corrected``); a person checked it against the
 #: PDF (``human_audited``). Only ``human_audited`` meets docs/08 §6.
 EVIDENCE_CHECKS = ("llm_double_read", "llm_support_disputed", "llm_corrected", "human_audited")
+
+#: Columns ``plant_reported_annual.csv`` must have: one row per figure a plant owner publishes
+#: for a period (company reports, not ANP data), with the PDF page and the verbatim quote.
+PLANT_REPORTED_COLUMNS = (
+    "row_id",
+    "plant_id",
+    "period_kind",
+    "period",
+    "start_month",
+    "end_month",
+    "quantity",
+    "value",
+    "unit",
+    "ref_id",
+    "pdf_page",
+    "quote",
+    "confidence",
+    "check",
+    "notes",
+)
+
+#: Allowed quantities and their unit. Gas volumes are Nm³ as the reports print them; the
+#: capacity rows are per year. ``*_processed`` is what went into the digesters, not what the
+#: mill generated (CLAUDE.md rule 9).
+PLANT_QUANTITY_UNITS = {
+    "biogas_produced": "Nm3",
+    "biogas_to_upgrading": "Nm3",
+    "biogas_to_power": "Nm3",
+    "biogas_flared": "Nm3",
+    "biogas_capacity": "Nm3",
+    "biomethane_produced": "Nm3",
+    "biomethane_flared": "Nm3",
+    "biomethane_capacity": "Nm3",
+    "biomethane_to_pipeline": "Nm3",
+    "biomethane_to_road": "Nm3",
+    "biomethane_to_fleet": "Nm3",
+    "biomethane_to_industrial_use": "Nm3",
+    "electricity_generated": "MWh",
+    "electricity_distributed_generation": "MWh",
+    "filter_cake_processed": "t",
+    "vinasse_processed": "m3",
+    "cattle_manure_processed": "t",
+    "chicken_manure_processed": "t",
+    "other_waste_processed": "t",
+    "biofertiliser": "t",
+    "organogeo": "t",
+    "liquifertil": "m3",
+}
+
+#: ``safra``: crop year 1 April to 31 March (``2024/25``); ``calendar``: January to December.
+PLANT_PERIOD_KINDS = ("safra", "calendar")
+
+#: How a row was read: one LLM read (``llm_single_read``), two independent LLM reads that agree
+#: (``llm_double_read``), a second read that corrected the first (``llm_corrected``), or a person
+#: checked it against the PDF (``human_audited``, the only one that meets docs/08 §6).
+PLANT_REPORT_CHECKS = ("llm_single_read", "llm_double_read", "llm_corrected", "human_audited")
+
+#: Relative difference above which two rows for the same plant, period and quantity count as a
+#: conflict to log in docs/21 (smaller gaps are rounding, e.g. 27.66 vs 27.7).
+PLANT_CONFLICT_REL_TOL = 0.01
 
 _SNAKE_CASE_RE = re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
 _DOI_RE = re.compile(r"^10\.\d{4,9}/\S+$")
@@ -1029,9 +1092,149 @@ def validate_value_evidence(
     return sink.issues
 
 
+def load_plant_reported(path: Path | str = PLANT_REPORTED_CSV) -> list[dict[str, str]]:
+    """Rows of ``plant_reported_annual.csv`` as dicts (all values text)."""
+    with open(path, newline="", encoding="utf-8-sig") as fh:
+        return list(csv.DictReader(fh))
+
+
+def _period_bounds(kind: str, period: str) -> tuple[str, str] | None:
+    """Expected ``(start_month, end_month)`` of a period, or ``None`` if the label is malformed."""
+    if kind == "safra":
+        m = re.fullmatch(r"(\d{4})/(\d{2})", period)
+        if not m or int(m.group(2)) != (int(m.group(1)) + 1) % 100:
+            return None
+        y = int(m.group(1))
+        return f"{y}-04", f"{y + 1}-03"
+    if kind == "calendar" and re.fullmatch(r"\d{4}", period):
+        return f"{period}-01", f"{period}-12"
+    return None
+
+
+def validate_plant_reported(
+    path: Path | str = PLANT_REPORTED_CSV,
+    references_path: Path | str | None = None,
+) -> list[Issue]:
+    """Validate ``plant_reported_annual.csv`` (docs/13 §8).
+
+    Rules (error unless stated):
+
+    - header has :data:`PLANT_REPORTED_COLUMNS`; every row has the header's fields;
+    - ``row_id`` non-empty and unique; ``plant_id`` non-empty;
+    - ``period_kind`` in :data:`PLANT_PERIOD_KINDS`; ``period`` is ``YYYY/YY`` (safra) or
+      ``YYYY`` (calendar); ``start_month`` and ``end_month`` match it (safra April-March);
+    - ``quantity`` in :data:`PLANT_QUANTITY_UNITS` with its unit; ``value`` a number >= 0;
+    - ``ref_id`` names a row of ``references.csv`` (checked when the file can be read);
+    - ``pdf_page`` a positive integer; ``quote`` non-empty;
+    - ``confidence`` in :data:`CONFIDENCE_FLAGS`; ``check`` in :data:`PLANT_REPORT_CHECKS`;
+    - warning: two rows for the same plant, period and quantity whose values differ by more
+      than :data:`PLANT_CONFLICT_REL_TOL` (log both in docs/21, never average);
+    - warning (one for the file): ``V`` rows not ``human_audited`` (docs/08 §6).
+
+    Args:
+        path: CSV file to check.
+        references_path: ``references.csv`` (default: next to ``path``).
+    """
+    path = Path(path)
+    sink = _IssueSink(path.name)
+    text = _read_registry_text(path, sink)
+    if text is None:
+        return sink.issues
+    refs_path = Path(references_path) if references_path else path.with_name(REFERENCES_CSV.name)
+    try:
+        ref_ids = {r.get("ref_id", "") for r in load_references(refs_path)}
+    except (OSError, csv.Error):
+        ref_ids = set()
+    reader = csv.DictReader(io.StringIO(text, newline=""), restkey=_EXTRA_FIELDS_KEY)
+    if not _check_header(reader.fieldnames, PLANT_REPORTED_COLUMNS, sink):
+        return sink.issues
+    seen: dict[str, int] = {}
+    values: dict[tuple[str, str, str, str], list[tuple[float, int, str]]] = {}
+    not_audited = 0
+    for row in reader:
+        line = reader.line_num
+        rid = (row.get("row_id") or "").strip()
+        if not _check_field_count(row, line, rid, sink):
+            continue
+        if not rid:
+            sink.error("empty row_id", line)
+        elif rid in seen:
+            sink.error(f"duplicate row_id (first defined on line {seen[rid]})", line, rid)
+        else:
+            seen[rid] = line
+        get = {k: (row.get(k) or "").strip() for k in PLANT_REPORTED_COLUMNS}
+        if not get["plant_id"]:
+            sink.error("empty plant_id", line, rid)
+        if get["period_kind"] not in PLANT_PERIOD_KINDS:
+            sink.error(
+                f"period_kind {get['period_kind']!r} is not one of {', '.join(PLANT_PERIOD_KINDS)}",
+                line,
+                rid,
+            )
+        else:
+            bounds = _period_bounds(get["period_kind"], get["period"])
+            if bounds is None:
+                sink.error(
+                    f"period {get['period']!r} is not a valid {get['period_kind']} label", line, rid
+                )
+            elif (get["start_month"], get["end_month"]) != bounds:
+                sink.error(
+                    f"start_month/end_month {get['start_month']}..{get['end_month']} do not match "
+                    f"{get['period_kind']} {get['period']} ({bounds[0]}..{bounds[1]})",
+                    line,
+                    rid,
+                )
+        unit = PLANT_QUANTITY_UNITS.get(get["quantity"])
+        if unit is None:
+            sink.error(f"quantity {get['quantity']!r} is not a known quantity", line, rid)
+        elif get["unit"] != unit:
+            sink.error(f"unit {get['unit']!r} for {get['quantity']} should be {unit!r}", line, rid)
+        value = _to_float(get["value"])
+        if value is None or value < 0:
+            sink.error(f"value {get['value']!r} is not a number >= 0", line, rid)
+        if ref_ids and get["ref_id"] not in ref_ids:
+            sink.error(f"ref_id {get['ref_id']!r} is not in references.csv", line, rid)
+        if not re.fullmatch(r"[1-9]\d*", get["pdf_page"]):
+            sink.error(f"pdf_page {get['pdf_page']!r} is not a positive integer", line, rid)
+        if not get["quote"]:
+            sink.error("quote is empty: record the verbatim text from the page", line, rid)
+        if get["confidence"] not in CONFIDENCE_FLAGS:
+            sink.error(
+                f"confidence {get['confidence']!r} is not one of {', '.join(CONFIDENCE_FLAGS)}",
+                line,
+                rid,
+            )
+        if get["check"] not in PLANT_REPORT_CHECKS:
+            sink.error(
+                f"check {get['check']!r} is not one of {', '.join(PLANT_REPORT_CHECKS)}", line, rid
+            )
+        if get["confidence"] == "V" and get["check"] != "human_audited":
+            not_audited += 1
+        if value is not None:
+            key = (get["plant_id"], get["period_kind"], get["period"], get["quantity"])
+            values.setdefault(key, []).append((value, line, rid))
+    for (plant, _kind, period, quantity), found in values.items():
+        vals = [v for v, _, _ in found]
+        top = max(abs(v) for v in vals)
+        if len(found) > 1 and top > 0 and (max(vals) - min(vals)) / top > PLANT_CONFLICT_REL_TOL:
+            others = ", ".join(f"{r} = {v:g}" for v, _, r in found)
+            sink.warning(
+                f"{plant} {period} {quantity}: values differ ({others}); log the conflict in "
+                "docs/21 and keep both (never average)",
+                found[0][1],
+                found[0][2],
+            )
+    if not_audited:
+        sink.warning(
+            f"{not_audited} V row(s) not human_audited: a person must check page and quote "
+            "against the PDF before the value is used in results (docs/08 §6)"
+        )
+    return sink.issues
+
+
 def validate_all(registry_dir: Path | str = REGISTRY_DIR) -> list[Issue]:
     """Run the validators on ``registry_dir``: parameters, sources, projects_capex and, when the
-    files exist, references and value_evidence."""
+    files exist, references, value_evidence and plant_reported_annual."""
     registry_dir = Path(registry_dir)
     issues = (
         validate_parameters(registry_dir / PARAMETERS_CSV.name)
@@ -1042,6 +1245,8 @@ def validate_all(registry_dir: Path | str = REGISTRY_DIR) -> list[Issue]:
         issues += validate_references(registry_dir / REFERENCES_CSV.name)
     if (registry_dir / VALUE_EVIDENCE_CSV.name).exists():
         issues += validate_value_evidence(registry_dir / VALUE_EVIDENCE_CSV.name)
+    if (registry_dir / PLANT_REPORTED_CSV.name).exists():
+        issues += validate_plant_reported(registry_dir / PLANT_REPORTED_CSV.name)
     return issues
 
 
@@ -1082,8 +1287,9 @@ def summary_markdown(registry_dir: Path | str = REGISTRY_DIR) -> str:
     """Return a Markdown summary of the registry.
 
     Sections: parameters (module x confidence flag), sources (module x status, and counts by
-    confidence), projects (feedstock x confidence), references (by ref_check) and value evidence
-    (support x check) when those files exist, and the validation error/warning counts.
+    confidence), projects (feedstock x confidence), references (by ref_check), value evidence
+    (support x check) and plant-reported values (confidence x check) when those files exist, and
+    the validation error/warning counts.
     Blank cells are counted under ``(missing)``.
     """
     registry_dir = Path(registry_dir)
@@ -1180,6 +1386,28 @@ def summary_markdown(registry_dir: Path | str = REGISTRY_DIR) -> str:
             ]
         except (OSError, csv.Error) as exc:
             out += ["## Value evidence", "", f"Could not be read: {exc}", ""]
+
+    plant_path = registry_dir / PLANT_REPORTED_CSV.name
+    if plant_path.exists():
+        try:
+            pl_rows = load_plant_reported(plant_path)
+            pairs = [
+                (
+                    (r.get("confidence") or "").strip() or _MISSING,
+                    (r.get("check") or "").strip() or _MISSING,
+                )
+                for r in pl_rows
+            ]
+            out += [
+                f"## Plant-reported annual values ({len(pl_rows)})",
+                "",
+                "By confidence and check (docs/13 §8, docs/08 §6):",
+                "",
+                _crosstab_markdown(pairs, "confidence", PLANT_REPORT_CHECKS),
+                "",
+            ]
+        except (OSError, csv.Error) as exc:
+            out += ["## Plant-reported annual values", "", f"Could not be read: {exc}", ""]
 
     issues = validate_all(registry_dir)
     n_err = sum(i.level == "error" for i in issues)

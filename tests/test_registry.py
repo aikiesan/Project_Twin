@@ -637,12 +637,97 @@ def test_validate_all_reads_value_evidence_when_present(clean_registry: Path) ->
     [
         (reg.REFERENCES_CSV, reg.validate_references),
         (reg.VALUE_EVIDENCE_CSV, reg.validate_value_evidence),
+        (reg.PLANT_REPORTED_CSV, reg.validate_plant_reported),
     ],
 )
 def test_real_references_and_evidence_have_no_errors(path: Path, validator) -> None:
-    """The committed references.csv and value_evidence.csv pass with no errors (warnings for
-    references not double-checked and rows not human-audited are expected)."""
+    """The committed references.csv, value_evidence.csv and plant_reported_annual.csv pass with
+    no errors (warnings for references not double-checked and rows not human-audited are
+    expected)."""
     if not path.exists():
         pytest.skip(f"{path.name} not present")
     errors = [i for i in validator() if i.level == "error"]
     assert errors == [], "\n".join(map(str, errors))
+
+
+# ---------------------------------------------------------------------------------------------
+# plant_reported_annual.csv (docs/13 §8) — SYNTHETIC rows
+# ---------------------------------------------------------------------------------------------
+
+PLANT_HEADER = (
+    "row_id,plant_id,period_kind,period,start_month,end_month,quantity,value,unit,ref_id,"
+    "pdf_page,quote,confidence,check,notes\n"
+)
+PLANT_ROW_OK = (
+    "syn_s202425_biogas,syn_plant,safra,2024/25,2024-04,2025-03,biogas_produced,1000,Nm3,"
+    "syn_ref,3,Synthetic verbatim quote,V,human_audited,\n"
+)
+
+
+def _plant(tmp_path: Path, rows: str) -> list[Issue]:
+    _write(tmp_path / "references.csv", REF_HEADER + REF_ROW_OK)
+    return reg.validate_plant_reported(
+        _write(tmp_path / "plant_reported_annual.csv", PLANT_HEADER + rows)
+    )
+
+
+def test_plant_reported_clean_file_has_no_issues(tmp_path: Path) -> None:
+    calendar = (
+        "syn_c2024_biogas,syn_plant,calendar,2024,2024-01,2024-12,biogas_produced,900,Nm3,"
+        "syn_ref,4,Another quote,S,llm_single_read,\n"
+    )
+    assert _plant(tmp_path, PLANT_ROW_OK + calendar) == []
+
+
+@pytest.mark.parametrize(
+    "old, new, message",
+    [
+        (",safra,", ",harvest,", "period_kind"),
+        (",2024/25,", ",2024/26,", "not a valid safra label"),
+        (",2024-04,2025-03,", ",2024-01,2024-12,", "do not match safra 2024/25"),
+        (",biogas_produced,", ",biogas_made,", "not a known quantity"),
+        (",Nm3,", ",m3,", "should be 'Nm3'"),
+        (",1000,", ",-5,", "number >= 0"),
+        (",1000,", ",lots,", "number >= 0"),
+        (",syn_ref,", ",other_ref,", "not in references.csv"),
+        (",3,Synthetic", ",0,Synthetic", "pdf_page"),
+        ("Synthetic verbatim quote", "", "quote is empty"),
+        (",V,", ",X,", "confidence"),
+        ("human_audited", "looks_right", "check"),
+        ("syn_s202425_biogas,", ",", "empty row_id"),
+        (",syn_plant,", ",,", "empty plant_id"),
+    ],
+)
+def test_plant_reported_errors(tmp_path: Path, old: str, new: str, message: str) -> None:
+    errors, _ = _levels(_plant(tmp_path, PLANT_ROW_OK.replace(old, new)))
+    assert any(message in e.message for e in errors), errors
+
+
+def test_plant_reported_duplicates_conflicts_and_audit_warning(tmp_path: Path) -> None:
+    errors, _ = _levels(_plant(tmp_path, PLANT_ROW_OK + PLANT_ROW_OK))
+    assert any("duplicate row_id" in e.message for e in errors)
+    second = PLANT_ROW_OK.replace("syn_s202425_biogas,", "syn_s202425_biogas_b,")
+    # 1000 vs 1005 is rounding (0.5 %), 1000 vs 1200 is a conflict to log
+    assert _plant(tmp_path, PLANT_ROW_OK + second.replace(",1000,", ",1005,")) == []
+    errors, warns = _levels(_plant(tmp_path, PLANT_ROW_OK + second.replace(",1000,", ",1200,")))
+    assert errors == []
+    (warn,) = warns
+    assert "values differ" in warn.message and "docs/21" in warn.message
+    llm = PLANT_ROW_OK.replace("human_audited", "llm_double_read")
+    errors, warns = _levels(_plant(tmp_path, llm))
+    assert errors == []
+    (warn,) = warns
+    assert "1 V row(s) not human_audited" in warn.message
+
+
+def test_validate_all_reads_plant_reported_when_present(clean_registry: Path) -> None:
+    _write(clean_registry / "references.csv", REF_HEADER + REF_ROW_OK)
+    _write(clean_registry / "plant_reported_annual.csv", PLANT_HEADER + PLANT_ROW_OK)
+    assert validate_all(clean_registry) == []
+    text = summary_markdown(clean_registry)
+    assert "## Plant-reported annual values (1)" in text
+    assert "| V | 0 | 0 | 0 | 1 | 1 |" in text
+    bad = PLANT_ROW_OK.replace(",Nm3,", ",t,")
+    _write(clean_registry / "plant_reported_annual.csv", PLANT_HEADER + bad)
+    (issue,) = validate_all(clean_registry)
+    assert issue.file == "plant_reported_annual.csv" and "unit" in issue.message

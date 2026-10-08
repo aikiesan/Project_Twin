@@ -1,0 +1,10 @@
+row_id,plant_id,period_kind,period,start_month,end_month,quantity,value,unit,ref_id,pdf_page,quote,confidence,check,notes
+p_s2324_biogas,plant_p,safra,2023/24,2023-04,2024-03,biogas_produced,2000000,Nm3,fixture_ref,1,Synthetic quote,V,human_audited,synthetic
+p_s2324_vinasse,plant_p,safra,2023/24,2023-04,2024-03,vinasse_processed,100000,m3,fixture_ref,1,Synthetic quote,V,human_audited,synthetic
+p_s2324_cake,plant_p,safra,2023/24,2023-04,2024-03,filter_cake_processed,10000,t,fixture_ref,1,Synthetic quote,V,human_audited,synthetic
+p_s2324_other,plant_p,safra,2023/24,2023-04,2024-03,other_waste_processed,1000,t,fixture_ref,1,Synthetic quote,V,human_audited,synthetic
+p_s2324_biomethane,plant_p,safra,2023/24,2023-04,2024-03,biomethane_produced,600000,Nm3,fixture_ref,1,Synthetic quote,V,human_audited,synthetic
+p_s2324_upgrading,plant_p,safra,2023/24,2023-04,2024-03,biogas_to_upgrading,1000000,Nm3,fixture_ref,1,Synthetic quote,S,human_audited,synthetic
+p_c2024_biogas,plant_p,calendar,2024,2024-01,2024-12,biogas_produced,1800000,Nm3,fixture_ref,2,Synthetic quote,V,human_audited,no feed rows
+p_c2024_vinasse,plant_p,calendar,2024,2024-01,2024-12,vinasse_processed,90000,m3,fixture_ref,2,Synthetic quote,V,human_audited,cake missing
+q_s2324_cake,plant_q,safra,2023/24,2023-04,2024-03,filter_cake_processed,5000,t,fixture_ref,1,Synthetic quote,V,human_audited,no biogas: no row in the check

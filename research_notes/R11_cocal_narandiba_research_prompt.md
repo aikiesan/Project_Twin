@@ -297,3 +297,16 @@ OUTPUT FORMAT
 5. **Calibration targets for Narandiba exist now:** annual biogas, biomethane, flare and feed tonnages per safra 2022/23–2025/26. They are better targets than the ANP months before Aug 2025.
 
 **Still open:** Q1 (ANP acts), Q6 (CETESB), Q8 detail (certificate, CI, eligible fraction), Q9 (LRCAP result), Q10 (minimum scale), Q11 (mandate path), and whether the RAS 2025/26 flow chart (p. 19) is Narandiba only (Paraguaçu reports zero to ANP until Apr 2026, so probably yes).
+
+**Correction, later on 2026-10-08: the 2025/26 figures cover two plants.** Cocal RAS 2025/26 p. 23: "A entrada em operação da planta de Paraguaçu Paulista impulsionou a entrega desse combustível renovável. Juntas, as duas unidades da Cocal atingiram o volume recorde de produção de 10,6 milhões de Nm3 de biometano. A produção de biogás alcançou 32,7 milhões de Nm³". The p. 19 flow chart carries the same 10.6 and 32.7, so its 2025/26 column is Narandiba + Paraguaçu Paulista. Its 2024/25 column is Narandiba alone: RAS 2024/25 p. 32 says Paraguaçu "deve iniciar suas operações na safra 2025/2026". This answers the open question above with "no" and changes three points of "What it changes":
+- item 2: the 90 k Nm³/d implied by 32.7 M Nm³/yr is a two-plant figure; the 2023/24 figure (30.5 M Nm³, Narandiba alone, 83.6 k Nm³/d) carries the argument;
+- item 3: the 41.7 kt of "other waste" and 4.0 kt of chicken manure in 2025/26 include Paraguaçu, which takes manure and effluent from Granja Shida (p. 20);
+- item 5: Narandiba targets are safras 2022/23–2024/25 and Geo's calendar 2022–2023.
+
+ANP lists Paraguaçu from Jan 2026 with zero processed biogas until Apr 2026, although the company counts the plant in 2025/26 (docs/21 C41). In `registry/plant_reported_annual.csv` the 2025/26 rows are keyed to `sp_cocal_narandiba_paraguacu`. New questions for Cocal: Narandiba's own 2025/26 biogas and biomethane, and Paraguaçu's first month of biomethane output.
+
+**Second read and feed check, later on 2026-10-08.** A second, independent LLM reader re-read all 67 values of `registry/plant_reported_annual.csv` from the uploaded texts. It confirmed every value, the p. 10 capacity layout of RAS 2022/23 (capacity above realised), the flare boxes and biogas splits on RAS 2025/26 p. 19, and the year order on Geo p. 30. Independently of the first reader, it also found the two-plant scope of the 2025/26 column on p. 23 (rows now `llm_corrected`). Human audit against the PDFs is still owed (docs/08 §6). Two new findings:
+- RAS 2022/23 p. 10 gives annual capacities of 33 M Nm³ of biogas and 9 M Nm³ of biomethane. The biogas figure conflicts with Geo's 120 k Nm³/d (docs/21 C39).
+- Run through the registry central yields, Narandiba's reported vinasse and filter cake explain only 64–78 % of its reported biogas, in every year with feed data (docs/13 §9).
+
+Questions added for Cocal (docs/21 Q22): vinasse COD and the basis of the reported volume; filter cake TS, VS/TS and BMP; what the "outros resíduos industriais e urbanos" are; the reference conditions of the reported Nm³; and what each biogas capacity measures.

@@ -1,0 +1,7 @@
+row_id,plant_id,period_kind,period,start_month,end_month,quantity,value,unit,ref_id,pdf_page,quote,confidence,check,notes
+a_s202324_biomethane,plant_a,safra,2023/24,2023-04,2024-03,biomethane_produced,736000,Nm3,fixture_ref,1,Synthetic quote,V,human_audited,synthetic
+a_s202324_biogas,plant_a,safra,2023/24,2023-04,2024-03,biogas_produced,1472000,Nm3,fixture_ref,1,Synthetic quote,V,human_audited,synthetic
+a_s202324_cake,plant_a,safra,2023/24,2023-04,2024-03,filter_cake_processed,5000,t,fixture_ref,1,Synthetic quote,V,human_audited,not a gas quantity: ignored by the check
+a_c2024_biomethane,plant_a,calendar,2024,2024-01,2024-12,biomethane_produced,700000,Nm3,fixture_ref,2,Synthetic quote,V,human_audited,synthetic
+b_s202324_biomethane,plant_b,safra,2023/24,2023-04,2024-03,biomethane_produced,1,Nm3,fixture_ref,1,Synthetic quote,V,human_audited,other plant: ignored
+ab_s202324_biomethane,plant_ab,safra,2023/24,2023-04,2024-03,biomethane_produced,1046000,Nm3,fixture_ref,3,Synthetic quote,V,human_audited,one total for the plants in TOWNA and TOWNB

@@ -1,0 +1,139 @@
+{
+  "run_id": "suitability_v0_ch4_agro_no-demand_20261008T120050Z",
+  "param_hash": "a4ddc52b8bb914a69bb805f06d9c5c3fe1309936782dc12060912b64a65b9bd3",
+  "input": {
+    "file": "suitability_grid_v0.parquet",
+    "sha256": "b744d3ba415f651373b1e46df78fe7da98a81a875008be06ef0407f2492f9073"
+  },
+  "cells": 47273,
+  "excluded": 1946,
+  "extra_exclusions": {
+    "federal_uc_integral": {
+      "file": "FEDERAL_PROTECTED_AREAS_INTEGRAL_PROTECTION_v2.shp",
+      "sha256": "c42be75850886eec7915915e9355ae62f8a800bca773071c284b2378eeb6beb8",
+      "cells_inside": 85,
+      "newly_excluded": 62
+    }
+  },
+  "names": {
+    "file": "municipal_panel_v0.csv",
+    "sha256": "04ce8e2b456a8033f9e5de38aeb21ef0c5677bc7a56245f6c1eaeac87af63250"
+  },
+  "ch4": {
+    "file": "n3_ch4_30km_med.parquet",
+    "sha256": "60fc864973503d8cd51bacf978742f7baf5bad5df1d2f6ed268f04a2c1aebbc7"
+  },
+  "scored": 45327,
+  "robust_top_k_cells_p50": 19,
+  "oat_min_top_k_kept": 0.64,
+  "caveats": [
+    "straight-line distances, not road network",
+    "gas layer is a trunk summary (docs/21 Q17)",
+    "feedstock = N3 CH4 within 30 km, CP2b v5.1 (flag D; farm part withheld where fewer than k farm cells)",
+    "exclusions: state protected areas and indigenous territories, federal_uc_integral (cell centre inside)"
+  ]
+}
+criterion change   weight  top_k_kept
+      gas   -20% 0.210526        0.68
+      gas   +20% 0.285714        0.93
+    power   -20% 0.210526        0.92
+    power   +20% 0.285714        0.92
+     road   -20% 0.210526        0.97
+     road   +20% 0.285714        0.95
+      ch4   -20% 0.210526        0.89
+      ch4   +20% 0.285714        0.64
+                ibge_code              municipio  score_base  rank_median  rank_p05  rank_p95  p_top_k
+h3_index                                                                                              
+87a8116c4ffffff   3521408           Iracemápolis    0.901350         22.0      1.00    979.00    0.644
+87a8116f3ffffff   3526902                Limeira    0.894822         56.5      2.00   1136.55    0.563
+87a811614ffffff   3545803  Santa Bárbara d'Oeste    0.893552         23.0      2.00   1205.35    0.636
+87a8116e2ffffff   3521408           Iracemápolis    0.891864         85.0      4.00   1070.25    0.519
+87a8116c6ffffff   3526902                Limeira    0.891234         90.0      3.00   1138.20    0.512
+87a8116c2ffffff   3526902                Limeira    0.885393         97.5      4.95   1290.50    0.505
+87a8116e3ffffff   3521408           Iracemápolis    0.883980         77.5      4.00   1359.05    0.526
+87a8116f5ffffff   3526902                Limeira    0.883903        165.0     10.00   1288.20    0.397
+87a8116c5ffffff   3521408           Iracemápolis    0.882616         91.5      7.00   1363.10    0.513
+87a8116d1ffffff   3526902                Limeira    0.881109        122.5      4.00   1543.65    0.473
+87a8116f6ffffff   3526902                Limeira    0.881046        138.5     13.00   1296.35    0.441
+87a8116f1ffffff   3526902                Limeira    0.880997        219.5      7.00   1543.70    0.357
+87a8116ceffffff   3521408           Iracemápolis    0.880704         89.0      9.00   1463.15    0.521
+87a8116c0ffffff   3521408           Iracemápolis    0.880413        159.0      9.00   1325.50    0.420
+87a8116f0ffffff   3526902                Limeira    0.880371        163.0     16.00   1307.30    0.424
+
+Distinct sites >= 30 km apart:
+-- equal_weights
+                 site ibge_code             municipio  score_base  rank_median  rank_p05  rank_p95  p_top_k
+h3_index                                                                                                   
+87a8116c4ffffff     1   3521408          Iracemápolis    0.901350         22.0      1.00    979.00    0.644
+87a811153ffffff     2   3511508             Cerquilho    0.872617         42.5      3.00   2262.20    0.592
+87a818caeffffff     3   3503208            Araraquara    0.868473         68.0      3.00   2475.20    0.550
+87a81aa63ffffff     4   3539509          Pitangueiras    0.862872        218.5      2.00  19174.10    0.445
+87a81ec2bffffff     5   3503307                Araras    0.861662        125.5     16.00   2618.80    0.463
+87a81abb4ffffff     6   3543402        Ribeirão Preto    0.859285        260.0      5.00  18935.05    0.407
+87a813360ffffff     7   3530805            Mogi Mirim    0.827694        580.0    113.90   5585.30    0.035
+87a8184e9ffffff     8   3524303           Jaboticabal    0.826264       1064.5     20.00  19051.70    0.164
+87a80a4e0ffffff     9   3506508               Birigui    0.821588        924.5    218.95   5341.10    0.000
+87a81c02affffff    10   3528007              Macatuba    0.818717       1004.5     77.90  21566.80    0.071
+87a81d769ffffff    11   3517208              Guaiçara    0.816769       1473.5    210.00   5700.30    0.000
+87a81a345ffffff    12   3531902           Morro Agudo    0.810401       1281.0     37.95  27701.35    0.150
+87a811098ffffff    13   3510401              Capivari    0.807187       1946.5    380.80   7710.30    0.002
+87a80a060ffffff    14   3556305            Valparaíso    0.797939       2010.5    101.75  15693.35    0.050
+87a818d20ffffff    15   3506706  Boa Esperança do Sul    0.795651       2424.5    837.70   6064.80    0.000
+-- robust
+                 site ibge_code        municipio  score_base  rank_median  rank_p05  rank_p95  p_top_k
+h3_index                                                                                              
+87a8116c4ffffff     1   3521408     Iracemápolis    0.901350         22.0      1.00    979.00    0.644
+87a811153ffffff     2   3511508        Cerquilho    0.872617         42.5      3.00   2262.20    0.592
+87a818caeffffff     3   3503208       Araraquara    0.868473         68.0      3.00   2475.20    0.550
+87a81ec2bffffff     4   3503307           Araras    0.861662        125.5     16.00   2618.80    0.463
+87a81aa63ffffff     5   3539509     Pitangueiras    0.862872        218.5      2.00  19174.10    0.445
+87a81abb4ffffff     6   3543402   Ribeirão Preto    0.859285        260.0      5.00  18935.05    0.407
+87a813345ffffff     7   3530805       Mogi Mirim    0.823192        574.0     10.00   7952.50    0.225
+87a811c2affffff     8   3552205         Sorocaba    0.768873       1829.5      1.95  21276.55    0.199
+87a8184f1ffffff     9   3524303      Jaboticabal    0.822861       1270.0     10.00  20558.50    0.194
+87a8a1ac6ffffff    10   3513405         Cruzeiro    0.751819       2620.5      4.00  25229.35    0.168
+87a810306ffffff    11   3525003          Jandira    0.746612       2920.5      7.00  26653.60    0.155
+87a81a345ffffff    12   3531902      Morro Agudo    0.810401       1281.0     37.95  27701.35    0.150
+87a810ce9ffffff    13   3513504          Cubatão    0.745278       3003.0     17.90  26667.40    0.139
+87a8104c0ffffff    14   3530607  Mogi das Cruzes    0.747747       2895.0     18.90  25698.35    0.137
+87a812799ffffff    15   3502507        Aparecida    0.748847       2949.5     27.00  24860.95    0.123
+
+Score contributions (weight x normalised value) at the spaced sites:
+-- equal_weights
+                 site             municipio  score_base    gas  power   road    ch4
+h3_index                                                                           
+87a8116c4ffffff     1          Iracemápolis       0.901  0.249  0.233  0.246  0.173
+87a811153ffffff     2             Cerquilho       0.873  0.249  0.241  0.249  0.134
+87a818caeffffff     3            Araraquara       0.868  0.246  0.244  0.248  0.130
+87a81aa63ffffff     4          Pitangueiras       0.863  0.150  0.215  0.249  0.250
+87a81ec2bffffff     5                Araras       0.862  0.250  0.236  0.247  0.129
+87a81abb4ffffff     6        Ribeirão Preto       0.859  0.153  0.210  0.247  0.250
+87a813360ffffff     7            Mogi Mirim       0.828  0.244  0.241  0.241  0.102
+87a8184e9ffffff     8           Jaboticabal       0.826  0.195  0.146  0.247  0.239
+87a80a4e0ffffff     9               Birigui       0.822  0.237  0.236  0.244  0.105
+87a81c02affffff    10              Macatuba       0.819  0.139  0.232  0.245  0.202
+87a81d769ffffff    11              Guaiçara       0.817  0.245  0.195  0.246  0.130
+87a81a345ffffff    12           Morro Agudo       0.810  0.104  0.214  0.246  0.246
+87a811098ffffff    13              Capivari       0.807  0.226  0.191  0.250  0.140
+87a80a060ffffff    14            Valparaíso       0.798  0.245  0.147  0.245  0.161
+87a818d20ffffff    15  Boa Esperança do Sul       0.796  0.234  0.206  0.243  0.113
+-- robust
+                 site        municipio  score_base    gas  power   road    ch4
+h3_index                                                                      
+87a8116c4ffffff     1     Iracemápolis       0.901  0.249  0.233  0.246  0.173
+87a811153ffffff     2        Cerquilho       0.873  0.249  0.241  0.249  0.134
+87a818caeffffff     3       Araraquara       0.868  0.246  0.244  0.248  0.130
+87a81ec2bffffff     4           Araras       0.862  0.250  0.236  0.247  0.129
+87a81aa63ffffff     5     Pitangueiras       0.863  0.150  0.215  0.249  0.250
+87a81abb4ffffff     6   Ribeirão Preto       0.859  0.153  0.210  0.247  0.250
+87a813345ffffff     7       Mogi Mirim       0.823  0.245  0.249  0.244  0.085
+87a811c2affffff     8         Sorocaba       0.769  0.250  0.249  0.250  0.020
+87a8184f1ffffff     9      Jaboticabal       0.823  0.192  0.140  0.243  0.247
+87a8a1ac6ffffff    10         Cruzeiro       0.752  0.250  0.250  0.247  0.005
+87a810306ffffff    11          Jandira       0.747  0.249  0.248  0.248  0.001
+87a81a345ffffff    12      Morro Agudo       0.810  0.104  0.214  0.246  0.246
+87a810ce9ffffff    13          Cubatão       0.745  0.250  0.248  0.246  0.001
+87a8104c0ffffff    14  Mogi das Cruzes       0.748  0.250  0.248  0.246  0.004
+87a812799ffffff    15        Aparecida       0.749  0.243  0.249  0.249  0.008
+
+N3 CH4 within 30 km (Nm3/d) and shares by residue group (%):

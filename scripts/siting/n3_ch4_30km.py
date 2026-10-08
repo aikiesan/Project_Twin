@@ -5,7 +5,9 @@ layers ``celulas`` and ``pontos``, columns ``<RESIDUE>__min|med|max`` in Nm³ CH
 ``suitability_grid_v0.parquet`` (H3 cells), and writes next to the grid:
 
 - ``n3_ch4_30km_<scenario>.parquet``: per H3 cell, ``ch4_n3_nm3_d_30km`` (all residues),
-  ``ch4_n3_nonfarm_nm3_d_30km``, ``ch4_n3_farm_nm3_d_30km`` and ``farm_cells_30km``;
+  ``ch4_n3_nonfarm_nm3_d_30km``, ``ch4_n3_farm_nm3_d_30km``, ``farm_cells_30km`` and the
+  non-farm part split by residue group (``GROUPS``: ``ch4_n3_<group>_nm3_d_30km``), used to
+  read what drives a site, not as criteria;
 - ``n3_ch4_30km_<scenario>_meta.json``: input sha256, totals check, suppression counts.
 
 LGPD (sources.yaml ``esd_n3_supply_grid_1km``): the five farm-register residues (poultry,
@@ -35,6 +37,11 @@ import pandas as pd
 from engine.siting.catchment import disc_sums
 
 FARM = ("AVES_CORTE", "AVES_POSTURA", "SUINOS", "BOV_LEITE", "BOV_CONFINADO")
+# Non-farm residue groups for the breakdown columns; a residue in no group goes to "other".
+GROUPS = {
+    "cane": ("BAGACO", "PALHA", "TORTA_FILTRO", "VINHACA"),
+    "urban": ("RSU_ORGANICO", "LODO_ETE", "PODA_URBANA"),
+}
 CELL_M = 1000.0  # grade.celula_oferta_m in the ESD config_fl.yaml
 
 
@@ -80,13 +87,17 @@ def main(gpkg: Path, folder: Path, scenario: str, radius_km: float, k_min: int) 
     to_m = Transformer.from_crs("EPSG:4326", CRS.from_user_input(crs), always_xy=True)
     qx, qy = to_m.transform(lon, lat)
 
+    group_of = {r: next((k for k, v in GROUPS.items() if r in v), "other") for r in other}
+    groups = list(dict.fromkeys([*GROUPS, "other"]))
     vals = np.c_[
         tab[other].sum(axis=1),
         tab[farm].sum(axis=1),
         (tab[farm].sum(axis=1) > 0).astype(float),
+        *(tab[[r for r in other if group_of[r] == k]].sum(axis=1) for k in groups),
     ]
     s = disc_sums(x, y, vals, qx, qy, radius_m=radius_km * 1000, cell_m=CELL_M)
     nonfarm, farm_sum, farm_cells = s[:, 0], s[:, 1], np.rint(s[:, 2]).astype(int)
+    by_group = {f"ch4_n3_{k}_nm3_d_30km": s[:, 3 + i] for i, k in enumerate(groups)}
     suppressed = (farm_cells > 0) & (farm_cells < k_min)
     farm_out = np.where(suppressed, np.nan, farm_sum)
     out = pd.DataFrame(
@@ -97,6 +108,7 @@ def main(gpkg: Path, folder: Path, scenario: str, radius_km: float, k_min: int) 
             "ch4_n3_farm_nm3_d_30km": farm_out,
             "farm_cells_30km": farm_cells,
             "farm_suppressed": suppressed,
+            **by_group,
         }
     )
     stem = f"n3_ch4_30km_{scenario}"
@@ -111,6 +123,7 @@ def main(gpkg: Path, folder: Path, scenario: str, radius_km: float, k_min: int) 
         "k_min_farm_cells": k_min,
         "residues_farm": farm,
         "residues_other": other,
+        "residue_groups": {k: [r for r in other if group_of[r] == k] for k in groups},
         "gpkg_total_nm3_ch4_d": round(total, 1),
         "gpkg_total_expected_med": 19183201 if scenario == "med" else None,
         "h3_cells": int(len(out)),

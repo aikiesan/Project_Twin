@@ -100,9 +100,11 @@ def main(
     g = pd.read_parquet(src).set_index("h3_index")
     g["gas_network_km"] = g[GAS_COLS].min(axis=1)
     spec = SPEC
+    info = []  # CH4 breakdown by residue group: shown with the sites, not scored
     if ch4 is not None:
-        c = pd.read_parquet(ch4, columns=["h3_index", CH4_COL]).set_index("h3_index")
-        g = g.join(c, how="left")
+        c = pd.read_parquet(ch4).set_index("h3_index")
+        info = [k for k in c.columns if k.startswith("ch4_n3_") and k != CH4_COL]
+        g = g.join(c[[CH4_COL, *info]], how="left")
         spec = [t for t in SPEC if t[0] not in FEEDSTOCK] + [("ch4", CH4_COL, "higher_better")]
     lat, lon = zip(*(h3.cell_to_latlng(c) for c in g.index), strict=True)
     g["excluded"] = g["excluded"].astype(bool)
@@ -150,7 +152,7 @@ def main(
     oat.to_csv(folder / f"suitability_oat_v0{tag}.csv", index=False)
     draws.to_csv(folder / f"suitability_draws_v0{tag}.csv", index=False)
 
-    raw_cols = [c for _, c, _ in spec]
+    raw_cols = [c for _, c, _ in spec] + info
     top = out.dropna(subset=["rank_base"]).sort_values("rank_base").head(200)
     top.join(g[raw_cols]).to_csv(folder / f"suitability_top_cells_v0{tag}.csv")
 
@@ -258,6 +260,16 @@ def main(
     for name in orders:
         sub = sites[sites["list"] == name].head(15)
         print(f"-- {name}\n" + sub[["site", *cols]].to_string())
+    if info:
+        parts = [k for k in info if k != "ch4_n3_nonfarm_nm3_d_30km"]
+        short = [k.removeprefix("ch4_n3_").removesuffix("_nm3_d_30km") + "_%" for k in parts]
+        print("\nN3 CH4 within 30 km (Nm3/d) and shares by residue group (%):")
+        for name in orders:
+            sub = sites[sites["list"] == name].head(15)
+            share = sub[parts].div(sub[CH4_COL], axis=0).mul(100).round(0)
+            share.columns = short
+            comp = pd.concat([sub[["site", *ids[1:], CH4_COL]].round(0), share], axis=1)
+            print(f"-- {name}\n" + comp.to_string())
 
 
 if __name__ == "__main__":

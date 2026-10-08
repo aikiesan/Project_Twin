@@ -21,25 +21,9 @@ from pathlib import Path
 
 import pandas as pd
 
+from engine.ingest.municipalities import read_names
 from engine.ingest.pdftext import load_pages
 from engine.ingest.semil_anuario import check_tables, match_ibge, parse_pages
-
-CODE_COLS = ("ibge_code", "CD_MUN", "cd_mun", "cod_ibge", "codigo_ibge")
-NAME_COLS = ("name", "NM_MUN", "nm_mun", "nome", "municipio", "name_municipality")
-
-
-def read_names(path: Path) -> pd.DataFrame:
-    """IBGE codes and official names from a CSV or a vector file (pyogrio, no geometry)."""
-    if path.suffix.lower() == ".csv":
-        df = pd.read_csv(path, dtype=str)
-    else:
-        import pyogrio  # optional: only for shapefile / GeoPackage input
-
-        df = pyogrio.read_dataframe(path, read_geometry=False)
-    code = next(c for c in CODE_COLS if c in df.columns)
-    name = next(c for c in NAME_COLS if c in df.columns)
-    out = pd.DataFrame({"ibge_code": df[code].astype(str).str[:7].astype(int), "name": df[name]})
-    return out[out["ibge_code"].between(3500000, 3599999)].drop_duplicates("ibge_code")
 
 
 def main() -> None:

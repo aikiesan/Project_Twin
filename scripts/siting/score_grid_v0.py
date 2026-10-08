@@ -21,6 +21,9 @@ Run:  uv run python scripts/siting/score_grid_v0.py <folder holding suitability_
 linear 0..p99 scale (ADR-0017); outputs then carry ``_per`` (e.g. ``suitability_map_v0_per.csv``)
 so the linear run is kept for comparison.
 
+``--names <csv|shp>`` adds a ``municipio`` column (IBGE code -> name, e.g. from
+``municipal_panel_v0.csv``) to the tables, the printout and the map CSV.
+
 ``--exclude label=path`` (repeatable) adds a hard exclusion: cells whose centre lies in a polygon
 of the layer (``engine.siting.exclusions``; needs shapely, pyproj, pyogrio). Use only layers
 with a legal basis and a ``sources.yaml`` entry.
@@ -37,6 +40,7 @@ from pathlib import Path
 import h3
 import pandas as pd
 
+from engine.ingest.municipalities import name_map
 from engine.siting.suitability import (
     NORMALIZATIONS,
     Criterion,
@@ -81,6 +85,7 @@ def main(
     spacing_km: float,
     n_sites: int,
     normalization: str = "linear",
+    names: Path | None = None,
 ) -> None:
     tag = "" if normalization == "linear" else f"_{normalization[:3]}"
     src = folder / "suitability_grid_v0.parquet"
@@ -88,6 +93,11 @@ def main(
     g["gas_network_km"] = g[GAS_COLS].min(axis=1)
     lat, lon = zip(*(h3.cell_to_latlng(c) for c in g.index), strict=True)
     g["excluded"] = g["excluded"].astype(bool)
+    ids = ["ibge_code"]
+    if names is not None:
+        code = pd.to_numeric(g["ibge_code"], errors="coerce").astype("Int64")
+        g["municipio"] = code.map(name_map(names)).fillna("")
+        ids.append("municipio")
     extra = {}
     for label, path in exclude.items():
         from engine.siting.exclusions import points_in_layer
@@ -121,7 +131,7 @@ def main(
     )
     oat = one_at_a_time(norm, w, delta=0.2, top_k=TOP_K, excluded=g["excluded"])
 
-    out = pd.concat([g[["ibge_code", "excluded"]], norm.add_prefix("n_"), per_row], axis=1)
+    out = pd.concat([g[[*ids, "excluded"]], norm.add_prefix("n_"), per_row], axis=1)
     out.to_parquet(folder / f"suitability_score_v0{tag}.parquet")
     bounds.to_csv(folder / f"suitability_bounds_v0{tag}.csv", index=False)
     oat.to_csv(folder / f"suitability_oat_v0{tag}.csv", index=False)
@@ -133,7 +143,7 @@ def main(
 
     ok = out.dropna(subset=["score_base"])
     best = ok.loc[ok.groupby("ibge_code")["score_base"].idxmax()]
-    mun = best[["ibge_code", "score_base", "rank_base", "p_top_k"]].rename(
+    mun = best[[*ids, "score_base", "rank_base", "p_top_k"]].rename(
         columns={
             "score_base": "best_cell_score",
             "rank_base": "best_cell_rank",
@@ -156,7 +166,7 @@ def main(
     }
     for name, idx in orders.items():
         pick = spaced_selection(lat, lon, pos[idx].to_numpy(), min_km=spacing_km, n=n_sites)
-        sel = out.iloc[pick][["ibge_code", *PER_ROW]]
+        sel = out.iloc[pick][[*ids, *PER_ROW]]
         sel = sel.join(g[raw_cols]).assign(list=name, site=range(1, len(pick) + 1))
         sel["lat"], sel["lon"] = [lat[i] for i in pick], [lon[i] for i in pick]
         sites.append(sel)
@@ -168,6 +178,7 @@ def main(
         {
             "h3_index": g.index,
             "ibge_code": g["ibge_code"].to_numpy(),
+            **({"municipio": g["municipio"].to_numpy()} if names is not None else {}),
             "lat": lat,
             "lon": lon,
             "excluded": g["excluded"].astype(int).to_numpy(),
@@ -200,6 +211,9 @@ def main(
         "cells": int(len(g)),
         "excluded": int((~keep).sum()),
         "extra_exclusions": extra,
+        "names": (
+            None if names is None else {"file": Path(names).name, "sha256": sha256(Path(names))}
+        ),
         "scored": int(out["score_base"].notna().sum()),
         "robust_top_k_cells_p50": int((per_row["p_top_k"] >= 0.5).sum()),
         "oat_min_top_k_kept": float(oat["top_k_kept"].min()),
@@ -218,7 +232,7 @@ def main(
     )
     print(json.dumps({k: v for k, v in meta.items() if k != "params"}, indent=2))
     print(oat.to_string(index=False))
-    cols = ["ibge_code", "score_base", "rank_median", "rank_p05", "rank_p95", "p_top_k"]
+    cols = [*ids, "score_base", "rank_median", "rank_p05", "rank_p95", "p_top_k"]
     print(top.head(15)[cols].to_string())
     print(f"\nDistinct sites >= {spacing_km:g} km apart:")
     for name in orders:
@@ -233,6 +247,18 @@ if __name__ == "__main__":
     ap.add_argument("--spacing-km", type=float, default=30.0)
     ap.add_argument("--n-sites", type=int, default=30)
     ap.add_argument("--normalization", choices=NORMALIZATIONS, default="linear")
+    ap.add_argument(
+        "--names",
+        type=Path,
+        help="IBGE code + name table (e.g. municipal_panel_v0.csv or the IBGE mesh shp)",
+    )
     a = ap.parse_args()
     excl = dict(e.split("=", 1) for e in a.exclude)
-    main(a.folder, {k: Path(v) for k, v in excl.items()}, a.spacing_km, a.n_sites, a.normalization)
+    main(
+        a.folder,
+        {k: Path(v) for k, v in excl.items()},
+        a.spacing_km,
+        a.n_sites,
+        a.normalization,
+        a.names,
+    )

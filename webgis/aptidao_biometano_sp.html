@@ -123,7 +123,7 @@ code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px}
     <section>
       <h2>Melhores células</h2>
       <div class="tbl"><table>
-        <thead><tr><th class="n">#</th><th>H3</th><th>IBGE</th><th class="n">nota</th><th class="n">p top-k</th></tr></thead>
+        <thead><tr><th class="n">#</th><th>H3</th><th>Município</th><th class="n">nota</th><th class="n">p top-k</th></tr></thead>
         <tbody id="top"></tbody>
       </table></div>
     </section>
@@ -131,7 +131,7 @@ code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px}
     <details>
       <summary>Formato do CSV e ressalvas</summary>
       <ul>
-        <li>Colunas: <code>h3_index</code>, <code>ibge_code</code>, <code>lat</code>, <code>lon</code>, <code>excluded</code> (0/1) e uma coluna <code>n_&lt;critério&gt;</code> por critério, já em 0–1 (1 = melhor). Demais colunas aparecem na dica do mapa.</li>
+        <li>Colunas: <code>h3_index</code>, <code>ibge_code</code>, <code>municipio</code> (opcional), <code>lat</code>, <code>lon</code>, <code>excluded</code> (0/1) e uma coluna <code>n_&lt;critério&gt;</code> por critério, já em 0–1 (1 = melhor). Demais colunas aparecem na dica do mapa.</li>
         <li>Distâncias são em linha reta (geodésicas), não por estrada: servem só para triagem.</li>
         <li>A rede de gás conhecida é um resumo de troncos (Q17); distâncias reais a dutos de distribuição podem ser menores.</li>
         <li>Rebanhos e cana municipais foram espalhados por área (flag D).</li>
@@ -182,16 +182,17 @@ function parseCSV(text){
   const crit = head.filter(h => h.startsWith("n_")).map(h => h.slice(2));
   if (ix("h3_index") < 0 && (ix("lat") < 0 || ix("lon") < 0)) throw new Error("o CSV precisa de h3_index (ou lat/lon)");
   if (!crit.length) throw new Error("nenhuma coluna n_<critério> no CSV");
-  const base = ["h3_index","ibge_code","lat","lon","excluded"];
+  const base = ["h3_index","ibge_code","municipio","lat","lon","excluded"];
   const rawCols = head.filter(h => !h.startsWith("n_") && !base.includes(h));
   const n = lines.length - 1, m = crit.length;
   const d = newData(n, crit, rawCols);
   const ci = crit.map(c => ix("n_" + c)), rc = rawCols.map(ix);
-  const ih = ix("h3_index"), ib = ix("ibge_code"), ila = ix("lat"), ilo = ix("lon"), iex = ix("excluded");
+  const ih = ix("h3_index"), ib = ix("ibge_code"), im = ix("municipio"), ila = ix("lat"), ilo = ix("lon"), iex = ix("excluded");
   for (let i = 0; i < n; i++){
     const f = lines[i + 1].split(",");
     d.h3[i] = ih >= 0 ? f[ih] : "";
     d.ibge[i] = ib >= 0 ? f[ib] : "";
+    d.mun[i] = im >= 0 ? (f[im] || "").replace(/^"|"$/g, "") : "";
     if (ila >= 0 && f[ila] !== "") { d.lat[i] = +f[ila]; d.lon[i] = +f[ilo]; }
     else if (H3 && d.h3[i]) { const [la, lo] = H3.cellToLatLng(d.h3[i]); d.lat[i] = la; d.lon[i] = lo; }
     const e = iex >= 0 ? f[iex].trim().toLowerCase() : "0";
@@ -202,8 +203,9 @@ function parseCSV(text){
   d.synthetic = false;
   return d;
 }
+function esc(t){ return String(t).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]); }
 function newData(n, crit, rawCols){
-  return {n, crit, rawCols, h3:new Array(n), ibge:new Array(n), lat:new Float64Array(n), lon:new Float64Array(n),
+  return {n, crit, rawCols, h3:new Array(n), ibge:new Array(n), mun:new Array(n).fill(""), lat:new Float64Array(n), lon:new Float64Array(n),
     excl:new Uint8Array(n), X:new Float32Array(n * crit.length), raw:new Float32Array(n * rawCols.length)};
 }
 
@@ -441,7 +443,7 @@ function table(){
   topIdx(score, 15).forEach((i, r) => {
     const tr = document.createElement("tr");
     const h = D.h3[i] ? D.h3[i].slice(0, 9) + "…" : D.lat[i].toFixed(3) + "," + D.lon[i].toFixed(3);
-    tr.innerHTML = '<td class="n">' + (r + 1) + '</td><td><code>' + h + '</code></td><td>' + (D.ibge[i] || "–") +
+    tr.innerHTML = '<td class="n">' + (r + 1) + '</td><td><code>' + h + '</code></td><td>' + esc(D.mun[i] || D.ibge[i] || "–") +
       '</td><td class="n">' + score[i].toFixed(3) + '</td><td class="n">' + (ptop ? ptop[i].toFixed(2) : "–") + "</td>";
     tr.title = D.h3[i] || "";
     tr.addEventListener("click", () => centerOn(i));
@@ -463,7 +465,7 @@ function showTip(i){
   const tip = $("#tip");
   if (i < 0){ tip.hidden = true; return; }
   const m = D.crit.length, f = v => v === v ? (Math.abs(v) >= 1000 ? Math.round(v).toLocaleString("pt-BR") : v.toFixed(3)) : "–";
-  let s = (D.h3[i] || "") + "\nIBGE " + (D.ibge[i] || "–") + (D.excl[i] ? "   EXCLUÍDA" : "") +
+  let s = (D.h3[i] || "") + (D.mun[i] ? "\n" + D.mun[i] : "") + "\nIBGE " + (D.ibge[i] || "–") + (D.excl[i] ? "   EXCLUÍDA" : "") +
     "\nnota " + f(score[i]) + (ptop ? "   p top-" + ptopK + " " + f(ptop[i]) : "") + "\n";
   D.crit.forEach((c, a) => { s += "\n" + (LABELS[c] || c).padEnd(18) + f(D.X[i * m + a]); });
   if (D.rawCols.length){ s += "\n"; D.rawCols.forEach((c, a) => { s += "\n" + c + " " + f(D.raw[i * D.rawCols.length + a]); }); }

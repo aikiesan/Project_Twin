@@ -616,6 +616,35 @@ sources:
       inventory's reading (P10/P90). Values in parameters.csv as road_detour_factor_* and
       straw_mill_road_km_* (flag D). The straw inputs come from the CP2b N3 cascade; no GEDAVE
       or other personal data enters these two summary files.
+  - id: esd_n3_supply_grid_1km
+    name: CP2b v5.1 N3 supply grid, 1 km cells + facility points, Nm3 CH4/d per residue (min/med/max)
+    publisher: CP2B / NIPE-UNICAMP (internal; ESD folder Metodo_CP2b/fl_espacial/outputs/grade_oferta_1km.gpkg)
+    url: local
+    module: supply
+    provides: [n3_ch4_nm3_d_by_residue_1km]
+    spatial: SP, 1 km squares (EPSG:5880, 189,887 cells) + 456 points (mills, sewage plants, juice factories)
+    temporal: CP2b v5.1 run of 2026-09-24
+    format: GeoPackage (layers celulas, pontos); 48 value columns <RESIDUE>__min|med|max
+    access: internal, contains personal-data-derived columns (LGPD)
+    license: internal (CP2B)
+    status: have
+    confidence: D
+    local_path: not copied (stays in the ESD folder on the project lead's PC)
+    sha256: c4bfbc72e83e81bff4b52061fc759c2d1cfa9129d0e63e65ac559cdc165303cf
+    accessed: '2026-10-08'
+    notes: >-
+      Read-only inventory in docs/inbox/esd_n3_grid.md (commit b46c9ba). Written by
+      fl_espacial/02_oferta.py: municipal N3 (Nm3 CH4/yr / 365) shared out inside each
+      municipality by weights; grid sums equal municipal sums within 0.01 %. Med total of both
+      layers 19,183,201 Nm3 CH4/d = N3 med of T1_state_levels.csv. Methane, not biogas or
+      biomethane; no total column. BOV_PASTO_MISTO is absent (ignored in config).
+      LGPD: AVES_CORTE, AVES_POSTURA (GEDAVE poultry register), SUINOS (farms_for_gee.csv),
+      BOV_LEITE and BOV_CONFINADO (GEDAVE cattle register) are farm points summed per 1 km cell,
+      so a cell with one farm carries that farm's capacity. Never copy or export those columns
+      cell by cell; use them only after aggregation to the 30 km sums of the suitability grid
+      (or H3 res 7) with a k >= 3 farms rule checked by someone allowed to read the registers.
+      The other 11 residues (straw, vinasse, filter cake, bagasse, citrus, MSW, pruning, sludge,
+      crop residues) carry no personal data. Do not use the outputs_v5.0_bak copy.
   - id: mapbiomas_federal_uc_integral
     name: Federal protected areas, integral protection (MapBiomas 10.1 auxiliary layer FEDERAL_PROTECTED_AREAS_INTEGRAL_PROTECTION_v2)
     publisher: MapBiomas (compiling the federal protected-area registry)

@@ -17,7 +17,7 @@ What it does, all in the browser:
 - excluded cells (state protected areas, indigenous territories) are shown and never scored;
 - click or hover a cell for its values; the table lists the 15 best cells.
 
-CSV contract: `h3_index`, `ibge_code`, `lat`, `lon`, `excluded` (0/1), one `n_<criterion>`
+CSV contract: `h3_index`, `ibge_code`, optional `municipio` (name, from `score_grid_v0.py --names`), `lat`, `lon`, `excluded` (0/1), one `n_<criterion>`
 column per criterion in [0, 1] (1 = best); any other column shows in the tooltip.
 
 Needs `h3-js` from cdn.jsdelivr.net (without it, cells draw as squares and hover is off).

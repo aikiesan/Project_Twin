@@ -7,6 +7,9 @@
 # - ad_shares are CALIBRATION START VALUES, not data: the share of each generated stream sent to
 #   the digester (docs/09 §5). They are what the comparison with ANP will tune.
 # - The nameplate comes from the ANP series in evidence/ (anp_plant_id), not from this file.
+# - anp_volume_basis: what the ANP plant field "Volume Processado de Biogás" is compared with,
+#   simulated biogas (the field's name, the default) or biomethane. At Narandiba it tracks
+#   biomethane (docs/21 C40, company reports); ANP has not confirmed either reading (Q9).
 # - x_ch4 (biogas CH4 fraction for vinasse + filter cake) is in conflict, docs/21 C13: 0.575
 #   (CP2B convention note) vs 0.65 (PILAR-2b feedstocks.yaml). Run both (--x-ch4).
 # - storage (strategy S1, engine.process.strategies): store_frac is a calibration start value;
@@ -20,6 +23,7 @@ mills:
   costa_pinto:
     name: Raízen Costa Pinto (Piracicaba, SP)
     anp_plant_id: sp_raizen_costa_pinto
+    anp_volume_basis: biogas
     strategy: S0
     cane_t:
       2024: {value: null, source: TODO, confidence: null}
@@ -33,6 +37,7 @@ mills:
   narandiba:
     name: Cocal Narandiba (Narandiba, SP)
     anp_plant_id: sp_cocal_narandiba
+    anp_volume_basis: biomethane
     strategy: S0
     cane_t:
       2025: {value: null, source: TODO, confidence: null}

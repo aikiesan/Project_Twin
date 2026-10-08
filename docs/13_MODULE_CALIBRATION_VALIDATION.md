@@ -49,12 +49,13 @@ Module: `engine.skeleton` (`python -m engine.skeleton list | run`). Tests: `test
 - the AD shares, which are calibration start values;
 - the strategy;
 - the ANP plant id, from which the nameplate is taken;
+- `anp_volume_basis`: what the ANP plant field is compared with, simulated `biogas` (default) or `biomethane` (set for Narandiba, §8);
 - `x_ch4`, set to 0.575 with `--x-ch4` to run 0.65 as well (docs/21 C13).
 
 Both mills' cane values are still empty.
 
 **Comparison rules (v0)**
-- Basis: biogas, because ANP reports biogas volume (m³/d) and utilization against biogas capacity. Simulated biogas is capped at the ANP biogas capacity, since a plant cannot report more.
+- Basis, set per mill (`anp_volume_basis`). The ANP field is named "Volume Processado de Biogás" (m³/d), with utilization against biogas capacity, so the default compares simulated biogas with it, capped at the ANP biogas capacity, since a plant cannot report more. At Narandiba the field tracks biomethane (§8, docs/21 C40), so that mill compares simulated biomethane, capped at the ANP biomethane capacity (27,112 m³/d), and its utilization is against that capacity. Added 2026-10-08; until then both mills used the biogas basis, which mixed bases at Narandiba. ANP has not confirmed what the field holds (Q9), so the basis is an input of the run (it changes the `run_id`), written to `summary.json` and to the `basis` column of `comparison.csv`.
 - **Near-zero ANP months** (below 1 % of capacity) are flagged `obs_near_zero` and left out of the metrics. §3.2 says zeros count as missing unless confirmed. Example: Narandiba's months before Aug 2025 (C6) and Costa Pinto's Sep 2025.
 - Metrics:
   - months observed and compared;
@@ -188,7 +189,7 @@ Run: `PYTHONPATH=src python -m engine.calibrate.anp_units evidence/anp_biometano
 1. The thousand-unit reading fixes the scale only from about 2024. Aug 2022–Aug 2023 stays about ten times too low even ×1000.
 2. At Narandiba the field tracks biomethane, not biogas. The ×0.525 yield proxy in step 2 then undercounts Narandiba, so the good state-level fit of the rescaled series may be partly a coincidence of two errors. The state check stays a diagnostic, not a proof.
 
-**Rule added.** For Narandiba, calibrate against the company's annual figures (biogas, biomethane, flare, feed tonnages per safra; `registry/skeleton_mills.yaml` notes) and use ANP months only for the seasonal shape from Aug 2025, labelled. Utilisation shares computed as ANP "processed biogas" / biogas capacity (§4 target series) mix bases at Narandiba until ANP answers Q9.
+**Rule added.** For Narandiba, calibrate against the company's annual figures (biogas, biomethane, flare, feed tonnages per safra; `registry/skeleton_mills.yaml` notes) and use ANP months only for the seasonal shape from Aug 2025, labelled. Utilisation shares computed as ANP "processed biogas" / biogas capacity (§4 target series) mix bases at Narandiba until ANP answers Q9. The skeleton runner therefore compares Narandiba on the biomethane basis (`anp_volume_basis: biomethane`, §6).
 
 **Table and check.** The reported values are in `registry/plant_reported_annual.csv`: one row per value, with `ref_id`, PDF page, verbatim quote, flag and read check (`python -m engine.registry validate` checks the file). `plant_period_check` (`engine.calibrate.anp_units`) sums a plant's ANP months over each reported period, flagged months ×1000. Plants are keyed on CNPJ (Cocal Narandiba 14788495000170, Cocal Paraguaçu Paulista 44191268000123). A municipality name is accepted only when one CNPJ holds all its ANP rows. When the owner reports one total for several plants, the check sums their ANP rows: Cocal's 2025/26 figures sit under `sp_cocal_narandiba_paraguacu` and are compared with Narandiba + Paraguaçu Paulista.
 

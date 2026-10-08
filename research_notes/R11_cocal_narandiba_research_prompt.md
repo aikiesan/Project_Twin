@@ -84,3 +84,20 @@
 - Narandiba sells through a dedicated 65 km pipeline built by the distributor. A plant far from the trunk line can still reach a grid if a distributor builds a spur, so distance to the trunk line overstates the barrier.
 
 **Next questions for a second round:** the act 422/2022 text in the DOU; the Paques and Geo pages read directly; CETESB licence numbers (the old endpoint returned 404); the ANP unit used before Aug 2025.
+
+## Second-round prompt (2026-10-08)
+
+> Same rules as the first prompt: no invented values; for every value give URL, document title, publisher, date, page/table and a **verbatim quote**; mark PRIMARY or SECONDARY; keep biogas, CH₄ and biomethane apart, and nameplate apart from actual; list conflicts with both values; write "not found" with the places searched. **Download and attach every primary PDF or CSV you use** (file name + sha256 if you can), so it can be read here directly.
+>
+> 1. **ANP Autorização SPC-ANP nº 422, de 30/06/2022** (Cocal Energia S.A., CNPJ 14.788.495/0001-70, Narandiba-SP): full text from the Diário Oficial da União (in.gov.br), DOU section, edition and page; the authorised capacity with all decimals; any later act changing it. Same for Autorização ANP nº 547/2022 and for the act authorising Cocal Energia PPT Participações Ltda. (CNPJ 44.191.268/0001-23, Paraguaçu Paulista).
+> 2. **ANP reporting unit.** Any ANP note, methodology page, dictionary of the biomethane open-data files ("Biometano_DadosAbertos_CSV_Capacidade.csv") or panel FAQ that defines the unit of "Volume Processado de Biogás (m³/d)", the reference conditions of the m³, and how operators report it (form, resolution, e.g. Resolução ANP nº 734/2018 or its successor). Any record of corrections or revisions of past months.
+> 3. **Paques case page "Cocal Energia"** (paquesglobal.com): the full parameter box (biogas flow, H₂S in/out, units, whether the flow is design or actual).
+> 4. **Geo Biogás page "Cocal Geo Biogás"** (geobiogas.tech): every number for the Narandiba and Paraguaçu units with its label (capacity basis, digester volumes, CO₂, investment, feedstock).
+> 5. **Upgrading technology** at Narandiba (membranes, PSA, water scrubbing, amine) and supplier; any CO₂ recovery plant supplier.
+> 6. **CETESB**: licences (LP/LI/LO) of Cocal Energia in Narandiba — numbers, dates, licensed capacity, conditions — from the CETESB licensing portal or the Diário Oficial do Estado de SP.
+> 7. **Cane and residues at the Narandiba mill**: cane crushed per crop year 2019/20–2025/26 (UNICA, RenovaBio certification report of the mill, company reports, credit-rating reports, debenture/CRA prospectuses); vinasse and filter cake volumes; share of vinasse sent to the digesters.
+> 8. **RenovaBio**: the biomethane certification of Cocal Energia (certifier, carbon-intensity score in gCO₂e/MJ, eligible volume, validity) from the ANP RenovaBio panel or the certifier's public report; CBIOs issued if public.
+> 9. **CCEE / MME, LRCAP 2026**: the official winners list (PDF or spreadsheet) with UTE COCAL BIOMETANO NRD and PPT — power offered, fuel, start of supply, contract length; MME outorga portaria for each UTE with installed power.
+> 10. **Minimum viable plant scale (Germany, Sweden)**: peer-reviewed papers or official statistics (DBFZ, Fachverband Biogas, dena biogas register, Energigas Sverige, Swedish Energy Agency) giving the size distribution of biomethane upgrading plants (Nm³/h raw gas or biomethane) and the smallest plants that operate without feed-in support; give DOI, authors, journal, year for every paper.
+>
+> Output: one table per question (columns: value | unit | basis | period | source title | publisher | date | URL | page/table | verbatim quote | PRIMARY/SECONDARY), a conflicts list, a not-found list, and the list of attached files.

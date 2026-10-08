@@ -4,8 +4,10 @@ ADR-0018, docs/12 Step 1 (``engine.siting.coverage``). Reads ``grade_oferta_1km.
 ``esd_n3_supply_grid_1km``; layers ``celulas`` and ``pontos``, columns ``<RESIDUE>__min|med|max``
 in Nm³ CH₄/d of N3) and a candidate grid (a parquet with ``h3_index`` and ``excluded``, e.g.
 ``suitability_grid_v0.parquet`` or a ``suitability_score_v0*.parquet`` with more exclusions).
-Hubs can open at the non-excluded H3 cells and at the ``pontos`` facilities (mills, sewage plants,
-juice factories). Writes to ``--out``:
+Hubs can open at the non-excluded H3 cells, at the ``pontos`` facilities (mills, sewage plants,
+juice factories) and at ``--extra-candidates`` (e.g. existing biogas plants, which the gpkg does
+not hold; with ``--fix-extra`` they open first and the curve also counts new hubs only). Writes to
+``--out``:
 
 - ``hub_coverage_v0_<scenario><tag>_hubs.csv``: per hub, opening step, position, supply collected
   (non-farm by material class, farm part withheld below ``--k-min`` farm cells);
@@ -28,11 +30,13 @@ Run (needs shapely, pyproj, pyogrio):
         <candidates.parquet> --classes residue_classes.csv \\
         --radius liquid=R1:R2 --radius wet=R1:R2 --radius dry=R1:R2 \\
         --q-min Q --detour-factor 1.295 [--scenario med] [--only-to PALHA=<tipo>] \\
-        [--skip RESIDUE] [--source-cell-km 2] [--k-min 3] [--tag _x] [--out folder]
+        [--extra-candidates plants.csv [--fix-extra]] [--skip RESIDUE] \\
+        [--source-cell-km 2] [--k-min 3] [--tag _x] [--out folder]
 
 ``residue_classes.csv`` has columns ``residue,class``, one row per residue in the gpkg (or name the
 residue with ``--skip``). Run once with ``--list`` to print the residues and the facility types
-(``tipo``) found in the gpkg, then write the csv.
+(``tipo``) found in the gpkg, then write the csv. ``--extra-candidates`` is a csv with columns
+``id,lat,lon`` (WGS84 degrees) and optionally ``tipo,nome,ibge`` (``tipo`` defaults to ``extra``).
 
 Supply is summed into ``--source-cell-km`` squares in the gpkg CRS (projected, metres) to bound
 memory; every position is then taken to latitude and longitude, and distances are great-circle
@@ -95,6 +99,30 @@ def read_layer(path: Path, layer: str, scenario: str):
     return shapely.get_x(c), shapely.get_y(c), tab, extra, meta.get("crs")
 
 
+def read_extra(path: Path) -> pd.DataFrame:
+    """Extra candidates: ``id, lat, lon`` (degrees), optional ``tipo, nome, ibge``."""
+    ex = pd.read_csv(path, dtype={"id": str, "tipo": str, "nome": str, "ibge": str})
+    need = {"id", "lat", "lon"} - set(ex.columns)
+    if need:
+        raise SystemExit(f"{path.name}: missing columns {sorted(need)}")
+    lat, lon = ex["lat"].astype(float), ex["lon"].astype(float)
+    if not (lat.between(-90, 90).all() and lon.between(-180, 180).all()):
+        raise SystemExit(f"{path.name}: lat/lon must be degrees (no NaN)")
+    if ex["id"].isna().any() or ex["id"].duplicated().any():
+        raise SystemExit(f"{path.name}: id must be filled and unique")
+    return pd.DataFrame(
+        {
+            "kind": "extra",
+            "id": ex["id"],
+            "tipo": ex["tipo"].fillna("extra") if "tipo" in ex else "extra",
+            "nome": ex["nome"].fillna("") if "nome" in ex else "",
+            "ibge": ex["ibge"].fillna("") if "ibge" in ex else "",
+            "lat": lat,
+            "lon": lon,
+        }
+    )
+
+
 def parse_pairs(items: list[str], what: str) -> dict[str, str]:
     out = {}
     for it in items or []:
@@ -138,10 +166,12 @@ def main(a: argparse.Namespace) -> None:
     no_radius = sorted({residue_class[r] for r in used} - set(radii))
     if no_radius:
         raise SystemExit(f"no --radius for classes {no_radius}")
+    extra = read_extra(a.extra_candidates) if a.extra_candidates else None
+    known = set(tipo) | (set(extra["tipo"]) if extra is not None else set())
     only_to = {k: set(v.split(",")) for k, v in parse_pairs(a.only_to, "--only-to").items()}
-    unknown = sorted(set().union(*only_to.values()) - set(tipo)) if only_to else []
+    unknown = sorted(set().union(*only_to.values()) - known) if only_to else []
     if unknown:
-        raise SystemExit(f"--only-to: tipo {unknown} not in pontos ({sorted(set(tipo))})")
+        raise SystemExit(f"--only-to: tipo {unknown} not among candidates ({sorted(known)})")
 
     t0 = time.time()
     rc = source_rows(
@@ -179,6 +209,11 @@ def main(a: argparse.Namespace) -> None:
             "lon": np.r_[lon, plon],
         }
     )
+    fixed: list[int] = []
+    if extra is not None:
+        if a.fix_extra:
+            fixed = list(range(len(cand), len(cand) + len(extra)))
+        cand = pd.concat([cand, extra], ignore_index=True)
 
     routes = sorted(only_to)
     code = rows["route"].map({r: k for k, r in enumerate(routes)}).fillna(-1).to_numpy(int)
@@ -201,8 +236,8 @@ def main(a: argparse.Namespace) -> None:
     )
     t1 = time.time()
     supply = rows["supply"].to_numpy(float)
-    cov = greedy_coverage(W, supply, q_min=a.q_min)
-    ub = coverage_upper_bound(W, supply, q_min=a.q_min)
+    cov = greedy_coverage(W, supply, q_min=a.q_min, fixed=fixed)
+    ub = coverage_upper_bound(W, supply, q_min=a.q_min, fixed=fixed)
     t2 = time.time()
 
     cls_names = sorted(rows["cls"].unique())
@@ -260,6 +295,8 @@ def main(a: argparse.Namespace) -> None:
         "radii_km": radii,
         "only_to": {k: sorted(v) for k, v in only_to.items()},
         "q_min_nm3_ch4_d": a.q_min,
+        "extra_candidates": a.extra_candidates.name if a.extra_candidates else None,
+        "fix_extra": bool(a.fix_extra and extra is not None),
         "distance": "great-circle km x detour_factor (fallback, not routed)",
         "detour_factor": a.detour_factor,
         "source_cell_km": a.source_cell_km,
@@ -272,19 +309,33 @@ def main(a: argparse.Namespace) -> None:
             "gpkg": {"file": a.gpkg.name, "sha256": sha256(a.gpkg), "crs": str(crs)},
             "candidates": {"file": a.candidates.name, "sha256": sha256(a.candidates)},
             "classes": {"file": a.classes.name, "sha256": sha256(a.classes)},
+            **(
+                {"extra": {"file": a.extra_candidates.name, "sha256": sha256(a.extra_candidates)}}
+                if a.extra_candidates
+                else {}
+            ),
         },
         "params": params,
         "sources": {
             "rows": int(len(rows)),
             "rows_by_class": rows["cls"].value_counts().sort_index().to_dict(),
         },
-        "candidates": {"h3": n_h3, "facilities": int(len(xp)), "pairs_with_weight": int(W.nnz)},
+        "candidates": {
+            "h3": n_h3,
+            "facilities": int(len(xp)),
+            "extra": int(len(extra)) if extra is not None else 0,
+            "fixed": len(fixed),
+            "pairs_with_weight": int(W.nnz),
+        },
         "seconds": {"weights": round(t1 - t0, 1), "greedy_and_bound": round(t2 - t1, 1)},
         "stop_reason": cov.stop_reason,
         "hubs_open": int((~cov.hubs["closed"]).sum()),
         "hubs_closed_by_pruning": int(cov.hubs["closed"].sum()),
         "hubs_for_share": {
-            str(r.share): (None if pd.isna(r.n_hubs) else int(r.n_hubs)) for r in curve.itertuples()
+            str(r.share): (
+                None if pd.isna(r.n_hubs) else {"n_hubs": int(r.n_hubs), "n_new": int(r.n_new)}
+            )
+            for r in curve.itertuples()
         },
         "nonfarm_covered_share": (
             round(float(hubs["nonfarm"].sum()) / nonfarm_total, 4) if nonfarm_total > 0 else None
@@ -319,6 +370,8 @@ if __name__ == "__main__":
     ap.add_argument("--skip", action="append", metavar="RESIDUE")
     ap.add_argument("--radius", action="append", metavar="CLASS=R1:R2", help="road km")
     ap.add_argument("--only-to", action="append", metavar="RESIDUE=TIPO[,TIPO]")
+    ap.add_argument("--extra-candidates", type=Path, help="csv id,lat,lon[,tipo,nome,ibge]")
+    ap.add_argument("--fix-extra", action="store_true", help="open the extra candidates first")
     ap.add_argument("--q-min", type=float, help="Nm3 CH4/d a new hub must add")
     ap.add_argument("--detour-factor", type=float, help="road km per straight-line km")
     ap.add_argument("--source-cell-km", type=float, default=2.0, help="0 keeps the 1 km cells")

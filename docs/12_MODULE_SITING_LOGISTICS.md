@@ -26,6 +26,7 @@ Choose plant **locations, scales, feedstock contracts, storage and gas-delivery 
 - **Distances:** routed (`routing.od_matrix`, then `pairs_from_dense`) or the fallback: great-circle distance × a cited detour factor (`sphere_xyz_m`, `fallback_pairs_km`; the rule of `routing.fallback_road_km`).
 - **Script** `scripts/siting/hub_coverage_v0.py` (PC; needs pyogrio, shapely, pyproj). It reads `grade_oferta_1km.gpkg` (`esd_n3_supply_grid_1km`).
   - Candidates: the non-excluded H3 res-7 cells of a grid parquet, plus the 456 facility points of the gpkg (mills, sewage plants, juice factories).
+  - `--extra-candidates plants.csv` (`id,lat,lon`, optional `tipo,nome,ibge`) adds points the gpkg lacks, such as existing biogas plants. With `--fix-extra` they open first, and the curve reports both all hubs and new hubs only.
   - Supply is summed into 2 km squares (`--source-cell-km`) to bound memory; this moves supply by at most about 1.4 km.
   - Run `--list` first for the residue names and facility types, then pass `--classes`, `--radius CLASS=R1:R2`, `--q-min`, `--detour-factor` and, for straw, `--only-to PALHA=<mill tipo>`.
   - Writes `hub_coverage_v0_<scenario><tag>_hubs.csv`: per hub, step, position and collected supply by class.
@@ -38,7 +39,7 @@ Choose plant **locations, scales, feedstock contracts, storage and gas-delivery 
   - heuristic (a test case covers 7 where the best pair covers 8);
   - depends on the candidate grid;
   - fallback distances only;
-  - existing biogas plants are not in the gpkg and cannot be fixed yet;
+  - existing biogas plants are not in the gpkg; they need a csv from a registered source (`--extra-candidates`);
   - not compared with the ESD `mclp.csv` (455 hubs; 16 and 114 hubs for 50 and 80 % with straw at mills) until both run on the same inputs on the PC.
 - **Tests:** `tests/test_siting_coverage.py` (26).
 

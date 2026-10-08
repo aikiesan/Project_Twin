@@ -45,7 +45,7 @@
 - **Follow-ups:**
   - compare with `mclp.csv` on the PC (same classes, radii, Q_min and candidates);
   - source the radii, the class mapping and q_min (docs/21 Q20, Q23);
-  - add existing biogas plants as fixed hubs (they are not in the gpkg `pontos` layer);
+  - add existing biogas plants (not in the gpkg `pontos` layer) with `--extra-candidates`, fixed or not, from a source registered in `sources.yaml`;
   - route the final hubs with OSRM;
   - run the min/med/max scenarios.
 

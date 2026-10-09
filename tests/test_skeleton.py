@@ -104,9 +104,10 @@ def test_comparison_math():
     months = ["2025-11", "2025-12", "2026-01"]
     sim = pd.DataFrame({"month": months, "days": [30, 31, 31], "biogas_nm3": [300.0, 0, 62.0]})
     anp = pd.DataFrame({"month": months[:2], "vol_biogas_m3d": [5.0, 0.0]})
-    t, m = compare_with_anp(sim, anp, cap_biogas_m3_d=8.0)
+    t, m = compare_with_anp(sim, anp, cap_m3_d=8.0)
     t = t.set_index("month")
-    assert t.loc["2025-11", "sim_biogas_capped_nm3_d"] == 8.0  # 10/d capped at 8
+    assert m["basis"] == "biogas" and (t["basis"] == "biogas").all()
+    assert t.loc["2025-11", "sim_capped_nm3_d"] == 8.0  # 10/d capped at 8
     assert t.loc["2025-11", "sim_util_pct"] == pytest.approx(100)
     assert t.loc["2025-11", "obs_util_pct"] == pytest.approx(62.5)
     assert t.loc["2025-12", "obs_near_zero"] is True
@@ -118,6 +119,52 @@ def test_comparison_math():
     assert m["bias_util_pp"] == pytest.approx(37.5)
     assert m["volume_ratio_sim_obs"] == pytest.approx(8 / 5)
     assert m["offseason_share_sim"] == 0 and m["offseason_share_obs"] == 0
+
+
+def test_comparison_on_the_biomethane_basis():
+    months = ["2025-11", "2025-12"]
+    sim = pd.DataFrame(
+        {
+            "month": months,
+            "days": [30, 31],
+            "biogas_nm3": [3000.0, 3100.0],
+            "biomethane_nm3": [150.0, 310.0],
+        }
+    )
+    anp = pd.DataFrame({"month": months, "vol_biogas_m3d": [4.0, 8.0]})
+    t, m = compare_with_anp(sim, anp, cap_m3_d=8.0, basis="biomethane")
+    t = t.set_index("month")
+    assert m["basis"] == "biomethane"
+    assert t["sim_nm3_d"].tolist() == [5.0, 10.0]  # biomethane, not biogas
+    assert t["sim_capped_nm3_d"].tolist() == [5.0, 8.0]
+    assert t["obs_util_pct"].tolist() == [50.0, 100.0]
+    assert m["volume_ratio_sim_obs"] == pytest.approx((150 + 248) / (120 + 248))
+    with pytest.raises(ValueError, match="basis"):
+        compare_with_anp(sim, anp, cap_m3_d=8.0, basis="ch4")
+
+
+def test_mill_basis_is_read_checked_and_used(tmp_path):
+    mills, _ = load_mill_configs(FIXTURE)
+    assert mills["narandiba_test"].anp_volume_basis == "biogas"  # default
+    plant = "    anp_plant_id: sp_cocal_narandiba\n"
+    text = FIXTURE.read_text(encoding="utf-8").replace(
+        plant + "    strategy: S0\n",
+        plant + "    anp_volume_basis: biomethane\n    strategy: S0\n",
+        1,
+    )
+    cfg = tmp_path / "mills.yaml"
+    cfg.write_text(text, encoding="utf-8")
+    assert load_mill_configs(cfg)[0]["narandiba_test"].anp_volume_basis == "biomethane"
+    run = run_skeleton("narandiba_test", 2025, config_path=cfg, out_dir=None)
+    assert run.summary["comparison_with_anp"]["basis"] == "biomethane"
+    assert run.summary["inputs"]["anp_volume_basis"] == "biomethane"
+    cap_bm = run.summary["nameplate"]["cap_biometano_m3_d"]
+    assert run.comparison["sim_capped_nm3_d"].max() <= cap_bm
+    biogas_run = run_skeleton("narandiba_test", 2025, config_path=FIXTURE, out_dir=None)
+    assert biogas_run.run_id != run.run_id
+    cfg.write_text(text.replace("anp_volume_basis: biomethane", "anp_volume_basis: ch4"))
+    with pytest.raises(ValueError, match="anp_volume_basis"):
+        load_mill_configs(cfg)
 
 
 def test_run_writes_outputs_and_is_reproducible(tmp_path):

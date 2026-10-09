@@ -67,6 +67,7 @@ Module: `engine.process.mass_balance`. It is the process step of the walking ske
 - `simulate()`, month by month: CH₄ → biogas → biomethane. Output is capped at the upgrading nameplate; the excess is reported as `biomethane_curtailed_nm3`. Capacity factor is reported per month.
 - Monthly checks with three states (True, False, or None = not evaluable): OLR, HRT, feed TS, COD/SO₄ and potassium. `feasible` is true when every evaluable check passes.
 - `size_digester()`: the volume that meets OLR and HRT in the worst month.
+- **Check tolerance (2026-10-06):** the OLR and HRT checks pass within a relative `CHECK_RTOL` of 10⁻⁹. Without it, a digester sized exactly at a limit could be flagged infeasible by rounding: `V / Q` came out as 26.666666666666664 against a limit of 26.666666666666668. The Morris screen found this (docs/13 §7), and a regression test covers it.
 - `substrates_from_registry()` and `limits_from_registry()` build vinasse, filter cake and the limits from central values. Each substrate records the parameter ids it used.
 
 **v0 assumptions, stated in code**

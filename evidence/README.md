@@ -8,6 +8,8 @@ Small files kept in git on purpose (they are the only **V**-level evidence so fa
 | `renovabio_cert_report_usina_santa_adelia_pereira_barreto.txt` | Text extraction of the PDF (pdftotext layout) | derived | 0b6c4acb…eceeae |
 | `anp_monthly_sp_plants_from_pilar2b.csv` | ANP monthly biogas volume & utilization, **SP plants only** (215 rows) | extracted from `aikiesan/Pilar-2b` `analysis/data/05e_anp_biometano_plant_volume_monthly.csv` (GPL-3.0) | 6a315052…b1e |
 | `anp_biomethane_plants_latest_from_pilar2b.csv` | ANP authorized biomethane plants, latest month (04/2026), with CNPJ, capacity, utilization | copy of PILAR-2b `analysis/data/05c_anp_biometano_plants_latest.csv` | 51f0921d…b6c |
+| `anp_biometano_dadosabertos_capacidade_2026-08.csv` | ANP open data, plant-level monthly: authorised biomethane capacity, biogas processing capacity, processed biogas (m³/d), % (22 plants, 01/2020–08/2026) | ANP biomethane open-data ZIP, downloaded by the project lead 2026-10-08 (`anp_biometano_dados_abertos`) | 6cd432e1…52bf75 |
+| `anp_biometano_dadosabertos_producao_2026-08.csv` | ANP open data, biomethane production per state and product (m³/month) | same ZIP | 1f40f437…3e04a4 |
 
 ## Verified values (flag V) from the Santa Adélia report
 
@@ -28,3 +30,4 @@ Notes:
 - Raízen Costa Pinto: off-season ~0–12 %, peak 56–58 % (Jul–Aug 2025).
 - Cocal Narandiba: **0 % every month Jul 2022–Jul 2025**, then 30–49 % from Aug 2025, including off-season months → conflict **C6**.
 - `util_pct` = biogas volume ÷ biogas capacity (verify definition with ANP).
+- 2026-10-08: `util_pct` definition confirmed by the ANP header ("Volume Processado de Biogás" / "Capacidade Processamento de Biogás"). Narandiba's "0 %" months are 1–30 m³/d, probably reported in thousand m³/d (docs/21 C6, docs/13 §8).

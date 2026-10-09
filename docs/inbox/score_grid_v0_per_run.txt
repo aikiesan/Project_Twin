@@ -1,0 +1,103 @@
+{
+  "run_id": "suitability_v0_per_20261008T112729Z",
+  "param_hash": "dc964c6a3e86b1e080c9785e5ad3bade002fe4d354ed6c6c24962e2171df29f9",
+  "input": {
+    "file": "suitability_grid_v0.parquet",
+    "sha256": "b744d3ba415f651373b1e46df78fe7da98a81a875008be06ef0407f2492f9073"
+  },
+  "cells": 47273,
+  "excluded": 1946,
+  "extra_exclusions": {
+    "federal_uc_integral": {
+      "file": "FEDERAL_PROTECTED_AREAS_INTEGRAL_PROTECTION_v2.shp",
+      "sha256": "c42be75850886eec7915915e9355ae62f8a800bca773071c284b2378eeb6beb8",
+      "cells_inside": 85,
+      "newly_excluded": 62
+    }
+  },
+  "names": {
+    "file": "municipal_panel_v0.csv",
+    "sha256": "04ce8e2b456a8033f9e5de38aeb21ef0c5677bc7a56245f6c1eaeac87af63250"
+  },
+  "scored": 45327,
+  "robust_top_k_cells_p50": 30,
+  "oat_min_top_k_kept": 0.88,
+  "caveats": [
+    "straight-line distances, not road network",
+    "gas layer is a trunk summary (docs/21 Q17)",
+    "municipal cane and herds spread uniformly by area (flag D)",
+    "exclusions: state protected areas and indigenous territories, federal_uc_integral (cell centre inside)"
+  ]
+}
+criterion change   weight  top_k_kept
+      gas   -20% 0.102564        0.96
+      gas   +20% 0.146341        0.97
+    power   -20% 0.102564        0.94
+    power   +20% 0.146341        0.97
+     road   -20% 0.102564        0.92
+     road   +20% 0.146341        0.96
+     cane   -20% 0.102564        0.93
+     cane   +20% 0.146341        0.92
+    swine   -20% 0.102564        0.98
+    swine   +20% 0.146341        0.97
+  poultry   -20% 0.102564        0.98
+  poultry   +20% 0.146341        0.97
+   cattle   -20% 0.102564        0.94
+   cattle   +20% 0.146341        0.88
+   demand   -20% 0.102564        0.94
+   demand   +20% 0.146341        0.98
+                ibge_code  municipio  score_base  rank_median  rank_p05  rank_p95  p_top_k
+h3_index                                                                                  
+87a811028ffffff   3554508      Tietê    0.894089          3.0       1.0    298.15    0.886
+87a811153ffffff   3511508  Cerquilho    0.890212          6.0       2.0    372.60    0.871
+87a81102bffffff   3554508      Tietê    0.889837          7.0       2.0    333.60    0.875
+87a811071ffffff   3525854    Jumirim    0.887903          8.0       1.0    802.30    0.820
+87a811076ffffff   3554508      Tietê    0.881903         15.0       5.0    587.40    0.818
+87a811044ffffff   3525854    Jumirim    0.880066         18.0       2.0   1065.95    0.759
+87a811074ffffff   3525854    Jumirim    0.878169         18.0       2.0    697.65    0.750
+87a811005ffffff   3554508      Tietê    0.877865         25.0       3.0    380.05    0.803
+87a811070ffffff   3525854    Jumirim    0.877154         20.0       6.0    774.15    0.759
+87a81100dffffff   3554508      Tietê    0.876820         26.0       8.0    625.30    0.787
+87a811009ffffff   3554508      Tietê    0.876056         30.0       5.0    727.05    0.753
+87a81102dffffff   3511508  Cerquilho    0.874970         25.5       7.0    593.00    0.754
+87a81102affffff   3554508      Tietê    0.873671         34.0       6.0    512.05    0.752
+87a811004ffffff   3554508      Tietê    0.872237         38.0       7.0    477.05    0.742
+87a811155ffffff   3511508  Cerquilho    0.871012         40.0       9.0    766.50    0.735
+
+Distinct sites >= 30 km apart:
+-- equal_weights
+                 site ibge_code          municipio  score_base  rank_median  rank_p05  rank_p95  p_top_k
+h3_index                                                                                                
+87a811028ffffff     1   3554508              Tietê    0.894089          3.0      1.00    298.15    0.886
+87a811654ffffff     2   3538709         Piracicaba    0.842541        167.0      5.00   1940.10    0.395
+87a811572ffffff     3   3545209              Salto    0.840355        138.0      9.95   2261.40    0.420
+87a81ec29ffffff     4   3503307             Araras    0.824054        360.0     14.00   3659.35    0.242
+87a811c44ffffff     5   3552205           Sorocaba    0.819536        329.5     36.00   4705.40    0.218
+87a813a33ffffff     6   3524709         Jaguariúna    0.817796        370.5     26.00   4581.55    0.176
+87a813376ffffff     7   3530805         Mogi Mirim    0.815532        481.0     73.90   3694.50    0.084
+87a819181ffffff     8   3524501               Jaci    0.800803        663.5      7.95   7577.85    0.212
+87a8118edffffff     9   3554003              Tatuí    0.798249        850.0    116.00   5610.40    0.039
+87a81396dffffff    10   3524006            Itupeva    0.784668       1024.5     86.00   9836.15    0.055
+87a811735ffffff    11   3510401           Capivari    0.776303       1573.5    194.90   6238.65    0.021
+87a811325ffffff    12   3512308            Conchas    0.770542       1772.5     85.95   8206.90    0.059
+87a813896ffffff    13   3507605  Bragança Paulista    0.768717       1488.5    310.85   9880.90    0.000
+87a81e8d2ffffff    14   3512704         Corumbataí    0.760973       2169.5    461.80   6887.80    0.000
+87a81034cffffff    15   3502754       Araçariguama    0.759619       1666.5    162.65  16204.30    0.026
+-- robust
+                 site ibge_code              municipio  score_base  rank_median  rank_p05  rank_p95  p_top_k
+h3_index                                                                                                    
+87a811028ffffff     1   3554508                  Tietê    0.894089          3.0      1.00    298.15    0.886
+87a811616ffffff     2   3545803  Santa Bárbara d'Oeste    0.837114        151.5      2.00   3793.05    0.441
+87a811420ffffff     3   3520509             Indaiatuba    0.838667        153.0      3.00   2806.55    0.430
+87a811c42ffffff     4   3540606            Porto Feliz    0.834503        174.5      6.00   3313.25    0.389
+87a81ec2bffffff     5   3503307                 Araras    0.822768        374.0      9.00   4187.40    0.248
+87a819568ffffff     6   3504602           Bady Bassitt    0.800502        624.0      8.00   8225.15    0.245
+87a813a33ffffff     7   3524709             Jaguariúna    0.817796        370.5     26.00   4581.55    0.176
+87a813376ffffff     8   3530805             Mogi Mirim    0.815532        481.0     73.90   3694.50    0.084
+87a812a9cffffff     9   3549904    São José dos Campos    0.750830       1967.0     54.95  17501.35    0.080
+87a811325ffffff    10   3512308                Conchas    0.770542       1772.5     85.95   8206.90    0.059
+87a811296ffffff    11   3538709             Piracicaba    0.823538        458.0    101.00   1992.30    0.049
+87a8120c6ffffff    12   3554102                Taubaté    0.743296       2316.5    107.95  16486.75    0.044
+87a8118edffffff    13   3554003                  Tatuí    0.798249        850.0    116.00   5610.40    0.039
+87a810342ffffff    14   3502754           Araçariguama    0.745317       2218.5    177.80  19394.05    0.027
+87a819074ffffff    15   3532702                  Nipoã    0.737998       2461.0    166.55  12523.10    0.026

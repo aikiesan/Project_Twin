@@ -1,0 +1,177 @@
+{
+  "run_id": "suitability_v0_per_ch4_20261008T115353Z",
+  "param_hash": "597479e6248ad3786befee2494167989d5b25eb384e035fb8edfb8056201589b",
+  "input": {
+    "file": "suitability_grid_v0.parquet",
+    "sha256": "b744d3ba415f651373b1e46df78fe7da98a81a875008be06ef0407f2492f9073"
+  },
+  "cells": 47273,
+  "excluded": 1946,
+  "extra_exclusions": {
+    "federal_uc_integral": {
+      "file": "FEDERAL_PROTECTED_AREAS_INTEGRAL_PROTECTION_v2.shp",
+      "sha256": "c42be75850886eec7915915e9355ae62f8a800bca773071c284b2378eeb6beb8",
+      "cells_inside": 85,
+      "newly_excluded": 62
+    }
+  },
+  "names": {
+    "file": "municipal_panel_v0.csv",
+    "sha256": "04ce8e2b456a8033f9e5de38aeb21ef0c5677bc7a56245f6c1eaeac87af63250"
+  },
+  "ch4": {
+    "file": "n3_ch4_30km_med.parquet",
+    "sha256": "60fc864973503d8cd51bacf978742f7baf5bad5df1d2f6ed268f04a2c1aebbc7"
+  },
+  "scored": 45327,
+  "robust_top_k_cells_p50": 54,
+  "oat_min_top_k_kept": 0.95,
+  "caveats": [
+    "straight-line distances, not road network",
+    "gas layer is a trunk summary (docs/21 Q17)",
+    "feedstock = N3 CH4 within 30 km, CP2b v5.1 (flag D; farm part withheld where fewer than k farm cells)",
+    "exclusions: state protected areas and indigenous territories, federal_uc_integral (cell centre inside)"
+  ]
+}
+criterion change   weight  top_k_kept
+      gas   -20% 0.166667        0.95
+      gas   +20% 0.230769        0.98
+    power   -20% 0.166667        0.98
+    power   +20% 0.230769        0.97
+     road   -20% 0.166667        0.95
+     road   +20% 0.230769        0.98
+   demand   -20% 0.166667        0.97
+   demand   +20% 0.230769        0.96
+      ch4   -20% 0.166667        0.98
+      ch4   +20% 0.230769        0.97
+                ibge_code              municipio  score_base  rank_median  rank_p05  rank_p95  p_top_k
+h3_index                                                                                              
+87a811616ffffff   3545803  Santa Bárbara d'Oeste    0.967121          1.0       1.0     26.05    0.984
+87a811614ffffff   3545803  Santa Bárbara d'Oeste    0.958879          4.0       1.0    132.00    0.929
+87a8116c4ffffff   3521408           Iracemápolis    0.954224          7.0       2.0    219.40    0.883
+87a8116f3ffffff   3526902                Limeira    0.949913         11.0       2.0    378.05    0.829
+87a811610ffffff   3545803  Santa Bárbara d'Oeste    0.948827         17.0       3.0    223.00    0.877
+87a8116d1ffffff   3526902                Limeira    0.945624         19.5       2.0    549.30    0.792
+87a8116c2ffffff   3526902                Limeira    0.945575         20.0       3.0    429.50    0.801
+87a811654ffffff   3538709             Piracicaba    0.945214         24.0       6.0    319.65    0.862
+87a811656ffffff   3538709             Piracicaba    0.943210         28.0       9.0    301.30    0.841
+87a8116ceffffff   3521408           Iracemápolis    0.942778         28.0       7.0    430.65    0.802
+87a8116e5ffffff   3538709             Piracicaba    0.942328         31.0      10.0    324.15    0.829
+87a811612ffffff   3545803  Santa Bárbara d'Oeste    0.941754         28.0       3.0    427.10    0.789
+87a811691ffffff   3526902                Limeira    0.939544         38.5       3.0    541.20    0.757
+87a8116c6ffffff   3526902                Limeira    0.938833         35.0       5.0    653.25    0.717
+87a811646ffffff   3538709             Piracicaba    0.938600         43.0      12.0    403.30    0.754
+
+Distinct sites >= 30 km apart:
+-- equal_weights
+                 site ibge_code              municipio  score_base  rank_median  rank_p05  rank_p95  p_top_k
+h3_index                                                                                                    
+87a811616ffffff     1   3545803  Santa Bárbara d'Oeste    0.967121          1.0      1.00     26.05    0.984
+87a81ec2bffffff     2   3503307                 Araras    0.937651         46.5      7.00    388.25    0.744
+87a811153ffffff     3   3511508              Cerquilho    0.928698         65.5      3.00   1231.30    0.595
+87a818caeffffff     4   3503208             Araraquara    0.916727        138.5     13.95   1602.75    0.407
+87a81164cffffff     5   3538709             Piracicaba    0.903662        286.5     76.95   1498.15    0.118
+87a8100deffffff     6   3550308              São Paulo    0.894330        152.0      6.00   3886.15    0.436
+87a811546ffffff     7   3545209                  Salto    0.878675        460.5     81.95   3252.70    0.084
+87a813360ffffff     8   3530805             Mogi Mirim    0.876345        634.0    187.90   2270.05    0.004
+87a813b18ffffff     9   3509502               Campinas    0.869484        376.0     63.95   6272.40    0.179
+87a80a475ffffff    10   3506508                Birigui    0.862936        883.5    104.95   4392.50    0.047
+87a811c44ffffff    11   3552205               Sorocaba    0.854036        668.5    175.95   6927.10    0.005
+87a81056cffffff    12   3544103    Rio Grande da Serra    0.851186        545.0     29.95  10645.45    0.210
+87a810306ffffff    13   3525003                Jandira    0.848221        528.5     15.95  11878.45    0.235
+87a81396dffffff    14   3524006                Itupeva    0.845737        617.5     37.95  11425.15    0.156
+87a81a88dffffff    15   3513108              Cravinhos    0.832036       1001.5     76.00   9609.00    0.087
+-- robust
+                 site ibge_code              municipio  score_base  rank_median  rank_p05  rank_p95  p_top_k
+h3_index                                                                                                    
+87a811616ffffff     1   3545803  Santa Bárbara d'Oeste    0.967121          1.0      1.00     26.05    0.984
+87a81ec2bffffff     2   3503307                 Araras    0.937651         46.5      7.00    388.25    0.744
+87a811153ffffff     3   3511508              Cerquilho    0.928698         65.5      3.00   1231.30    0.595
+87a81001dffffff     4   3550308              São Paulo    0.893876        138.0      2.00   4346.85    0.456
+87a818caeffffff     5   3503208             Araraquara    0.916727        138.5     13.95   1602.75    0.407
+87a8107a0ffffff     6   3523107        Itaquaquecetuba    0.869021        283.5      7.00   8121.00    0.341
+87a811420ffffff     7   3520509             Indaiatuba    0.874761        324.5     29.00   5940.20    0.252
+87a810306ffffff     8   3525003                Jandira    0.848221        528.5     15.95  11878.45    0.235
+87a811c2affffff     9   3552205               Sorocaba    0.847784        594.5      7.95  12217.75    0.222
+87a813b18ffffff    10   3509502               Campinas    0.869484        376.0     63.95   6272.40    0.179
+87a81a8e8ffffff    11   3543402         Ribeirão Preto    0.827169       1145.5     29.95  10524.45    0.154
+87a810ce9ffffff    12   3513504                Cubatão    0.823807        882.0     30.00  16671.05    0.144
+87a81164cffffff    13   3538709             Piracicaba    0.903662        286.5     76.95   1498.15    0.118
+87a81aa29ffffff    14   3540200                 Pontal    0.796040       2304.5     71.00  11993.25    0.070
+87a81336affffff    15   3530805             Mogi Mirim    0.871196        643.0     86.00   3454.60    0.064
+
+Score contributions (weight x normalised value) at the spaced sites:
+-- equal_weights
+                 site              municipio  score_base    gas  power   road  demand    ch4
+h3_index                                                                                    
+87a811616ffffff     1  Santa Bárbara d'Oeste       0.967  0.198  0.196  0.197   0.191  0.184
+87a81ec2bffffff     2                 Araras       0.938  0.199  0.193  0.192   0.179  0.174
+87a811153ffffff     3              Cerquilho       0.929  0.196  0.197  0.198   0.162  0.175
+87a818caeffffff     4             Araraquara       0.917  0.187  0.199  0.195   0.163  0.172
+87a81164cffffff     5             Piracicaba       0.904  0.188  0.177  0.194   0.178  0.166
+87a8100deffffff     6              São Paulo       0.894  0.199  0.196  0.192   0.200  0.108
+87a811546ffffff     7                  Salto       0.879  0.192  0.182  0.199   0.185  0.121
+87a813360ffffff     8             Mogi Mirim       0.876  0.179  0.197  0.179   0.177  0.145
+87a813b18ffffff     9               Campinas       0.869  0.193  0.196  0.194   0.194  0.092
+87a80a475ffffff    10                Birigui       0.863  0.199  0.158  0.198   0.155  0.153
+87a811c44ffffff    11               Sorocaba       0.854  0.199  0.192  0.181   0.188  0.094
+87a81056cffffff    12    Rio Grande da Serra       0.851  0.194  0.198  0.196   0.198  0.066
+87a810306ffffff    13                Jandira       0.848  0.198  0.200  0.195   0.198  0.058
+87a81396dffffff    14                Itupeva       0.846  0.199  0.196  0.195   0.193  0.062
+87a81a88dffffff    15              Cravinhos       0.832  0.084  0.190  0.194   0.183  0.180
+-- robust
+                 site              municipio  score_base    gas  power   road  demand    ch4
+h3_index                                                                                    
+87a811616ffffff     1  Santa Bárbara d'Oeste       0.967  0.198  0.196  0.197   0.191  0.184
+87a81ec2bffffff     2                 Araras       0.938  0.199  0.193  0.192   0.179  0.174
+87a811153ffffff     3              Cerquilho       0.929  0.196  0.197  0.198   0.162  0.175
+87a81001dffffff     4              São Paulo       0.894  0.199  0.194  0.199   0.200  0.102
+87a818caeffffff     5             Araraquara       0.917  0.187  0.199  0.195   0.163  0.172
+87a8107a0ffffff     6        Itaquaquecetuba       0.869  0.199  0.197  0.198   0.197  0.078
+87a811420ffffff     7             Indaiatuba       0.875  0.199  0.195  0.197   0.190  0.095
+87a810306ffffff     8                Jandira       0.848  0.198  0.200  0.195   0.198  0.058
+87a811c2affffff     9               Sorocaba       0.848  0.200  0.200  0.200   0.189  0.059
+87a813b18ffffff    10               Campinas       0.869  0.193  0.196  0.194   0.194  0.092
+87a81a8e8ffffff    11         Ribeirão Preto       0.827  0.076  0.173  0.196   0.186  0.196
+87a810ce9ffffff    12                Cubatão       0.824  0.200  0.200  0.191   0.197  0.037
+87a81164cffffff    13             Piracicaba       0.904  0.188  0.177  0.194   0.178  0.166
+87a81aa29ffffff    14                 Pontal       0.796  0.075  0.154  0.200   0.167  0.200
+87a81336affffff    15             Mogi Mirim       0.871  0.173  0.198  0.196   0.175  0.129
+
+N3 CH4 within 30 km (Nm3/d) and shares by residue group (%):
+-- equal_weights
+                 site              municipio  ch4_n3_nm3_d_30km  farm_%  cane_%  urban_%  other_%
+h3_index                                                                                         
+87a811616ffffff     1  Santa Bárbara d'Oeste           456590.0     6.0    82.0     10.0      2.0
+87a81ec2bffffff     2                 Araras           392078.0     5.0    82.0      5.0      8.0
+87a811153ffffff     3              Cerquilho           396457.0    32.0    62.0      2.0      4.0
+87a818caeffffff     4             Araraquara           384994.0     3.0    83.0      2.0     12.0
+87a81164cffffff     5             Piracicaba           367417.0     8.0    85.0      6.0      1.0
+87a8100deffffff     6              São Paulo           209694.0     2.0     0.0     98.0      0.0
+87a811546ffffff     7                  Salto           247099.0    23.0    64.0     10.0      3.0
+87a813360ffffff     8             Mogi Mirim           308291.0     7.0    74.0      4.0     15.0
+87a813b18ffffff     9               Campinas           172169.0    20.0    40.0     34.0      6.0
+87a80a475ffffff    10                Birigui           327628.0     4.0    88.0      2.0      5.0
+87a811c44ffffff    11               Sorocaba           175600.0    32.0    43.0     19.0      6.0
+87a81056cffffff    12    Rio Grande da Serra           106410.0     7.0     0.0     93.0      0.0
+87a810306ffffff    13                Jandira            90060.0     1.0     0.0     98.0      1.0
+87a81396dffffff    14                Itupeva            98458.0    28.0     5.0     60.0      7.0
+87a81a88dffffff    15              Cravinhos           423107.0     3.0    93.0      3.0      1.0
+-- robust
+                 site              municipio  ch4_n3_nm3_d_30km  farm_%  cane_%  urban_%  other_%
+h3_index                                                                                         
+87a811616ffffff     1  Santa Bárbara d'Oeste           456590.0     6.0    82.0     10.0      2.0
+87a81ec2bffffff     2                 Araras           392078.0     5.0    82.0      5.0      8.0
+87a811153ffffff     3              Cerquilho           396457.0    32.0    62.0      2.0      4.0
+87a81001dffffff     4              São Paulo           197406.0     0.0     0.0    100.0      0.0
+87a818caeffffff     5             Araraquara           384994.0     3.0    83.0      2.0     12.0
+87a8107a0ffffff     6        Itaquaquecetuba           135680.0     8.0     0.0     92.0      0.0
+87a811420ffffff     7             Indaiatuba           177422.0    31.0    41.0     24.0      4.0
+87a810306ffffff     8                Jandira            90060.0     1.0     0.0     98.0      1.0
+87a811c2affffff     9               Sorocaba            92420.0    33.0    21.0     37.0      9.0
+87a813b18ffffff    10               Campinas           172169.0    20.0    40.0     34.0      6.0
+87a81a8e8ffffff    11         Ribeirão Preto           661780.0     2.0    95.0      2.0      1.0
+87a810ce9ffffff    12                Cubatão            41309.0     8.0     0.0     92.0      0.0
+87a81164cffffff    13             Piracicaba           367417.0     8.0    85.0      6.0      1.0
+87a81aa29ffffff    14                 Pontal          1135543.0     1.0    98.0      0.0      1.0
+87a81336affffff    15             Mogi Mirim           264118.0     8.0    71.0      4.0     17.0

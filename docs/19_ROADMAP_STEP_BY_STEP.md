@@ -34,12 +34,12 @@ Tick boxes as you go. Each phase ends with a **gate** — don't move on until it
 - [ ] Manure base-load v0 from municipal PPM herds (`ibge_ppm`), aggregated; no farm points
 - [ ] Process v0: Level-1 CSTR mass balance with operating constraints (`10_MODULE_PROCESS.md`); unit test that reproduces Volpi et al. 2021
 - [x] LCOB v0: annuity, with EPE NT 2025-08 and the FIESP 2025 report as anchors — `engine.economics.lcob` (docs/11 §9, 2026-10-06); WACC and lifetime are `K` until anchored
-- [ ] Compare simulated and observed (ANP) monthly output for both plants; resolve or log conflicts C2 and C6 — the comparison is built (`engine.skeleton`, docs/13 §6); it waits on sourced cane values in `registry/skeleton_mills.yaml`
+- [ ] Compare simulated and observed (ANP) monthly output for both plants; resolve or log conflicts C2 and C6 — the comparison is built (`engine.skeleton`, docs/13 §6); it waits on sourced cane values in `registry/skeleton_mills.yaml`. For Narandiba the targets are now the company's annual figures (`registry/plant_reported_annual.csv`, docs/13 §8). The registry yields already explain only 64–78 % of the reported biogas from the reported feed (docs/13 §9, Q22)
 - [x] Each run gets a `run_id` and a parameter hash; outputs go to `data/processed/skeleton/` — `python -m engine.skeleton run` (2026-10-06)
 
 ### Weeks 4–6 — Verification led by sensitivity
-- [ ] Morris screening (SALib) on the skeleton, for annual CH₄, capacity factor and LCOB
-- [ ] Add columns `page, quote, verified_by, verified_on, conditions, price_year, currency` to `parameters.csv`
+- [x] Morris screening (SALib) on the skeleton, for annual CH₄, capacity factor and LCOB — `python -m engine.sensitivity morris` (docs/13 §7, ADR-0014, 2026-10-06); first ranking on a labelled synthetic case, re-run per mill once cane is sourced
+- [x] Add columns `page, quote, verified_by, verified_on, conditions, price_year, currency` to `parameters.csv` — done 2026-10-06; value statements per paper in `registry/value_evidence.csv` (ADR-0015)
 - [ ] Verify the top-ranked parameters (target: top 15), in the order of `08_VERIFICATION_PROTOCOL.md` §5 within that set
 - [ ] Normalize `projects_capex.csv` (capacity basis, scope, price year)
 - [ ] Resolve/log all conflicts in `21_RISKS_AND_OPEN_QUESTIONS.md`
@@ -110,7 +110,7 @@ Tick boxes as you go. Each phase ends with a **gate** — don't move on until it
 
 ## PHASE 4 — Siting & supply curve (weeks 20–25)
 
-- [ ] Candidate sites (mills + hub cells) after exclusions
+- [ ] Candidate sites (mills + hub cells) after exclusions — hub coverage v0 (greedy with a minimum scale, ADR-0018, docs/12 Step 1) is built and tested; it runs on the PC once the residue classes, radii and q_min are chosen (docs/21 Q20, Q23)
 - [ ] OD matrices for feedstock and gas delivery; mode costs (grid/TUSD-Verde, CNG, LNG)
 - [ ] Multi-period MILP with storage and process constraints (Pyomo/linopy + HiGHS)
 - [ ] Baseline comparison with Paulino et al. 2024 criteria

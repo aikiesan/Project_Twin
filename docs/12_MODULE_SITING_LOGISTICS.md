@@ -9,15 +9,65 @@ Choose plant **locations, scales, feedstock contracts, storage and gas-delivery 
 - Default candidates: **every active mill** (annexed plants are the realistic case), plus H3 cells passing suitability for hub plants (manure/sludge/OFMSW clusters).
 - Hub candidates: H3 res 8 centroids filtered by exclusions.
 
+#### Hub coverage: greedy selection with a minimum scale (2026-10-08, ADR-0018)
+- **Question:** how many hubs, and where, collect a given share of the N3 supply if each hub must collect at least q_min? The answer narrows the candidates and gives the coverage curve; Step 5 decides with costs.
+- **Method** (`engine.siting.coverage`): port of the ESD "FL espacial" hub selection (`fl_comum.cobertura_gulosa`, variant B), as described in `docs/inbox/esd_inventory.md` §2 M1. It is a greedy heuristic for the maximal covering location problem (Church & ReVelle 1974, `church1974`).
+  - A source at road distance d from a hub counts with w(d) = 1 up to r1, falling linearly to 0 at r2. The radii are set per material class (liquid, wet solid, dry solid).
+  - Rules (ADR-0018):
+    - each source counts once, at its best open hub;
+    - a hub opens only if it adds at least q_min;
+    - existing plants can be fixed first;
+    - hubs left below q_min after reallocation are closed (`prune`);
+    - a residue can be restricted to some candidate types (straw only to mills).
+  - Outputs of the method:
+    - the curve (hubs for 25–95 % of the supply), read from the greedy trace before pruning;
+    - the upper bound: every candidate whose own catchment reaches q_min (ESD variant A).
+- **Inputs with no default** (docs/21 Q20, Q23): the material class of each residue, r1 and r2 per class, q_min, and the detour factor. The ESD values are in `registry/inbox/esd_parameters.csv` (`fl_r1_*`, `fl_r2_*`, `fl_qmin_*`, flag S, unsourced).
+- **Distances:** routed (`routing.od_matrix`, then `pairs_from_dense`) or the fallback: great-circle distance × a cited detour factor (`sphere_xyz_m`, `fallback_pairs_km`; the rule of `routing.fallback_road_km`).
+- **Script** `scripts/siting/hub_coverage_v0.py` (PC; needs pyogrio, shapely, pyproj). It reads `grade_oferta_1km.gpkg` (`esd_n3_supply_grid_1km`).
+  - Candidates: the non-excluded H3 res-7 cells of a grid parquet, plus the 456 facility points of the gpkg (mills, sewage plants, juice factories).
+  - `--extra-candidates plants.csv` (`id,lat,lon`, optional `tipo,nome,ibge`) adds points the gpkg lacks, such as existing biogas plants. With `--fix-extra` they open first, and the curve reports both all hubs and new hubs only.
+  - Supply is summed into 2 km squares (`--source-cell-km`) to bound memory; this moves supply by at most about 1.4 km.
+  - Run `--list` first for the residue names and facility types, then pass `--classes`, `--radius CLASS=R1:R2`, `--q-min`, `--detour-factor` and, for straw, `--only-to PALHA=<mill tipo>`.
+  - Writes `hub_coverage_v0_<scenario><tag>_hubs.csv`: per hub, step, position and collected supply by class.
+  - Writes `_meta.json`: run_id, parameter hash, input sha256, coverage curve, covered shares, upper bound and caveats.
+- **LGPD:** nothing is written per supply cell.
+  - Farm-register residues (poultry, swine, dairy and feedlot cattle) appear only per hub.
+  - A hub's farm part, total and gain are withheld when 1–2 farm cells feed it (k = 3, `withhold_small_counts`).
+  - The state covered share is withheld unless the withheld hubs hold no farm cells or at least 3 together (`cells_behind`).
+- **Limits:**
+  - heuristic (a test case covers 7 where the best pair covers 8);
+  - depends on the candidate grid;
+  - fallback distances only;
+  - existing biogas plants are not in the gpkg; they need a csv from a registered source (`--extra-candidates`);
+  - not compared with the ESD `mclp.csv` (455 hubs; 16 and 114 hubs for 50 and 80 % with straw at mills) until both run on the same inputs on the PC.
+- **Tests:** `tests/test_siting_coverage.py` (26).
+
 ### Step 2 — Exclusions & suitability (GIS)
 - Hard exclusions (have): protected areas (UC), APP buffers, water bodies, urban areas, steep slopes, flood zones, ZAA "unsuitable".
 - Soft criteria (score): distance to gas network/city gate, road class, distance to feedstock clusters, land price (IEA-SP VTN), digestate land (cane area within radius, P4.231 capacity).
 - AHP weights optional (for comparison with Paulino et al. 2024) — main model uses explicit costs instead of weights.
 
+#### Screening v0 and the suitability screen (2026-10-07, ADR-0016)
+- **Screening v0** was run on the user's PC from the PILAR-2b SP export (`pilar2b_export_2026-10-07`). Per ethanol mill it computes the straight-line geodesic distance (GRS80, nearest search in EPSG:31983) to gas delivery points, gas pipelines, substations, transmission lines, highways, biogas and biomass thermal plants, protected areas, indigenous territories and INCRA settlements, plus the number of other mills within 30 km. It writes `data/processed/screening_v0/` (mills table, municipal panel, attribute keys, `run_meta.json` with input and output sha256).
+  - These are **not** road distances and are not used for haul costs (Step 3).
+  - First results (160 SP mill records, one of them a duplicate): within 25 km of a gas delivery point 22, of a transport pipeline 34, of a substation 54. The median mill is 0.7 km from a biomass thermal plant (its own cogeneration).
+  - Data issues: gas pipeline layer partial (docs/21 Q17), a Paraná mill labelled SP (C32), a duplicate mill (C33).
+- **Suitability screen** (`engine.siting.suitability`): normalise each criterion to [0, 1] with recorded bounds, weighted linear score, equal weights as baseline, Dirichlet random-weight ranks (median, 5–95 %, share in top k) and a one-at-a-time ±20 % weight check. Hard exclusions need a cited basis; INCRA settlements are a constraint, not an exclusion. The score narrows candidates; Step 5 decides.
+- **Grid v0 scoring** (`scripts/siting/score_grid_v0.py`): H3 res-7 grid of SP (47,273 cells, 1,884 excluded by state protected areas or indigenous territories). Eight criteria: distance to gas network (min of delivery point, transport and distribution layers), substation and highway (lower is better), and cane, swine, poultry, cattle and population within 30 km (higher is better). Bounds 0 to the 99th percentile of non-excluded cells. Equal weights, 1,000 Dirichlet draws (concentration 1, seed 20261007), top-100 stability and ±20 % one-at-a-time. Under equal weights feedstock is 4 of 8 criteria; that choice is open and the map lets users change it.
+  - **Distinct sites:** `suitability_sites_spaced_v0.csv` lists the best cells at least `--spacing-km` apart (default 30 km), by equal-weight rank and by robustness, because adjacent cells share their 30 km sums (ADR-0016 Notes).
+  - **Normalisation:** `--normalization percentile` ranks each criterion among non-excluded cells instead of the linear 0–p99 scale, because herds and population are concentrated in few cells; outputs carry `_per`. It does not fix the main bias: feedstock as 4 separate criteria (cane saturated at p99 across the cane belt, three herd criteria) puts herd hot spots first. ADR-0017 (proposed) replaces them with one CH₄-within-30 km criterion.
+  - **Feedstock as CH₄:** `scripts/siting/n3_ch4_30km.py` sums the CP2b v5.1 N3 supply grid (Nm³ CH₄/d) within 30 km of each cell; `--ch4` uses it as one criterion instead of the four resource criteria (ADR-0017 Notes). Farm-register residues enter only as 30 km sums with a k ≥ 3 farm-cell rule.
+  - **Extra exclusions:** `--exclude label=<polygon layer>` (repeatable) excludes cells whose centre falls inside, e.g. federal integral-protection UCs (`mapbiomas_federal_uc_integral`), missing from the v0 grid.
+  - **WebGIS** `webgis/aptidao_biometano_sp.html` reads the script's `suitability_map_v0.csv` locally (no data embedded) and recomputes the score and the Dirichlet robustness in the browser for any weights. See `webgis/README.md`.
+- **Energy demand per municipality** (2026-10-07): `engine.ingest.semil_anuario` + `scripts/ingest/semil_anuario_2024.py` extract the SEMIL Anuário de Energéticos por Município 2025 (ano base 2024; registry `semil_anuario_energeticos_2025`) into one row per IBGE municipality: electricity by class (consumers, kWh), natural gas by class (consumers, m³, only municipalities with piped gas) and petroleum derivatives + hydrated ethanol (L or kg). Names are matched to IBGE codes by normalisation plus an explicit alias list; unmatched names, row-like lines that were not parsed, and the gas table's sum vs its printed state total are written to `checks.json`. Candidate criteria: industrial + cogeneration gas demand (an off-taker for biomethane) and diesel use (a substitution market for bio-CNG). They enter the screen only after the PDF run is checked (docs/21 Q18, C34).
+
 ### Step 3 — Routing & OD matrices
 - Graph: OSM Sudeste + DER-SP/DNIT attributes (surface, class) → Valhalla truck costing (weight/axle) or OSRM truck profile.
 - Matrices: feedstock cells/points → candidate sites; sites → injection points/city gates/CNG stations.
 - Cost per t·km by material (vinasse/digestate liquid tanker; filter cake/manure solid; CNG/LNG trailers) from ANTT cost methodology + ESALQ-LOG freight; payloads from CONTRAN 882/2021.
+
+- **Road/straight-line detour factor (SP).** Median 1.295 (P10 1.152, P90 1.641) over 5,000 OD pairs on the OSM Sudeste road graph, falling from 1.442 at 1–5 km to 1.267 at 40–60 km (`road_detour_factor_*`, flag D, source `esd_fl_espacial_outputs`). Use it only where `engine.siting.routing.fallback_road_km` is explicitly allowed; routed distances stay the rule. Its denominator (EPSG:5880 straight line or great circle) is open: docs/21 Q24 estimates the gap at 0.1 % (median) to 1.3 % in SP.
 
 ### Step 4 — Delivery mode
 | Mode | Cost elements |
@@ -48,7 +98,7 @@ Formulation reference: OptBio (Monteiro et al., arXiv:2603.06823, Mar 2026) [S],
 ## 3. Benchmarks
 - Paulino, Cherri & Soler 2024 (SP, GIS-AHP + optimization) — reproduce their criteria as a baseline, then show what changes with costs/seasonality.
 - Blanco, Hinojosa & Zavala 2024 (waste-to-biomethane logistics: pipeline vs LNG).
-- Jonker et al. 2016 (sugarcane spatial LP), Costa et al. 2020 (location-allocation for sugarcane supply).
+- Jonker et al. 2016 (sugarcane spatial LP), Costa et al. 2020 (location-allocation for sugarcane supply; Triângulo Mineiro, MG, not SP).
 
 ## 4. Outputs
 Maps of optimal sites/scales/modes, supply curve figure, table of top sites, scenario comparison.

@@ -1,0 +1,1 @@
+--ch4-scope agro_no_straw needs ['ch4_n3_urban_nm3_d_30km', 'ch4_n3_straw_nm3_d_30km']: re-run n3_ch4_30km.py

@@ -36,6 +36,12 @@ from engine.registry import Param, load_parameters
 #: Mass ratio K / K₂O (2·39.098 / 94.196), to turn the registry's K₂O into K.
 K_PER_K2O = 2 * 39.098 / 94.196
 
+#: Relative tolerance of the OLR and HRT checks. :func:`size_digester` sizes the volume exactly
+#: at a limit, and ``V / Q`` can then round to just below ``HRT_min`` (e.g. 26.666666666666664 <
+#: 26.666666666666668); the tolerance keeps such a month feasible. It is far below any physical
+#: meaning.
+CHECK_RTOL = 1e-9
+
 #: Feed columns :func:`simulate` expects.
 FEED_COLUMNS = ("month", "substrate", "fresh_t")
 
@@ -286,8 +292,8 @@ def simulate(
     out["biomethane_nm3_d"] = out["biomethane_nm3"] / out["days"]
     out["capacity_factor"] = out["biomethane_nm3"] / nameplate_month
 
-    out["olr_ok"] = out["olr_kg_vs_m3_d"] <= limits.olr_max_kg_vs_m3_d
-    out["hrt_ok"] = out["hrt_d"] >= limits.hrt_min_d
+    out["olr_ok"] = out["olr_kg_vs_m3_d"] <= limits.olr_max_kg_vs_m3_d * (1 + CHECK_RTOL)
+    out["hrt_ok"] = out["hrt_d"] >= limits.hrt_min_d * (1 - CHECK_RTOL)
     out["ts_ok"] = out["feed_ts_frac"] <= limits.ts_max_frac
     # object dtype keeps the three states True / False / None (not evaluable) as Python values
     out["cod_so4_ok"] = pd.Series(

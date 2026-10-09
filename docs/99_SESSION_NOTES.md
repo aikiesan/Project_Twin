@@ -298,3 +298,96 @@ Next:
 - **Diagnostic with test values (not data):** Narandiba's off-season share goes from 0 (S0) to about 0.25 (S1, half the cake stored, 3 %/month loss), against about 0.43 in ANP.
 - **Known v0 limit:** the cake-only off-season feed fails the TS check, because digestate recirculation is not modelled.
 - Tests: `tests/test_process_strategies.py`, plus S1 cases in `tests/test_skeleton.py`.
+## 2026-10-06 (night) — references registry, Morris screen, value evidence from PDFs
+PR #12 was merged. The work below sits on the same branch, on top of the merged history, and is not pushed yet (the branch choice is the user's).
+
+- **References registry (ADR-0013).** It adds `registry/references.csv` with 94 rows, `validate_references`, and rule 11 in CLAUDE.md. Identity checks gave:
+  - 18 `two_sources`;
+  - 26 `one_source`;
+  - 4 `unconfirmed`;
+  - 9 `unidentified` (vague citations such as "AFBR 2024", "overview tables", "Fuess 2024 CEJ");
+  - 37 `pending` (not searched yet).
+
+  The workflow's verify and tie-break passes ran out of search budget. Two more identity routes made up for it (docs/08 §8 rule 6): the first page of a publisher PDF in hand, and the reference lists of those PDFs.
+- **Morris screen (ADR-0014).** `python -m engine.sensitivity morris|worklist`. On the synthetic case the ranking is `vin_cod`, `capex_epe`, `wacc_real`, `vin_gen`, `cod_removal`, `vin_ch4_yield`, then the filter-cake rows.
+- **Evidence columns in `parameters.csv`** (`page`, `quote`, `verified_by`, `verified_on`, `conditions`, `price_year`, `currency`), plus the verification worklist.
+- **Value evidence (ADR-0015).** Seven publisher PDFs from Drive were each read by two independent LLM passes:
+  - Janke et al. 2019;
+  - Fuess et al. 2022;
+  - Volpi et al. 2021;
+  - Silva Neto & Gallo 2021;
+  - Barros et al. 2017;
+  - Aguiar et al. 2026;
+  - Sica et al. 2020.
+
+  This gave 141 statements in `registry/value_evidence.csv`: 128 agreed, 10 with the support label disputed, and 3 corrected (all Volpi 2021, from scrambled two-column text). `validate_value_evidence` checks the file. The worklist now knows which references were read.
+- **Registry changes (no value changed).**
+  - `codig_bmp` and `temp` became `V`, with page and quote from Volpi 2021, flagged "human audit pending".
+  - The "Janke 2020" citation is Janke et al. **2019** (Renew Energy 143:1416–1426).
+  - The DOI cited as "Janke 2015 IJMS 23210" is **Leite**, Janke et al. 2015. The `olr_max_cstr` central 3.0 matches Janke et al. 2016 Waste Manag, as cited by Volpi.
+  - C14 is resolved: `.023` is right, PILAR-2b's `.022` is wrong.
+- **New conflicts docs/21 C16–C26**, each a proposal for the registry owner. The main ones:
+  - `vin_ch4_yield`: the papers read give 0.09–0.25 against a 0.30 central;
+  - `fc_ts_vs`: Janke 2019 measured VS 52 % TS against 74;
+  - `bmp_fullscale` 0.85 has no source;
+  - `cod_removal`: Volpi's removal is on a VS basis, not COD;
+  - `vin_ts_vs` 16/9 equals an inoculum sludge's TS/VS in Barros 2017.
+
+  Open questions Q14 (Møller 2004 citation) and Q15 (origin of `bmp_fullscale`; which Fuess 2024).
+
+**User actions outstanding.**
+- **Human audit** of the LLM readings: open each PDF beside `value_evidence.csv`. Start with the rows behind `codig_bmp`/`temp` and the C16–C26 rows, then a 10 % sample. Set `check = human_audited`.
+- **Answers:** the origin of `bmp_fullscale` 0.85; which Fuess 2024 CEJ paper was meant; the Møller 2004 DOI.
+- **Decisions on C16–C26:** keep, change or widen each value. Every change goes in the docs/08 §7 change log with its page.
+
+Next:
+1. **PDF pass 2** for the next-ranked references not yet read: Moraes 2015 (`vin_gen`, `vin_ch4_yield`), Fuess 2018 (`vin_cod`, top of the ranking), Melo 2024, Janke 2015 IJMS (`fc_ts_vs`, `fc_gen`, `vin_ts_vs`), Leite 2015 and Janke 2016 WM (`olr_max_cstr`), Kiyuna 2017 and Ferraz 2016. This needs the PDFs in Drive.
+2. **EPE NT 2025-08:** page and table for `capex_epe` (rank 2) and its scope (C15).
+3. **Normalise `projects_capex.csv`** capacity bases (docs/21 C3).
+4. **S1 digestate recirculation**, so the off-season cake-only feed passes the TS check.
+5. **Morris per mill**, once cane per crop year is sourced.
+
+## 2026-10-07 — Paper inventory and PDF pass 2 (part 1)
+
+**Paper inventory (user side).** The project lead ran a cell-by-cell Jupyter inventory over their local Documents and Downloads folders:
+- 4,942 PDFs scanned and 3,818 unique by sha256.
+- DOIs taken from PDF metadata or page 1, checked against Crossref (title on page 1).
+- Matched to `references.csv` by DOI.
+- 1,122 unique papers copied into the Drive folder **Project_Twin_papers**. 11 are under `01_in_registry/<ref_id>.pdf`, the rest under `02_by_topic/`, plus `index.csv` and `papers_for_claude.csv`.
+- 28 PDFs with confidential or partner terms were excluded.
+
+The Crossref columns of `papers_for_claude.csv` (fetched on the lead's PC; Crossref is blocked from the cloud session) are used as the second identity source next to a publisher PDF's first page (route b).
+
+**Identity.** costa2020 and paulino2024 checked: Paulino's first author is E.J., not R.F.S.; Costa et al. 2020 study Triângulo Mineiro (MG), not SP.
+
+**Value reads (ADR-0015, extractor + independent verifier):**
+- **Janke et al. 2015 IJMS** (22 rows):
+  - `fc_ch4_fm` 54 printed (sample FC-3; range 50–58) → `V`, human audit pending.
+  - `vin_ts_vs` 16/9 g/L is not printed (C26 confirmed).
+  - HRT 30 d not printed (C28).
+  - Filter cake BMP up to 281 (C27).
+- **Moraes et al. 2015** (46 rows):
+  - A review, so all its values are cited.
+  - The PDF prints DOI .023 (C14 closed on our side).
+  - Only the range 10–15 L/L for `vin_gen` is printed, not 12.
+  - 0.30 for `vin_ch4_yield` is not printed.
+  - Some Table 8 reference numbers do not match the reference list.
+- **Fuess, Rodrigues & Garcia 2017 JESH-A** (new `fuess2017_jesh`, 20 rows):
+  - Own end-of-harvest COD 22.9–35.8 g/L at four South-Central distilleries.
+  - K 1.33–4.01 g/L as elemental K.
+  - SO₄ 2.1–3.8 g/L.
+  - Cited molasses vinasse COD 82–130 g/L (C29).
+
+**Next:** Fuess 2018 (was still uploading); Melo 2024, Leite 2015, Janke 2016 WM, Kiyuna 2017, Ferraz 2016 when in hand; use `papers_for_claude.csv` to find PDFs behind other `S`/`K` parameters.
+
+### Part 2 — Fuess 2018 and the local data inventory
+
+**Fuess, Garcia & Zaiat 2018 STOTEN** (`fuess2018`, 26 rows):
+- Identity: PDF p. 1 + Buller et al. 2021 reference list (new `buller2021`, identity via PDF p. 1 + Crossref). DOI 10.1016/j.scitotenv.2018.03.326 filled.
+- One annexed SP mill (9.3 Mt cane/harvest), May–Dec 2014. No COD concentration is printed, so `vin_cod` 30 stays `S` (C31).
+- K 2720–4175 mg/L (elemental) with an internal inconsistency (C30); SO₄ 1044–2079 mg/L.
+- Table 1 values 10 L/L, 0.301 and 0.234 Nm³/kg COD removed are cited from Moraes 2014, Fuess 2017a and Ferraz Jr. 2016.
+- TS, VS and vinasse pH not reported.
+
+**Local data inventory (user side, metadata only).** Cell 1 listed 35,594 files in eight data folders (ILUC_NIPE, CP2B, Pilar2b, ArcGIS, …); personal, admin, finance and backup folders were skipped, partner-named paths listed by name only. The kernel lacked `pyogrio`/`rasterio`, so rasters and vector layers were not yet described.
+

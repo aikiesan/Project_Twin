@@ -398,6 +398,32 @@ sources:
       ANP open-data files vendored in PILAR-2b; 05c-05f are PILAR-2b derivatives
       (analysis/build_anp_biometano_dataset.py). The URL is the ANP page that script cites; the
       exact open-data dataset URL is not recorded there. All files git-tracked at Pilar-2b 1d24ada5.
+  - id: anp_biometano_dados_abertos
+    name: ANP biomethane open data — plant capacity and processed biogas (monthly), state production (monthly)
+    publisher: ANP (Dados Abertos)
+    url: https://www.gov.br/anp/pt-br/assuntos/producao-e-fornecimento-de-biocombustiveis/biometano/biometano-dados-abertos.zip
+    also: [https://www.gov.br/anp/pt-br/centrais-de-conteudo/paineis-dinamicos-da-anp/paineis-e-mapa-dinamicos-de-produtores-de-combustiveis-e-derivados/painel-dinamico-de-produtores-de-biometano]
+    module: calibrate
+    local_path: evidence/anp_biometano_dadosabertos_capacidade_2026-08.csv
+    sha256: 6cd432e1ca14e831dc8b2673b286cc2df86d60e7f349819f88c11972a852bf75
+    also_files:
+      evidence/anp_biometano_dadosabertos_producao_2026-08.csv: 1f40f43779849623abe7cd0f1838813798920bd2616fbc4cd943902c1c3e04a4
+    accessed: '2026-10-08'
+    spatial: per plant (capacity file); per state (production file)
+    temporal: monthly 2020-01 to 2026-08
+    access: open
+    license: TODO verify ANP open-data license
+    status: have
+    confidence: V
+    notes: >-
+      Downloaded by the project lead on 2026-10-08 from the ZIP named in the deep-research output
+      (research_notes/raw/2026-10-08_cocal_narandiba_deep_research.md; the output says the ZIP members
+      are dated 2026-09-17). The ZIP URL is as relayed there; the panel page URL is from the saved
+      gov.br page. Capacity file: 22 plants, header "Volume Processado de Biogás (m³/d)" and
+      "Volume Processado/Capacidade (%)", so the plant series is processed biogas against biogas
+      processing capacity, not biomethane output. Decimal comma in the capacity file, decimal dot
+      in the production file. Same structure as the PILAR-2b vendored copy (anp_biomethane_plants),
+      newer by four months. Reporting-scale check: engine.calibrate.anp_units (docs/13 §8).
   - id: mme_boletim_gn
     name: MME Boletim Mensal de Acompanhamento da Indústria de Gás Natural
     publisher: MME
@@ -590,6 +616,86 @@ sources:
     module: spatial
     status: get
     confidence: K
+  - id: esd_fl_espacial_outputs
+    name: CP2b FL espacial outputs (road-network catchments, detour ratios, straw-to-mill distances), ESD resubmission work
+    publisher: CP2B / NIPE-UNICAMP (internal; user's folder Reposicionamento_Submissão_ESD/Metodo_CP2b/fl_espacial)
+    url: local
+    module: spatial
+    provides: [road_detour_ratio_by_distance_band, straw_to_mill_road_distance_percentiles]
+    spatial: SP
+    temporal: OSM extract jan/2026
+    format: CSV (tortuosidade_resumo.csv, palha_usinas_calibracao.csv)
+    access: internal
+    license: internal (CP2B)
+    status: have
+    confidence: D
+    local_path: data/interim/esd_fl_espacial/
+    sha256: 15e23e4a6456f2c3d360d6e509c3e48cc76d86e3ef20d3a59eec35f2d99e1432   # tortuosidade_resumo.csv
+    accessed: '2026-10-07'
+    notes: >-
+      Derived from osm_sudeste (Geofabrik gis_osm_roads_free_1.shp, jan/2026) by the FL espacial
+      pipeline (fl_comum.Roteador, Dijkstra; config_fl.yaml n_pares 5000; EPSG:5880). Hashes from
+      the inventory pushed in commit 44fe9ef (docs/inbox/esd_inventory.md,
+      registry/inbox/esd_datasets.csv): tortuosidade_resumo.csv 15e23e4a…1432,
+      palha_usinas_calibracao.csv 4dd8b53604fdb57b0695766762c5637ce39037f90ce63d490d9d6b90b1c38931.
+      Column headers were not copied with the values; low/high of the detour factor follow the
+      inventory's reading (P10/P90). Values in parameters.csv as road_detour_factor_* and
+      straw_mill_road_km_* (flag D). The straw inputs come from the CP2b N3 cascade; no GEDAVE
+      or other personal data enters these two summary files.
+  - id: esd_n3_supply_grid_1km
+    name: CP2b v5.1 N3 supply grid, 1 km cells + facility points, Nm3 CH4/d per residue (min/med/max)
+    publisher: CP2B / NIPE-UNICAMP (internal; ESD folder Metodo_CP2b/fl_espacial/outputs/grade_oferta_1km.gpkg)
+    url: local
+    module: supply
+    provides: [n3_ch4_nm3_d_by_residue_1km]
+    spatial: SP, 1 km squares (EPSG:5880, 189,887 cells) + 456 points (mills, sewage plants, juice factories)
+    temporal: CP2b v5.1 run of 2026-09-24
+    format: GeoPackage (layers celulas, pontos); 48 value columns <RESIDUE>__min|med|max
+    access: internal, contains personal-data-derived columns (LGPD)
+    license: internal (CP2B)
+    status: have
+    confidence: D
+    local_path: not copied (stays in the ESD folder on the project lead's PC)
+    sha256: c4bfbc72e83e81bff4b52061fc759c2d1cfa9129d0e63e65ac559cdc165303cf
+    accessed: '2026-10-08'
+    notes: >-
+      Read-only inventory in docs/inbox/esd_n3_grid.md (commit b46c9ba). Written by
+      fl_espacial/02_oferta.py: municipal N3 (Nm3 CH4/yr / 365) shared out inside each
+      municipality by weights; grid sums equal municipal sums within 0.01 %. Med total of both
+      layers 19,183,201 Nm3 CH4/d = N3 med of T1_state_levels.csv. Methane, not biogas or
+      biomethane; no total column. BOV_PASTO_MISTO is absent (ignored in config).
+      LGPD: AVES_CORTE, AVES_POSTURA (GEDAVE poultry register), SUINOS (farms_for_gee.csv),
+      BOV_LEITE and BOV_CONFINADO (GEDAVE cattle register) are farm points summed per 1 km cell,
+      so a cell with one farm carries that farm's capacity. Never copy or export those columns
+      cell by cell; use them only after aggregation to the 30 km sums of the suitability grid
+      (or H3 res 7) with a k >= 3 farms rule checked by someone allowed to read the registers.
+      The other 11 residues (straw, vinasse, filter cake, bagasse, citrus, MSW, pruning, sludge,
+      crop residues) carry no personal data. Do not use the outputs_v5.0_bak copy.
+  - id: mapbiomas_federal_uc_integral
+    name: Federal protected areas, integral protection (MapBiomas 10.1 auxiliary layer FEDERAL_PROTECTED_AREAS_INTEGRAL_PROTECTION_v2)
+    publisher: MapBiomas (compiling the federal protected-area registry)
+    url: https://mapbiomas.org
+    module: siting
+    provides: [exclusion_federal_integral_protection_uc]
+    spatial: Brazil (polygons)
+    format: ESRI Shapefile (.shp .shx .dbf .prj .cpg)
+    access: open
+    license: TODO not written next to the file; check MapBiomas terms
+    status: have
+    confidence: S
+    local_path: data/raw/mapbiomas_federal_uc_integral/
+    sha256: c42be75850886eec7915915e9355ae62f8a800bca773071c284b2378eeb6beb8   # .shp only
+    accessed: '2026-10-07'
+    notes: >-
+      Held in the user's ESD folder at 00_Primary_Data_Sources_PILAR2b/SHAPEFILES_MAPBIOMAS_10.1/
+      (inventory commit 44fe9ef; URL from README_DICIONARIO_ILUC_PIPELINE.md:168, only the site
+      root). Used by scripts/siting/score_grid_v0.py --exclude federal_uc_integral=<shp> to close
+      the gap in the v0 exclusions (state UCs and indigenous lands only). The run records the
+      file's sha256 in suitability_score_v0_meta.json. Layer date and source registry version not
+      recorded; seade_geo_ambiente_transporte also carries federal protected areas (MMA 2024)
+      and is the cross-check. The municipal layer
+      MUNICIPAL_PROTECTED_AREAS_INTEGRAL_PROTECTION_v1 (sha256 6efb1afc222505f52178839c29a80d66728dd6842a31abe5f354449e1d493c37)
+      sits beside it, not used yet.
   - id: zaa_sucro_sp
     name: Zoneamento Agroambiental do Setor Sucroenergético SP (SAD-69)
     publisher: Governo do Estado de SP (hosted by CIIAGRO)
@@ -1545,3 +1651,48 @@ sources:
       subscribers, analytics, any table with a personal-looking column, backup tables and the
       views that read them. Functions, triggers and RLS policies are not restored. Never write
       back to the source.
+  - id: semil_anuario_energeticos_2025
+    name: Anuário de Energéticos por Município no Estado de São Paulo – 2025, ano base 2024 (2ª Edição)
+    publisher: Secretaria de Meio Ambiente, Infraestrutura e Logística do Estado de São Paulo (SEMIL), Subsecretaria de Energia e Mineração
+    url: https://semil.sp.gov.br/sem/balanco-energetico-do-estado-de-sao-paulo/
+    module: siting
+    provides: [electricity_consumption_by_class_municipality_kwh, electricity_consumers_by_class, natural_gas_consumption_by_class_municipality_m3, natural_gas_consumers_by_class, petroleum_derivatives_and_hydrated_ethanol_by_municipality]
+    spatial: municipality (645 SP, by name only, no IBGE code); summary tables by administrative region
+    temporal: 2024
+    format: PDF (Anuario-de-Energeticos-por-Municipios-do-Estado-de-Sao-Paulo-2025-ano-base-2024-1.pdf, 11,055,051 bytes)
+    access: open
+    license: TODO not stated in the text read so far
+    status: get
+    confidence: S
+    local_path: data/raw/semil_anuario_energeticos_2025/
+    notes: >-
+      URL is the SEMIL page the user named for both SEMIL energy publications (2026-10-07); the PDF
+      text prints no URL, DOI or ISBN. Copy held in Google Drive Project_Twin/data (user upload,
+      2026-10-07); copy it to local_path and record sha256 (printed by
+      scripts/ingest/semil_anuario_2024.py). Data sources stated in the document: concessionaires
+      and regulators (ANEEL, ANP); gas distributors named "CONGAS, Gás Brasiliano e Naturgy".
+      Gas volumes in "m³" with no reference conditions (docs/21 Q18). The Drive text extraction
+      is truncated (electricity after "Ubirajara", petroleum after "Pongaí", section 6 missing),
+      so extraction must run on the PDF. Confidence S until the pages are checked against the PDF.
+      Same publisher also serves the companion Power BI panel (not readable from the cloud).
+  - id: semil_beesp_2025
+    name: Balanço Energético do Estado de São Paulo 2025, ano base 2024 (BEESP; Série Informações Energéticas, 002)
+    publisher: Secretaria de Meio Ambiente, Infraestrutura e Logística do Estado de São Paulo (SEMIL)
+    url: https://semil.sp.gov.br/sem/balanco-energetico-do-estado-de-sao-paulo/
+    module: supply
+    provides: [state_energy_balance_2024, natural_gas_supply_and_consumption_by_sector, sugarcane_and_bagasse_balance]
+    spatial: state of São Paulo (no regional or municipal tables)
+    temporal: 2024 (with historical series)
+    format: PDF (BEESP-2025AB2024-2a-Edicao.pdf, 10,070,466 bytes, 160 p.)
+    access: open
+    license: TODO not stated in the text read so far
+    status: get
+    confidence: S
+    local_path: data/raw/semil_beesp_2025/
+    notes: >-
+      The BEESP prints this URL among its closing links. Methodology follows the BEN (EPE)
+      and the OLADE method, as the document states. Copy held in Google Drive Project_Twin/data
+      (2026-10-07). The Drive text extraction stops at Tabela 8.1.5, so the appendices with the
+      calorific values, toe factors and the source list (§8.4-8.8) still need reading from the
+      PDF. Values quoted from the extracted text (e.g. Tabela 3.03 natural gas, 3.26 bagasse)
+      stay S until pages are recorded. See docs/21 C34.

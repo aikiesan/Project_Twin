@@ -17,6 +17,7 @@ These are the **full findings** of the research sweeps that fed `docs/05_DATA_CA
 | `R04_process_technical.md` | Vinasse/filter cake/straw/manure, CSTR limits, upgrading, models |
 | `R05_spatial_logistics_methods.md` | Geodata, routing, climate, land price; method references |
 | `R06_international_benchmarks.md` | DBFZ, MaStR, KTBL, DEA, Sweden, France, EU, US |
+| `R11_cocal_narandiba_research_prompt.md` | Deep-research prompt for the reference plant Cocal Narandiba (repo values to confirm, rules, questions) |
 | `digests/` | Daily digest triage from 2026-10-06 on, one note per day (ADR-0012) |
 
 **Use rule:** treat every number here as a lead to verify (see `docs/08_VERIFICATION_PROTOCOL.md`), not as a citable fact.

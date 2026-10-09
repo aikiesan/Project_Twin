@@ -155,3 +155,4 @@ def test_proposed_row_format():
         "NL CH4 per kg VS",
     ]
     assert parts[8] == "V"
+    assert len(parts) == 17  # parameters.csv width, evidence columns left for the reviewer

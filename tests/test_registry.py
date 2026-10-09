@@ -18,6 +18,7 @@ from engine import registry as reg
 from engine.registry import (
     Issue,
     Param,
+    load_parameters,
     main,
     param_hash,
     summary_markdown,
@@ -180,9 +181,23 @@ def test_parameters_v_flag_requires_page_and_quote(tmp_path: Path) -> None:
     path = _write(tmp_path / "a.csv", PARAM_HEADER + "syn_v,process,V,2,1,3,-,syn,V,\n")
     _, warns = _levels(validate_parameters(path))
     assert len(warns) == 1 and "flag V but no page" in warns[0].message
-    header = PARAM_HEADER.strip() + ",page,quote\n"
-    row = 'syn_v,process,V,2,1,3,-,syn,V,,p. 12,"synthetic quote"\n'
+    header = PARAM_HEADER.strip() + ",page,quote,verified_by,verified_on\n"
+    row = 'syn_v,process,V,2,1,3,-,syn,V,,p. 12,"synthetic quote",tester,2026-10-06\n'
     assert validate_parameters(_write(tmp_path / "b.csv", header + row)) == []
+    # a quote must say who read it; a verification date must be ISO
+    row = 'syn_v,process,V,2,1,3,-,syn,V,,p. 12,"synthetic quote",,06/10/2026\n'
+    errors, warns = _levels(validate_parameters(_write(tmp_path / "c.csv", header + row)))
+    assert len(errors) == 1 and "verified_on" in errors[0].message
+    assert len(warns) == 1 and "without page or verified_by" in warns[0].message
+
+
+def test_load_parameters_reads_page_and_quote(tmp_path: Path) -> None:
+    header = PARAM_HEADER.strip() + ",page,quote\n"
+    path = _write(tmp_path / "p.csv", header + 'syn_v,process,V,2,1,3,-,syn,V,,"6, Table 6","q"\n')
+    p = load_parameters(path)["syn_v"]
+    assert (p.page, p.quote) == ("6, Table 6", "q")
+    plain = _write(tmp_path / "plain.csv", PARAM_HEADER + PARAM_ROWS_OK)
+    assert all(q.page == "" and q.quote == "" for q in load_parameters(plain).values())
 
 
 # ---------------------------------------------------------------------------------------------
@@ -476,3 +491,243 @@ def test_real_registry_has_no_validation_errors(validator) -> None:
     if errors:
         pytest.xfail(f"{len(errors)} registry error(s):\n" + "\n".join(map(str, errors)))
     assert errors == []
+
+
+# ---------------------------------------------------------------------------------------------
+# references.csv (docs/08 §8) — SYNTHETIC rows, made-up DOIs on example domains
+# ---------------------------------------------------------------------------------------------
+
+REF_HEADER = (
+    "ref_id,kind,authors,year,title,container,volume,issue,pages,doi,url,used_for,ref_check,"
+    "checked_on,check_evidence,value_check,notes\n"
+)
+REF_ROW_OK = (
+    "syn_ref,article,Doe J,2020,Synthetic title,Synthetic Journal,1,2,3-4,10.9999/syn.1,,"
+    "parameters.csv:syn_a; docs/23,two_sources,2026-10-06,"
+    "https://example.org/a; https://example.net/b,syn_a=seen_in_abstract,\n"
+)
+
+
+def _refs(tmp_path: Path, rows: str, params: str = PARAM_ROWS_OK) -> list[Issue]:
+    _write(tmp_path / "parameters.csv", PARAM_HEADER + params)
+    return reg.validate_references(_write(tmp_path / "references.csv", REF_HEADER + rows))
+
+
+def test_references_clean_file_has_no_issues(tmp_path: Path) -> None:
+    assert _refs(tmp_path, REF_ROW_OK) == []
+
+
+@pytest.mark.parametrize(
+    "old, new, message",
+    [
+        ("syn_ref,article", "syn_ref,blog", "kind"),
+        ("10.9999/syn.1", "https://doi.org/10.9999/syn.1", "doi"),
+        (",2020,", ",20,", "year"),
+        ("parameters.csv:syn_a; docs/23", "", "used_for is empty"),
+        ("parameters.csv:syn_a; docs/23", "parameters.csv:syn_zz", "unknown parameter"),
+        ("https://example.org/a; https://example.net/b", "https://example.org/a", "two different"),
+        ("2026-10-06", "", "checked_on"),
+        ("syn_a=seen_in_abstract", "syn_a=looks_right", "value_check"),
+        ("two_sources", "verified", "ref_check"),
+    ],
+)
+def test_references_errors(tmp_path: Path, old: str, new: str, message: str) -> None:
+    errors, _ = _levels(_refs(tmp_path, REF_ROW_OK.replace(old, new)))
+    assert any(message in e.message for e in errors), errors
+
+
+def test_references_duplicate_ids(tmp_path: Path) -> None:
+    errors, _ = _levels(_refs(tmp_path, REF_ROW_OK + REF_ROW_OK))
+    assert any("duplicate ref_id" in e.message for e in errors)
+
+
+def test_references_warnings(tmp_path: Path) -> None:
+    # not double-checked -> warning; pending needs no date or evidence
+    row = REF_ROW_OK.replace("two_sources,2026-10-06", "pending,")
+    errors, warns = _levels(_refs(tmp_path, row))
+    assert errors == []
+    assert any("not double-checked" in w.message for w in warns)
+    # a parameter citing a paper with no reference row
+    params = PARAM_ROWS_OK + "syn_c,process,C,1,,,-,Roe et al. 2019,S,\n"
+    _, warns = _levels(_refs(tmp_path, REF_ROW_OK, params))
+    assert any("syn_c" in w.message and "no references.csv row" in w.message for w in warns)
+    # a V parameter whose only reference is not double-checked
+    params_v = PARAM_ROWS_OK.replace("Synthetic fixture,S,", "Synthetic fixture,V,", 1)
+    _, warns = _levels(_refs(tmp_path, row, params_v))
+    assert any("flagged V" in w.message for w in warns)
+
+
+def test_validate_all_reads_references_when_present(clean_registry: Path) -> None:
+    assert validate_all(clean_registry) == []
+    _write(clean_registry / "references.csv", REF_HEADER + REF_ROW_OK.replace("syn_ref", "Bad"))
+    (issue,) = validate_all(clean_registry)
+    assert "snake_case" in issue.message
+    _write(clean_registry / "references.csv", REF_HEADER + REF_ROW_OK)
+    text = summary_markdown(clean_registry)
+    assert "## References (1)" in text and "| two_sources | 1 |" in text
+
+
+# ---------------------------------------------------------------------------------------------
+# value_evidence.csv (docs/08 §6, ADR-0015) — SYNTHETIC rows
+# ---------------------------------------------------------------------------------------------
+
+EV_HEADER = (
+    "evidence_id,param_id,ref_id,pdf_page,printed_page,location,quote,value,unit,conditions,"
+    "origin,support,check,cited_ref,notes\n"
+)
+EV_ROW_OK = (
+    "syn_ref:syn_a:0,syn_a,syn_ref,3,103,Table 1,Synthetic verbatim quote,2,kg per t,"
+    "synthetic,own_measurement,supports_central,human_audited,,\n"
+)
+
+
+def _evidence(tmp_path: Path, rows: str) -> list[Issue]:
+    _write(tmp_path / "parameters.csv", PARAM_HEADER + PARAM_ROWS_OK)
+    _write(tmp_path / "references.csv", REF_HEADER + REF_ROW_OK)
+    return reg.validate_value_evidence(_write(tmp_path / "value_evidence.csv", EV_HEADER + rows))
+
+
+def test_value_evidence_clean_file_has_no_issues(tmp_path: Path) -> None:
+    assert _evidence(tmp_path, EV_ROW_OK) == []
+
+
+@pytest.mark.parametrize(
+    "old, new, message",
+    [
+        (",syn_a,syn_ref,", ",syn_zz,syn_ref,", "not in parameters.csv"),
+        (",syn_a,syn_ref,", ",syn_a,other_ref,", "not in references.csv"),
+        (",3,103,", ",0,103,", "pdf_page"),
+        (",3,103,", ",p3,103,", "pdf_page"),
+        ("Synthetic verbatim quote", "", "quote is empty"),
+        ("own_measurement", "measured", "origin"),
+        ("supports_central", "agrees", "support"),
+        ("human_audited", "looks_right", "check"),
+        ("syn_ref:syn_a:0,", ",", "empty evidence_id"),
+    ],
+)
+def test_value_evidence_errors(tmp_path: Path, old: str, new: str, message: str) -> None:
+    errors, _ = _levels(_evidence(tmp_path, EV_ROW_OK.replace(old, new)))
+    assert any(message in e.message for e in errors), errors
+
+
+def test_value_evidence_duplicates_and_audit_warning(tmp_path: Path) -> None:
+    errors, _ = _levels(_evidence(tmp_path, EV_ROW_OK + EV_ROW_OK))
+    assert any("duplicate evidence_id" in e.message for e in errors)
+    llm = EV_ROW_OK.replace("human_audited", "llm_double_read")
+    llm2 = llm.replace("syn_a:0", "syn_a:1").replace("llm_double_read", "llm_corrected")
+    errors, warns = _levels(_evidence(tmp_path, llm + llm2))
+    assert errors == []
+    (warn,) = warns
+    assert "2 row(s) not human_audited" in warn.message
+
+
+def test_validate_all_reads_value_evidence_when_present(clean_registry: Path) -> None:
+    _write(clean_registry / "references.csv", REF_HEADER + REF_ROW_OK)
+    _write(clean_registry / "value_evidence.csv", EV_HEADER + EV_ROW_OK)
+    assert validate_all(clean_registry) == []
+    text = summary_markdown(clean_registry)
+    assert "## Value evidence (1)" in text and "| supports_central | 0 | 0 | 0 | 1 | 1 |" in text
+    _write(clean_registry / "value_evidence.csv", EV_HEADER + EV_ROW_OK.replace(",3,", ",x,"))
+    (issue,) = validate_all(clean_registry)
+    assert issue.file == "value_evidence.csv" and "pdf_page" in issue.message
+
+
+@pytest.mark.parametrize(
+    "path, validator",
+    [
+        (reg.REFERENCES_CSV, reg.validate_references),
+        (reg.VALUE_EVIDENCE_CSV, reg.validate_value_evidence),
+        (reg.PLANT_REPORTED_CSV, reg.validate_plant_reported),
+    ],
+)
+def test_real_references_and_evidence_have_no_errors(path: Path, validator) -> None:
+    """The committed references.csv, value_evidence.csv and plant_reported_annual.csv pass with
+    no errors (warnings for references not double-checked and rows not human-audited are
+    expected)."""
+    if not path.exists():
+        pytest.skip(f"{path.name} not present")
+    errors = [i for i in validator() if i.level == "error"]
+    assert errors == [], "\n".join(map(str, errors))
+
+
+# ---------------------------------------------------------------------------------------------
+# plant_reported_annual.csv (docs/13 §8) — SYNTHETIC rows
+# ---------------------------------------------------------------------------------------------
+
+PLANT_HEADER = (
+    "row_id,plant_id,period_kind,period,start_month,end_month,quantity,value,unit,ref_id,"
+    "pdf_page,quote,confidence,check,notes\n"
+)
+PLANT_ROW_OK = (
+    "syn_s202425_biogas,syn_plant,safra,2024/25,2024-04,2025-03,biogas_produced,1000,Nm3,"
+    "syn_ref,3,Synthetic verbatim quote,V,human_audited,\n"
+)
+
+
+def _plant(tmp_path: Path, rows: str) -> list[Issue]:
+    _write(tmp_path / "references.csv", REF_HEADER + REF_ROW_OK)
+    return reg.validate_plant_reported(
+        _write(tmp_path / "plant_reported_annual.csv", PLANT_HEADER + rows)
+    )
+
+
+def test_plant_reported_clean_file_has_no_issues(tmp_path: Path) -> None:
+    calendar = (
+        "syn_c2024_biogas,syn_plant,calendar,2024,2024-01,2024-12,biogas_produced,900,Nm3,"
+        "syn_ref,4,Another quote,S,llm_single_read,\n"
+    )
+    assert _plant(tmp_path, PLANT_ROW_OK + calendar) == []
+
+
+@pytest.mark.parametrize(
+    "old, new, message",
+    [
+        (",safra,", ",harvest,", "period_kind"),
+        (",2024/25,", ",2024/26,", "not a valid safra label"),
+        (",2024-04,2025-03,", ",2024-01,2024-12,", "do not match safra 2024/25"),
+        (",biogas_produced,", ",biogas_made,", "not a known quantity"),
+        (",Nm3,", ",m3,", "should be 'Nm3'"),
+        (",1000,", ",-5,", "number >= 0"),
+        (",1000,", ",lots,", "number >= 0"),
+        (",syn_ref,", ",other_ref,", "not in references.csv"),
+        (",3,Synthetic", ",0,Synthetic", "pdf_page"),
+        ("Synthetic verbatim quote", "", "quote is empty"),
+        (",V,", ",X,", "confidence"),
+        ("human_audited", "looks_right", "check"),
+        ("syn_s202425_biogas,", ",", "empty row_id"),
+        (",syn_plant,", ",,", "empty plant_id"),
+    ],
+)
+def test_plant_reported_errors(tmp_path: Path, old: str, new: str, message: str) -> None:
+    errors, _ = _levels(_plant(tmp_path, PLANT_ROW_OK.replace(old, new)))
+    assert any(message in e.message for e in errors), errors
+
+
+def test_plant_reported_duplicates_conflicts_and_audit_warning(tmp_path: Path) -> None:
+    errors, _ = _levels(_plant(tmp_path, PLANT_ROW_OK + PLANT_ROW_OK))
+    assert any("duplicate row_id" in e.message for e in errors)
+    second = PLANT_ROW_OK.replace("syn_s202425_biogas,", "syn_s202425_biogas_b,")
+    # 1000 vs 1005 is rounding (0.5 %), 1000 vs 1200 is a conflict to log
+    assert _plant(tmp_path, PLANT_ROW_OK + second.replace(",1000,", ",1005,")) == []
+    errors, warns = _levels(_plant(tmp_path, PLANT_ROW_OK + second.replace(",1000,", ",1200,")))
+    assert errors == []
+    (warn,) = warns
+    assert "values differ" in warn.message and "docs/21" in warn.message
+    llm = PLANT_ROW_OK.replace("human_audited", "llm_double_read")
+    errors, warns = _levels(_plant(tmp_path, llm))
+    assert errors == []
+    (warn,) = warns
+    assert "1 V row(s) not human_audited" in warn.message
+
+
+def test_validate_all_reads_plant_reported_when_present(clean_registry: Path) -> None:
+    _write(clean_registry / "references.csv", REF_HEADER + REF_ROW_OK)
+    _write(clean_registry / "plant_reported_annual.csv", PLANT_HEADER + PLANT_ROW_OK)
+    assert validate_all(clean_registry) == []
+    text = summary_markdown(clean_registry)
+    assert "## Plant-reported annual values (1)" in text
+    assert "| V | 0 | 0 | 0 | 1 | 1 |" in text
+    bad = PLANT_ROW_OK.replace(",Nm3,", ",t,")
+    _write(clean_registry / "plant_reported_annual.csv", PLANT_HEADER + bad)
+    (issue,) = validate_all(clean_registry)
+    assert issue.file == "plant_reported_annual.csv" and "unit" in issue.message

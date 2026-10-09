@@ -1,4 +1,5 @@
-"""Access to the in-git registry: ``parameters.csv``, ``sources.yaml``, ``projects_capex.csv``.
+"""Access to the in-git registry: ``parameters.csv``, ``sources.yaml``, ``projects_capex.csv``,
+``references.csv``.
 
 This module is the **single entry point** other modules use to read model parameters, so every
 number used in a run can be traced to a registry row (id, source, confidence flag).
@@ -16,7 +17,12 @@ keep the raw text in :attr:`Param.raw_central` and have ``central = None``.
 Quality tooling (added 2026-10, does not change the loaders):
 
 - :func:`validate_parameters`, :func:`validate_sources`, :func:`validate_projects_capex`,
-  :func:`validate_all` -> ``list[Issue]`` (``level`` = ``"error"`` | ``"warning"``)
+  :func:`validate_references`, :func:`validate_all` -> ``list[Issue]``
+  (``level`` = ``"error"`` | ``"warning"``)
+- :func:`load_references` -> ``list[dict]`` (scientific references, what each supports and the
+  result of its double-check; docs/08 §8)
+- :func:`load_plant_reported` -> ``list[dict]`` (annual figures that plant owners publish, with
+  page and quote; :func:`validate_plant_reported` checks them; docs/13 §8)
 - :func:`summary_markdown` -> counts by module / confidence / status / feedstock
 - :func:`param_hash` -> short SHA-256 of ``parameters.csv`` or of an overrides dict
 - CLI: ``python -m engine.registry validate|summary|hash`` (:func:`main`)
@@ -45,6 +51,9 @@ from engine import REGISTRY_DIR
 PARAMETERS_CSV = REGISTRY_DIR / "parameters.csv"
 SOURCES_YAML = REGISTRY_DIR / "sources.yaml"
 PROJECTS_CAPEX_CSV = REGISTRY_DIR / "projects_capex.csv"
+REFERENCES_CSV = REGISTRY_DIR / "references.csv"
+VALUE_EVIDENCE_CSV = REGISTRY_DIR / "value_evidence.csv"
+PLANT_REPORTED_CSV = REGISTRY_DIR / "plant_reported_annual.csv"
 
 CONFIDENCE_FLAGS = ("V", "S", "K", "D")
 
@@ -77,6 +86,8 @@ class Param:
         confidence: one of V, S, K, D (see docs/08_VERIFICATION_PROTOCOL.md).
         notes: free text.
         raw_central, raw_low, raw_high: the original cell text.
+        page, quote: where the value was read in the primary document and the verbatim text
+            (docs/08 §3-4); empty until the value is verified. Required for flag ``V``.
     """
 
     id: str
@@ -92,6 +103,8 @@ class Param:
     raw_central: str
     raw_low: str
     raw_high: str
+    page: str = ""
+    quote: str = ""
 
     @property
     def has_range(self) -> bool:
@@ -128,6 +141,8 @@ def _load_parameters_cached(path: str) -> tuple[Param, ...]:
                     raw_central=(row.get("central") or "").strip(),
                     raw_low=(row.get("low") or "").strip(),
                     raw_high=(row.get("high") or "").strip(),
+                    page=(row.get("page") or "").strip(),
+                    quote=(row.get("quote") or "").strip(),
                 )
             )
     return tuple(rows)
@@ -193,6 +208,20 @@ PARAMETER_COLUMNS = (
     "notes",
 )
 
+#: Evidence columns of ``parameters.csv`` (docs/08 §4). Optional for the loader and the
+#: validator; a ``V`` row needs ``page`` and ``quote``. ``verified_by`` names who or what read
+#: the document (an LLM extraction must say so, docs/08 §6), ``conditions`` the basis of the
+#: value (substrate, scale, temperature, units), ``price_year``/``currency`` monetary rows.
+PARAMETER_EVIDENCE_COLUMNS = (
+    "page",
+    "quote",
+    "verified_by",
+    "verified_on",
+    "conditions",
+    "price_year",
+    "currency",
+)
+
 #: Keys every ``sources.yaml`` entry must carry (missing or empty -> error).
 SOURCE_REQUIRED_KEYS = ("id", "name", "publisher", "url", "module", "status", "confidence")
 
@@ -234,7 +263,138 @@ PROJECTS_REQUIRED_COLUMNS = (
 #: Monetary columns of ``projects_capex.csv`` (million BRL, nominal) that must be numeric.
 PROJECTS_INVESTMENT_COLUMNS = ("investment_total_R$M", "bndes_R$M")
 
+#: Columns ``references.csv`` must have (docs/08 §8).
+REFERENCE_COLUMNS = (
+    "ref_id",
+    "kind",
+    "authors",
+    "year",
+    "title",
+    "container",
+    "volume",
+    "issue",
+    "pages",
+    "doi",
+    "url",
+    "used_for",
+    "ref_check",
+    "checked_on",
+    "check_evidence",
+    "value_check",
+    "notes",
+)
+
+#: Kinds of reference in ``references.csv``.
+REFERENCE_KINDS = ("article", "preprint", "report", "book", "standard", "software", "grey")
+
+#: Outcome of the identity double-check of a reference (docs/08 §8):
+#: ``two_sources`` = DOI/title/first author/year/container confirmed by two independent sources;
+#: ``one_source`` = confirmed by one source only; ``corrected`` is not a status (fix the row and
+#: re-check); ``unconfirmed`` = searched but not established; ``unidentified`` = the citation is
+#: too vague to name one work; ``pending`` = not checked yet.
+REF_CHECK_STATUSES = ("two_sources", "one_source", "unconfirmed", "unidentified", "pending")
+
+#: Status of a value the project attributes to a reference (``value_check`` column).
+VALUE_CHECK_STATUSES = ("page_quote", "seen_in_abstract", "not_seen", "contradicted")
+
+#: Columns ``value_evidence.csv`` must have (docs/08 §6, ADR-0015): one row per value statement
+#: read in a reference, with the PDF page, the verbatim quote and how the reading was checked.
+VALUE_EVIDENCE_COLUMNS = (
+    "evidence_id",
+    "param_id",
+    "ref_id",
+    "pdf_page",
+    "printed_page",
+    "location",
+    "quote",
+    "value",
+    "unit",
+    "conditions",
+    "origin",
+    "support",
+    "check",
+    "cited_ref",
+    "notes",
+)
+
+#: Whose number the quote states: the paper's own measurement, a value the paper cites from
+#: another work (``cited_ref`` transcribes that work; it is not a project citation), or unclear.
+EVIDENCE_ORIGINS = ("own_measurement", "cited", "unclear")
+
+#: How the quoted value bears on the parameter: it supports the central value, falls inside
+#: the low-high range, is only related (other basis or conditions), or is different.
+EVIDENCE_SUPPORTS = ("supports_central", "supports_range", "related_only", "different")
+
+#: How the row was checked: two independent LLM reads agreed (``llm_double_read``); the second
+#: read confirmed the quote but disputed the support label (``llm_support_disputed``); the second
+#: read corrected the quote, page or value (``llm_corrected``); a person checked it against the
+#: PDF (``human_audited``). Only ``human_audited`` meets docs/08 §6.
+EVIDENCE_CHECKS = ("llm_double_read", "llm_support_disputed", "llm_corrected", "human_audited")
+
+#: Columns ``plant_reported_annual.csv`` must have: one row per figure a plant owner publishes
+#: for a period (company reports, not ANP data), with the PDF page and the verbatim quote.
+PLANT_REPORTED_COLUMNS = (
+    "row_id",
+    "plant_id",
+    "period_kind",
+    "period",
+    "start_month",
+    "end_month",
+    "quantity",
+    "value",
+    "unit",
+    "ref_id",
+    "pdf_page",
+    "quote",
+    "confidence",
+    "check",
+    "notes",
+)
+
+#: Allowed quantities and their unit. Gas volumes are Nm³ as the reports print them; the
+#: capacity rows are per year. ``*_processed`` is what went into the digesters, not what the
+#: mill generated (CLAUDE.md rule 9).
+PLANT_QUANTITY_UNITS = {
+    "biogas_produced": "Nm3",
+    "biogas_to_upgrading": "Nm3",
+    "biogas_to_power": "Nm3",
+    "biogas_flared": "Nm3",
+    "biogas_capacity": "Nm3",
+    "biomethane_produced": "Nm3",
+    "biomethane_flared": "Nm3",
+    "biomethane_capacity": "Nm3",
+    "biomethane_to_pipeline": "Nm3",
+    "biomethane_to_road": "Nm3",
+    "biomethane_to_fleet": "Nm3",
+    "biomethane_to_industrial_use": "Nm3",
+    "electricity_generated": "MWh",
+    "electricity_distributed_generation": "MWh",
+    "filter_cake_processed": "t",
+    "vinasse_processed": "m3",
+    "cattle_manure_processed": "t",
+    "chicken_manure_processed": "t",
+    "other_waste_processed": "t",
+    "biofertiliser": "t",
+    "organogeo": "t",
+    "liquifertil": "m3",
+}
+
+#: ``safra``: crop year 1 April to 31 March (``2024/25``); ``calendar``: January to December.
+PLANT_PERIOD_KINDS = ("safra", "calendar")
+
+#: How a row was read: one LLM read (``llm_single_read``), two independent LLM reads that agree
+#: (``llm_double_read``), a second read that corrected the first (``llm_corrected``), or a person
+#: checked it against the PDF (``human_audited``, the only one that meets docs/08 §6).
+PLANT_REPORT_CHECKS = ("llm_single_read", "llm_double_read", "llm_corrected", "human_audited")
+
+#: Relative difference above which two rows for the same plant, period and quantity count as a
+#: conflict to log in docs/21 (smaller gaps are rounding, e.g. 27.66 vs 27.7).
+PLANT_CONFLICT_REL_TOL = 0.01
+
 _SNAKE_CASE_RE = re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
+_DOI_RE = re.compile(r"^10\.\d{4,9}/\S+$")
+_DOI_IN_TEXT_RE = re.compile(r"10\.\d{4,9}/[^\s;,)]+")
+_ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _HTTP_URL_RE = re.compile(r"^https?://\S+$")
 # Gas volume per time: (N)m3 per hour / day / year / month. Group 1 = volume basis.
 _GAS_FLOW_UNIT_RE = re.compile(r"^(n?m3)/(h|hr|d|day|yr|y|year|a|month|mo)$")
@@ -359,7 +519,9 @@ def validate_parameters(path: Path | str = PARAMETERS_CSV) -> list[Issue]:
       ``raw_*``) but listed as a warning; a blank ``central`` is a warning because
       :meth:`Param.require_central` will raise;
     - flag ``V`` without a non-empty ``page`` and ``quote`` column -> warning
-      (docs/08_VERIFICATION_PROTOCOL.md §3-4).
+      (docs/08_VERIFICATION_PROTOCOL.md §3-4);
+    - ``verified_on`` empty or ``YYYY-MM-DD``; a ``quote`` without ``page`` or ``verified_by``
+      -> warning (where it was read and by whom must go with it).
 
     Args:
         path: CSV file to check (default: the registry's ``parameters.csv``).
@@ -433,16 +595,20 @@ def validate_parameters(path: Path | str = PARAMETERS_CSV) -> list[Issue]:
             broken = "; ".join(f"{a} > {b}" for a, b in bad)
             sink.error(f"values not ordered low <= central <= high ({broken}): {shown}", line, pid)
 
-        if flag == "V":
-            page = (row.get("page") or "").strip()
-            quote = (row.get("quote") or "").strip()
-            if not page or not quote:
-                sink.warning(
-                    "flag V but no page and verbatim quote recorded (add 'page'/'quote' "
-                    "columns, docs/08_VERIFICATION_PROTOCOL.md §3-4)",
-                    line,
-                    pid,
-                )
+        page = (row.get("page") or "").strip()
+        quote = (row.get("quote") or "").strip()
+        if flag == "V" and (not page or not quote):
+            sink.warning(
+                "flag V but no page and verbatim quote recorded (add 'page'/'quote' "
+                "columns, docs/08_VERIFICATION_PROTOCOL.md §3-4)",
+                line,
+                pid,
+            )
+        verified_on = (row.get("verified_on") or "").strip()
+        if verified_on and not _ISO_DATE_RE.fullmatch(verified_on):
+            sink.error(f"verified_on {verified_on!r} is not YYYY-MM-DD", line, pid)
+        if quote and not (page and (row.get("verified_by") or "").strip()):
+            sink.warning("quote recorded without page or verified_by", line, pid)
     return sink.issues
 
 
@@ -689,14 +855,399 @@ def validate_projects_capex(path: Path | str = PROJECTS_CAPEX_CSV) -> list[Issue
     return sink.issues
 
 
+def load_references(path: Path | str = REFERENCES_CSV) -> list[dict[str, str]]:
+    """Rows of ``references.csv`` as dicts of stripped strings."""
+    with open(path, newline="", encoding="utf-8") as fh:
+        return [{k: (v or "").strip() for k, v in row.items()} for row in csv.DictReader(fh)]
+
+
+def load_value_evidence(path: Path | str = VALUE_EVIDENCE_CSV) -> list[dict[str, str]]:
+    """Rows of ``value_evidence.csv`` as dicts of stripped strings (ADR-0015)."""
+    with open(path, newline="", encoding="utf-8-sig") as fh:
+        return [{k: (v or "").strip() for k, v in row.items()} for row in csv.DictReader(fh)]
+
+
+def _read_param_sources(path: Path) -> dict[str, tuple[str, str]]:
+    """``{id: (source, confidence)}`` read fresh from ``parameters.csv`` (no cache: validators
+    must see the file as it is now). Empty when the file cannot be read."""
+    try:
+        with open(path, newline="", encoding="utf-8-sig") as fh:
+            return {
+                (r.get("id") or "").strip(): (
+                    (r.get("source") or "").strip(),
+                    (r.get("confidence") or "").strip(),
+                )
+                for r in csv.DictReader(fh)
+                if (r.get("id") or "").strip()
+            }
+    except (OSError, csv.Error):
+        return {}
+
+
+def _split_list(text: str) -> list[str]:
+    return [x.strip() for x in text.split(";") if x.strip()]
+
+
+def _url_domain(url: str) -> str:
+    host = url.split("://", 1)[-1].split("/", 1)[0].lower()
+    return host[4:] if host.startswith("www.") else host
+
+
+def validate_references(
+    path: Path | str = REFERENCES_CSV, parameters_path: Path | str | None = None
+) -> list[Issue]:
+    """Validate ``references.csv`` and its links to ``parameters.csv`` (docs/08 §8).
+
+    Rules (error unless stated):
+
+    - header has :data:`REFERENCE_COLUMNS`; every row has the header's fields;
+    - ``ref_id`` non-empty, snake_case and unique; ``kind`` in :data:`REFERENCE_KINDS`;
+    - ``year`` empty or four digits; ``doi`` empty or ``10.<registrant>/<suffix>`` (no
+      ``https://doi.org/`` prefix); ``url`` empty or http(s);
+    - ``used_for`` non-empty (a reference must say what in the project it supports); every
+      ``parameters.csv:<id>`` item names an existing parameter;
+    - ``ref_check`` in :data:`REF_CHECK_STATUSES`; ``two_sources`` needs at least two http(s)
+      URLs from two different domains in ``check_evidence``, ``one_source`` at least one;
+      every status but ``pending`` needs ``checked_on`` (YYYY-MM-DD);
+    - ``value_check`` items are ``<parameter id>=<status>`` with a status from
+      :data:`VALUE_CHECK_STATUSES` and an existing parameter id;
+    - warning: a reference that is not ``two_sources``;
+    - warning: a parameter whose ``source`` names a DOI or "et al." but that no reference row
+      lists in ``used_for``;
+    - warning: a parameter flagged ``V`` whose linked references are not ``two_sources``.
+
+    Args:
+        path: CSV file to check.
+        parameters_path: ``parameters.csv`` for the cross-checks (default: next to ``path``).
+    """
+    path = Path(path)
+    sink = _IssueSink(path.name)
+    text = _read_registry_text(path, sink)
+    if text is None:
+        return sink.issues
+    params_path = Path(parameters_path) if parameters_path else path.with_name(PARAMETERS_CSV.name)
+    params = _read_param_sources(params_path)
+    reader = csv.DictReader(io.StringIO(text, newline=""), restkey=_EXTRA_FIELDS_KEY)
+    if not _check_header(reader.fieldnames, REFERENCE_COLUMNS, sink):
+        return sink.issues
+    seen: dict[str, int] = {}
+    linked: dict[str, list[str]] = {}
+    for row in reader:
+        line = reader.line_num
+        rid = (row.get("ref_id") or "").strip()
+        if not _check_field_count(row, line, rid, sink):
+            continue
+        if not rid:
+            sink.error("empty ref_id", line)
+        elif rid in seen:
+            sink.error(f"duplicate ref_id (first defined on line {seen[rid]})", line, rid)
+        elif not _SNAKE_CASE_RE.fullmatch(rid):
+            sink.error(f"ref_id {rid!r} is not snake_case", line, rid)
+        else:
+            seen[rid] = line
+        get = {k: (row.get(k) or "").strip() for k in REFERENCE_COLUMNS}
+        if get["kind"] not in REFERENCE_KINDS:
+            sink.error(
+                f"kind {get['kind']!r} is not one of {', '.join(REFERENCE_KINDS)}", line, rid
+            )
+        if get["year"] and not re.fullmatch(r"\d{4}", get["year"]):
+            sink.error(f"year {get['year']!r} is not four digits", line, rid)
+        if get["doi"] and not _DOI_RE.fullmatch(get["doi"]):
+            sink.error(f"doi {get['doi']!r} is not of the form 10.xxxx/suffix", line, rid)
+        if get["url"] and not _HTTP_URL_RE.fullmatch(get["url"]):
+            sink.error(f"url {get['url']!r} is not http(s)", line, rid)
+
+        used = _split_list(get["used_for"])
+        if not used:
+            sink.error(
+                "used_for is empty: say which values, data or methods it supports", line, rid
+            )
+        for item in used:
+            if item.startswith("parameters.csv:"):
+                pid = item.split(":", 1)[1]
+                if params and pid not in params:
+                    sink.error(f"used_for names unknown parameter {pid!r}", line, rid)
+                linked.setdefault(pid, []).append(get["ref_check"])
+
+        status = get["ref_check"]
+        urls = [u for u in _split_list(get["check_evidence"]) if _HTTP_URL_RE.fullmatch(u)]
+        if status not in REF_CHECK_STATUSES:
+            sink.error(
+                f"ref_check {status!r} is not one of {', '.join(REF_CHECK_STATUSES)}", line, rid
+            )
+        elif status == "two_sources" and len({_url_domain(u) for u in urls}) < 2:
+            sink.error("two_sources needs evidence URLs from two different domains", line, rid)
+        elif status == "one_source" and not urls:
+            sink.error("one_source needs an evidence URL", line, rid)
+        if status in REF_CHECK_STATUSES and status != "two_sources":
+            sink.warning(f"reference not double-checked (ref_check={status})", line, rid)
+        if status != "pending" and not _ISO_DATE_RE.fullmatch(get["checked_on"]):
+            sink.error("checked_on must be YYYY-MM-DD once a check was made", line, rid)
+
+        for item in _split_list(get["value_check"]):
+            pid, _, vstatus = item.partition("=")
+            pid, vstatus = pid.strip(), vstatus.strip()
+            if vstatus not in VALUE_CHECK_STATUSES:
+                sink.error(
+                    f"value_check {item!r}: status must be one of "
+                    + ", ".join(VALUE_CHECK_STATUSES),
+                    line,
+                    rid,
+                )
+            if params and pid not in params:
+                sink.error(f"value_check names unknown parameter {pid!r}", line, rid)
+
+    for pid, (source, confidence) in params.items():
+        cites_paper = bool(_DOI_IN_TEXT_RE.search(source)) or "et al" in source
+        if cites_paper and pid not in linked:
+            sink.warning(
+                f"parameter {pid!r} cites a paper that no references.csv row links to "
+                "(add the reference with used_for parameters.csv:" + pid + ")",
+                ident=pid,
+            )
+        if confidence == "V" and pid in linked and "two_sources" not in linked[pid]:
+            sink.warning(
+                f"parameter {pid!r} is flagged V but none of its references is double-checked",
+                ident=pid,
+            )
+    return sink.issues
+
+
+def validate_value_evidence(
+    path: Path | str = VALUE_EVIDENCE_CSV,
+    parameters_path: Path | str | None = None,
+    references_path: Path | str | None = None,
+) -> list[Issue]:
+    """Validate ``value_evidence.csv`` (docs/08 §6, ADR-0015).
+
+    Rules (error unless stated):
+
+    - header has :data:`VALUE_EVIDENCE_COLUMNS`; every row has the header's fields;
+    - ``evidence_id`` non-empty and unique;
+    - ``param_id`` names a parameter of ``parameters.csv``; ``ref_id`` names a row of
+      ``references.csv`` (both checked only when the file can be read);
+    - ``pdf_page`` is a positive integer (the page of the PDF file, not the printed number);
+    - ``quote`` is non-empty (verbatim text from the page);
+    - ``origin``, ``support`` and ``check`` are in :data:`EVIDENCE_ORIGINS`,
+      :data:`EVIDENCE_SUPPORTS` and :data:`EVIDENCE_CHECKS`;
+    - warning (one for the file): rows whose ``check`` is not ``human_audited``.
+
+    Args:
+        path: CSV file to check.
+        parameters_path: ``parameters.csv`` (default: next to ``path``).
+        references_path: ``references.csv`` (default: next to ``path``).
+    """
+    path = Path(path)
+    sink = _IssueSink(path.name)
+    text = _read_registry_text(path, sink)
+    if text is None:
+        return sink.issues
+    params = _read_param_sources(
+        Path(parameters_path) if parameters_path else path.with_name(PARAMETERS_CSV.name)
+    )
+    refs_path = Path(references_path) if references_path else path.with_name(REFERENCES_CSV.name)
+    try:
+        ref_ids = {r.get("ref_id", "") for r in load_references(refs_path)}
+    except (OSError, csv.Error):
+        ref_ids = set()
+    reader = csv.DictReader(io.StringIO(text, newline=""), restkey=_EXTRA_FIELDS_KEY)
+    if not _check_header(reader.fieldnames, VALUE_EVIDENCE_COLUMNS, sink):
+        return sink.issues
+    seen: dict[str, int] = {}
+    not_audited = 0
+    for row in reader:
+        line = reader.line_num
+        eid = (row.get("evidence_id") or "").strip()
+        if not _check_field_count(row, line, eid, sink):
+            continue
+        if not eid:
+            sink.error("empty evidence_id", line)
+        elif eid in seen:
+            sink.error(f"duplicate evidence_id (first defined on line {seen[eid]})", line, eid)
+        else:
+            seen[eid] = line
+        get = {k: (row.get(k) or "").strip() for k in VALUE_EVIDENCE_COLUMNS}
+        if params and get["param_id"] not in params:
+            sink.error(f"param_id {get['param_id']!r} is not in parameters.csv", line, eid)
+        if ref_ids and get["ref_id"] not in ref_ids:
+            sink.error(f"ref_id {get['ref_id']!r} is not in references.csv", line, eid)
+        if not re.fullmatch(r"[1-9]\d*", get["pdf_page"]):
+            sink.error(f"pdf_page {get['pdf_page']!r} is not a positive integer", line, eid)
+        if not get["quote"]:
+            sink.error("quote is empty: record the verbatim text from the page", line, eid)
+        for col, allowed in (
+            ("origin", EVIDENCE_ORIGINS),
+            ("support", EVIDENCE_SUPPORTS),
+            ("check", EVIDENCE_CHECKS),
+        ):
+            if get[col] not in allowed:
+                sink.error(f"{col} {get[col]!r} is not one of {', '.join(allowed)}", line, eid)
+        if get["check"] in EVIDENCE_CHECKS and get["check"] != "human_audited":
+            not_audited += 1
+    if not_audited:
+        sink.warning(
+            f"{not_audited} row(s) not human_audited: LLM readings only, a person must check "
+            "page and quote against the PDF before a value is used as V (docs/08 §6)"
+        )
+    return sink.issues
+
+
+def load_plant_reported(path: Path | str = PLANT_REPORTED_CSV) -> list[dict[str, str]]:
+    """Rows of ``plant_reported_annual.csv`` as dicts (all values text)."""
+    with open(path, newline="", encoding="utf-8-sig") as fh:
+        return list(csv.DictReader(fh))
+
+
+def _period_bounds(kind: str, period: str) -> tuple[str, str] | None:
+    """Expected ``(start_month, end_month)`` of a period, or ``None`` if the label is malformed."""
+    if kind == "safra":
+        m = re.fullmatch(r"(\d{4})/(\d{2})", period)
+        if not m or int(m.group(2)) != (int(m.group(1)) + 1) % 100:
+            return None
+        y = int(m.group(1))
+        return f"{y}-04", f"{y + 1}-03"
+    if kind == "calendar" and re.fullmatch(r"\d{4}", period):
+        return f"{period}-01", f"{period}-12"
+    return None
+
+
+def validate_plant_reported(
+    path: Path | str = PLANT_REPORTED_CSV,
+    references_path: Path | str | None = None,
+) -> list[Issue]:
+    """Validate ``plant_reported_annual.csv`` (docs/13 §8).
+
+    Rules (error unless stated):
+
+    - header has :data:`PLANT_REPORTED_COLUMNS`; every row has the header's fields;
+    - ``row_id`` non-empty and unique; ``plant_id`` non-empty;
+    - ``period_kind`` in :data:`PLANT_PERIOD_KINDS`; ``period`` is ``YYYY/YY`` (safra) or
+      ``YYYY`` (calendar); ``start_month`` and ``end_month`` match it (safra April-March);
+    - ``quantity`` in :data:`PLANT_QUANTITY_UNITS` with its unit; ``value`` a number >= 0;
+    - ``ref_id`` names a row of ``references.csv`` (checked when the file can be read);
+    - ``pdf_page`` a positive integer; ``quote`` non-empty;
+    - ``confidence`` in :data:`CONFIDENCE_FLAGS`; ``check`` in :data:`PLANT_REPORT_CHECKS`;
+    - warning: two rows for the same plant, period and quantity whose values differ by more
+      than :data:`PLANT_CONFLICT_REL_TOL` (log both in docs/21, never average);
+    - warning (one for the file): ``V`` rows not ``human_audited`` (docs/08 §6).
+
+    Args:
+        path: CSV file to check.
+        references_path: ``references.csv`` (default: next to ``path``).
+    """
+    path = Path(path)
+    sink = _IssueSink(path.name)
+    text = _read_registry_text(path, sink)
+    if text is None:
+        return sink.issues
+    refs_path = Path(references_path) if references_path else path.with_name(REFERENCES_CSV.name)
+    try:
+        ref_ids = {r.get("ref_id", "") for r in load_references(refs_path)}
+    except (OSError, csv.Error):
+        ref_ids = set()
+    reader = csv.DictReader(io.StringIO(text, newline=""), restkey=_EXTRA_FIELDS_KEY)
+    if not _check_header(reader.fieldnames, PLANT_REPORTED_COLUMNS, sink):
+        return sink.issues
+    seen: dict[str, int] = {}
+    values: dict[tuple[str, str, str, str], list[tuple[float, int, str]]] = {}
+    not_audited = 0
+    for row in reader:
+        line = reader.line_num
+        rid = (row.get("row_id") or "").strip()
+        if not _check_field_count(row, line, rid, sink):
+            continue
+        if not rid:
+            sink.error("empty row_id", line)
+        elif rid in seen:
+            sink.error(f"duplicate row_id (first defined on line {seen[rid]})", line, rid)
+        else:
+            seen[rid] = line
+        get = {k: (row.get(k) or "").strip() for k in PLANT_REPORTED_COLUMNS}
+        if not get["plant_id"]:
+            sink.error("empty plant_id", line, rid)
+        if get["period_kind"] not in PLANT_PERIOD_KINDS:
+            sink.error(
+                f"period_kind {get['period_kind']!r} is not one of {', '.join(PLANT_PERIOD_KINDS)}",
+                line,
+                rid,
+            )
+        else:
+            bounds = _period_bounds(get["period_kind"], get["period"])
+            if bounds is None:
+                sink.error(
+                    f"period {get['period']!r} is not a valid {get['period_kind']} label", line, rid
+                )
+            elif (get["start_month"], get["end_month"]) != bounds:
+                sink.error(
+                    f"start_month/end_month {get['start_month']}..{get['end_month']} do not match "
+                    f"{get['period_kind']} {get['period']} ({bounds[0]}..{bounds[1]})",
+                    line,
+                    rid,
+                )
+        unit = PLANT_QUANTITY_UNITS.get(get["quantity"])
+        if unit is None:
+            sink.error(f"quantity {get['quantity']!r} is not a known quantity", line, rid)
+        elif get["unit"] != unit:
+            sink.error(f"unit {get['unit']!r} for {get['quantity']} should be {unit!r}", line, rid)
+        value = _to_float(get["value"])
+        if value is None or value < 0:
+            sink.error(f"value {get['value']!r} is not a number >= 0", line, rid)
+        if ref_ids and get["ref_id"] not in ref_ids:
+            sink.error(f"ref_id {get['ref_id']!r} is not in references.csv", line, rid)
+        if not re.fullmatch(r"[1-9]\d*", get["pdf_page"]):
+            sink.error(f"pdf_page {get['pdf_page']!r} is not a positive integer", line, rid)
+        if not get["quote"]:
+            sink.error("quote is empty: record the verbatim text from the page", line, rid)
+        if get["confidence"] not in CONFIDENCE_FLAGS:
+            sink.error(
+                f"confidence {get['confidence']!r} is not one of {', '.join(CONFIDENCE_FLAGS)}",
+                line,
+                rid,
+            )
+        if get["check"] not in PLANT_REPORT_CHECKS:
+            sink.error(
+                f"check {get['check']!r} is not one of {', '.join(PLANT_REPORT_CHECKS)}", line, rid
+            )
+        if get["confidence"] == "V" and get["check"] != "human_audited":
+            not_audited += 1
+        if value is not None:
+            key = (get["plant_id"], get["period_kind"], get["period"], get["quantity"])
+            values.setdefault(key, []).append((value, line, rid))
+    for (plant, _kind, period, quantity), found in values.items():
+        vals = [v for v, _, _ in found]
+        top = max(abs(v) for v in vals)
+        if len(found) > 1 and top > 0 and (max(vals) - min(vals)) / top > PLANT_CONFLICT_REL_TOL:
+            others = ", ".join(f"{r} = {v:g}" for v, _, r in found)
+            sink.warning(
+                f"{plant} {period} {quantity}: values differ ({others}); log the conflict in "
+                "docs/21 and keep both (never average)",
+                found[0][1],
+                found[0][2],
+            )
+    if not_audited:
+        sink.warning(
+            f"{not_audited} V row(s) not human_audited: a person must check page and quote "
+            "against the PDF before the value is used in results (docs/08 §6)"
+        )
+    return sink.issues
+
+
 def validate_all(registry_dir: Path | str = REGISTRY_DIR) -> list[Issue]:
-    """Run all three validators on ``registry_dir`` (parameters, sources, projects_capex)."""
+    """Run the validators on ``registry_dir``: parameters, sources, projects_capex and, when the
+    files exist, references, value_evidence and plant_reported_annual."""
     registry_dir = Path(registry_dir)
-    return (
+    issues = (
         validate_parameters(registry_dir / PARAMETERS_CSV.name)
         + validate_sources(registry_dir / SOURCES_YAML.name)
         + validate_projects_capex(registry_dir / PROJECTS_CAPEX_CSV.name)
     )
+    if (registry_dir / REFERENCES_CSV.name).exists():
+        issues += validate_references(registry_dir / REFERENCES_CSV.name)
+    if (registry_dir / VALUE_EVIDENCE_CSV.name).exists():
+        issues += validate_value_evidence(registry_dir / VALUE_EVIDENCE_CSV.name)
+    if (registry_dir / PLANT_REPORTED_CSV.name).exists():
+        issues += validate_plant_reported(registry_dir / PLANT_REPORTED_CSV.name)
+    return issues
 
 
 # ---------------------------------------------------------------------------------------------
@@ -736,7 +1287,9 @@ def summary_markdown(registry_dir: Path | str = REGISTRY_DIR) -> str:
     """Return a Markdown summary of the registry.
 
     Sections: parameters (module x confidence flag), sources (module x status, and counts by
-    confidence), projects (feedstock x confidence), and the validation error/warning counts.
+    confidence), projects (feedstock x confidence), references (by ref_check), value evidence
+    (support x check) and plant-reported values (confidence x check) when those files exist, and
+    the validation error/warning counts.
     Blank cells are counted under ``(missing)``.
     """
     registry_dir = Path(registry_dir)
@@ -795,6 +1348,66 @@ def summary_markdown(registry_dir: Path | str = REGISTRY_DIR) -> str:
         ]
     except (OSError, csv.Error) as exc:
         out += ["## Projects CAPEX", "", f"Could not be read: {exc}", ""]
+
+    refs_path = registry_dir / REFERENCES_CSV.name
+    if refs_path.exists():
+        try:
+            refs = load_references(refs_path)
+            out += [
+                f"## References ({len(refs)})",
+                "",
+                "By double-check status (docs/08 §8):",
+                "",
+                _count_markdown([r.get("ref_check") or _MISSING for r in refs], "ref_check"),
+                "",
+            ]
+        except (OSError, csv.Error) as exc:
+            out += ["## References", "", f"Could not be read: {exc}", ""]
+
+    evidence_path = registry_dir / VALUE_EVIDENCE_CSV.name
+    if evidence_path.exists():
+        try:
+            with open(evidence_path, newline="", encoding="utf-8-sig") as fh:
+                ev_rows = list(csv.DictReader(fh))
+            pairs = [
+                (
+                    (r.get("support") or "").strip() or _MISSING,
+                    (r.get("check") or "").strip() or _MISSING,
+                )
+                for r in ev_rows
+            ]
+            out += [
+                f"## Value evidence ({len(ev_rows)})",
+                "",
+                "By support and check (docs/08 §6, ADR-0015):",
+                "",
+                _crosstab_markdown(pairs, "support", EVIDENCE_CHECKS),
+                "",
+            ]
+        except (OSError, csv.Error) as exc:
+            out += ["## Value evidence", "", f"Could not be read: {exc}", ""]
+
+    plant_path = registry_dir / PLANT_REPORTED_CSV.name
+    if plant_path.exists():
+        try:
+            pl_rows = load_plant_reported(plant_path)
+            pairs = [
+                (
+                    (r.get("confidence") or "").strip() or _MISSING,
+                    (r.get("check") or "").strip() or _MISSING,
+                )
+                for r in pl_rows
+            ]
+            out += [
+                f"## Plant-reported annual values ({len(pl_rows)})",
+                "",
+                "By confidence and check (docs/13 §8, docs/08 §6):",
+                "",
+                _crosstab_markdown(pairs, "confidence", PLANT_REPORT_CHECKS),
+                "",
+            ]
+        except (OSError, csv.Error) as exc:
+            out += ["## Plant-reported annual values", "", f"Could not be read: {exc}", ""]
 
     issues = validate_all(registry_dir)
     n_err = sum(i.level == "error" for i in issues)

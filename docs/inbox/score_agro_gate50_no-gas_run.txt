@@ -1,0 +1,179 @@
+{
+  "run_id": "suitability_v0_ch4_agro_gate50_no-demand_no-gas_20261008T131338Z",
+  "param_hash": "0291163d0b8638c7d71435388c3f5f02e2ecdbdeeca9e5491214ec3a5e64a28b",
+  "input": {
+    "file": "suitability_grid_v0.parquet",
+    "sha256": "b744d3ba415f651373b1e46df78fe7da98a81a875008be06ef0407f2492f9073"
+  },
+  "cells": 47273,
+  "excluded": 24609,
+  "extra_exclusions": {
+    "federal_uc_integral": {
+      "file": "FEDERAL_PROTECTED_AREAS_INTEGRAL_PROTECTION_v2.shp",
+      "sha256": "c42be75850886eec7915915e9355ae62f8a800bca773071c284b2378eeb6beb8",
+      "cells_inside": 85,
+      "newly_excluded": 62
+    },
+    "ch4_gate": {
+      "column": "ch4_n3_agro_nm3_d_30km",
+      "quantile": 0.5,
+      "threshold_nm3_ch4_d_30km": 187498.2,
+      "newly_excluded": 22663
+    }
+  },
+  "names": {
+    "file": "municipal_panel_v0.csv",
+    "sha256": "04ce8e2b456a8033f9e5de38aeb21ef0c5677bc7a56245f6c1eaeac87af63250"
+  },
+  "ch4": {
+    "file": "n3_ch4_30km_med.parquet",
+    "sha256": "60fc864973503d8cd51bacf978742f7baf5bad5df1d2f6ed268f04a2c1aebbc7"
+  },
+  "scored": 22664,
+  "robust_top_k_cells_p50": 47,
+  "oat_min_top_k_kept": 0.88,
+  "caveats": [
+    "straight-line distances, not road network",
+    "gas layer is a trunk summary (docs/21 Q17)",
+    "feedstock = N3 CH4 within 30 km, CP2b v5.1 (flag D; farm part withheld where fewer than k farm cells)",
+    "exclusions: state protected areas and indigenous territories, federal_uc_integral, ch4_gate (cell centre inside)"
+  ]
+}
+criterion change   weight  top_k_kept
+    power   -20% 0.285714        0.90
+    power   +20% 0.375000        0.93
+     road   -20% 0.285714        0.88
+     road   +20% 0.375000        0.94
+      ch4   -20% 0.285714        0.91
+      ch4   +20% 0.375000        0.91
+                ibge_code       municipio  score_base  rank_median  rank_p05  rank_p95  p_top_k
+h3_index                                                                                       
+87a81bd86ffffff   3531902     Morro Agudo    0.967745          2.0       1.0     56.10    0.979
+87a81bd95ffffff   3531902     Morro Agudo    0.955924          8.0       2.0    122.00    0.931
+87a81bd80ffffff   3531902     Morro Agudo    0.943653         20.0       3.0    278.05    0.849
+87a81aa63ffffff   3539509    Pitangueiras    0.942674          5.0       1.0    682.10    0.849
+87a81bdb3ffffff   3531902     Morro Agudo    0.938216         23.0       3.0    897.25    0.768
+87a81aa6dffffff   3539509    Pitangueiras    0.933058         11.0       3.0   1093.45    0.787
+87a81aa62ffffff   3539509    Pitangueiras    0.932962         16.0       4.0    855.35    0.796
+87a81aa6effffff   3539509    Pitangueiras    0.931388         21.0       6.0    920.75    0.787
+87a81aa29ffffff   3540200          Pontal    0.929971         16.0       1.0   1438.70    0.749
+87a81abb4ffffff   3543402  Ribeirão Preto    0.929537         19.5       6.0   1064.00    0.760
+87a81aa74ffffff   3539509    Pitangueiras    0.928211         17.0       5.0   1207.20    0.753
+87a81aa71ffffff   3539509    Pitangueiras    0.926892         32.0       9.0   1118.15    0.761
+87a81aa75ffffff   3539509    Pitangueiras    0.925935         25.0       9.0   1123.00    0.762
+87a81abb1ffffff   3543402  Ribeirão Preto    0.923216         25.0       6.0   1580.60    0.699
+87a81aa6cffffff   3539509    Pitangueiras    0.922046         33.0      13.0   1351.75    0.738
+
+Distinct sites >= 30 km apart:
+-- equal_weights
+                 site ibge_code           municipio  score_base  rank_median  rank_p05  rank_p95  p_top_k
+h3_index                                                                                                 
+87a81bd86ffffff     1   3531902         Morro Agudo    0.967745          2.0      1.00     56.10    0.979
+87a81abb4ffffff     2   3543402      Ribeirão Preto    0.929537         19.5      6.00   1064.00    0.760
+87a8184d9ffffff     3   3524303         Jaboticabal    0.863657        206.0     10.00   7161.35    0.373
+87a81c02affffff     4   3528007            Macatuba    0.857274        180.0     38.95    822.05    0.277
+87a80eca9ffffff     5   3504008               Assis    0.842399        180.5     10.00   1333.10    0.357
+87a80e0b4ffffff     6   3535507  Paraguaçu Paulista    0.829032        231.0     10.00   1936.35    0.357
+87a8116c4ffffff     7   3521408        Iracemápolis    0.828213        281.5     64.95   1476.25    0.165
+87a81aa99ffffff     8   3525102        Jardinópolis    0.822770        500.0    124.95   4212.80    0.000
+87a811153ffffff     9   3511508           Cerquilho    0.800423        417.5     12.00   3351.20    0.247
+87a818caeffffff    10   3503208          Araraquara    0.799975        418.0      7.00   3646.65    0.275
+87a81b51effffff    11   3521309                Ipuã    0.789937        716.5     95.00  10367.50    0.057
+87a81ec2bffffff    12   3503307              Araras    0.784455        622.5     76.90   3847.15    0.084
+87a8191adffffff    13   3524501                Jaci    0.783118        975.0    221.85   2367.60    0.000
+87a8186dbffffff    14   3506102           Bebedouro    0.770118       1123.0    328.90   6199.65    0.000
+87a80b401ffffff    15   3502101           Andradina    0.761110        997.5      7.00   8872.90    0.202
+-- robust
+                 site ibge_code           municipio  score_base  rank_median  rank_p05  rank_p95  p_top_k
+h3_index                                                                                                 
+87a81bd86ffffff     1   3531902         Morro Agudo    0.967745          2.0      1.00     56.10    0.979
+87a81abb4ffffff     2   3543402      Ribeirão Preto    0.929537         19.5      6.00   1064.00    0.760
+87a8184d9ffffff     3   3524303         Jaboticabal    0.863657        206.0     10.00   7161.35    0.373
+87a80e198ffffff     4   3535507  Paraguaçu Paulista    0.828577        238.0      1.00   2328.15    0.365
+87a80eca9ffffff     5   3504008               Assis    0.842399        180.5     10.00   1333.10    0.357
+87a81c15effffff     6   3526803    Lençóis Paulista    0.852283        212.0     18.00   1067.15    0.338
+87a8116adffffff     7   3526902             Limeira    0.807256        380.5     12.00   3035.45    0.283
+87a818caeffffff     8   3503208          Araraquara    0.799975        418.0      7.00   3646.65    0.275
+87a811153ffffff     9   3511508           Cerquilho    0.800423        417.5     12.00   3351.20    0.247
+87a81ec66ffffff    10   3543907           Rio Claro    0.788631        542.5     13.00   4326.95    0.221
+87a80b401ffffff    11   3502101           Andradina    0.761110        997.5      7.00   8872.90    0.202
+87a813345ffffff    12   3530805          Mogi Mirim    0.751123       1263.0     11.95  10641.70    0.184
+87a803cd3ffffff    13   3538808              Piraju    0.734912       1549.0     12.00  14222.35    0.174
+87a8f4b68ffffff    14   3529708        Miguelópolis    0.733217       1725.5     16.00  14181.85    0.161
+87a803336ffffff    15   3545407        Salto Grande    0.752462       1166.5     32.90   9443.40    0.149
+
+Score contributions (weight x normalised value) at the spaced sites:
+-- equal_weights
+                 site           municipio  score_base  power   road    ch4
+h3_index                                                                  
+87a81bd86ffffff     1         Morro Agudo       0.968  0.316  0.329  0.322
+87a81abb4ffffff     2      Ribeirão Preto       0.930  0.271  0.328  0.330
+87a8184d9ffffff     3         Jaboticabal       0.864  0.201  0.330  0.333
+87a81c02affffff     4            Macatuba       0.857  0.306  0.325  0.226
+87a80eca9ffffff     5               Assis       0.842  0.312  0.333  0.197
+87a80e0b4ffffff     6  Paraguaçu Paulista       0.829  0.321  0.330  0.178
+87a8116c4ffffff     7        Iracemápolis       0.828  0.308  0.327  0.194
+87a81aa99ffffff     8        Jardinópolis       0.823  0.237  0.323  0.263
+87a811153ffffff     9           Cerquilho       0.800  0.319  0.332  0.149
+87a818caeffffff    10          Araraquara       0.800  0.325  0.331  0.145
+87a81b51effffff    11                Ipuã       0.790  0.176  0.324  0.290
+87a81ec2bffffff    12              Araras       0.784  0.312  0.329  0.144
+87a8191adffffff    13                Jaci       0.783  0.274  0.330  0.179
+87a8186dbffffff    14           Bebedouro       0.770  0.221  0.324  0.226
+87a80b401ffffff    15           Andradina       0.761  0.330  0.327  0.104
+-- robust
+                 site           municipio  score_base  power   road    ch4
+h3_index                                                                  
+87a81bd86ffffff     1         Morro Agudo       0.968  0.316  0.329  0.322
+87a81abb4ffffff     2      Ribeirão Preto       0.930  0.271  0.328  0.330
+87a8184d9ffffff     3         Jaboticabal       0.864  0.201  0.330  0.333
+87a80e198ffffff     4  Paraguaçu Paulista       0.829  0.330  0.329  0.169
+87a80eca9ffffff     5               Assis       0.842  0.312  0.333  0.197
+87a81c15effffff     6    Lençóis Paulista       0.852  0.320  0.318  0.214
+87a8116adffffff     7             Limeira       0.807  0.324  0.328  0.155
+87a818caeffffff     8          Araraquara       0.800  0.325  0.331  0.145
+87a811153ffffff     9           Cerquilho       0.800  0.319  0.332  0.149
+87a81ec66ffffff    10           Rio Claro       0.789  0.319  0.333  0.137
+87a80b401ffffff    11           Andradina       0.761  0.330  0.327  0.104
+87a813345ffffff    12          Mogi Mirim       0.751  0.331  0.325  0.095
+87a803cd3ffffff    13              Piraju       0.735  0.329  0.329  0.077
+87a8f4b68ffffff    14        Miguelópolis       0.733  0.331  0.324  0.078
+87a803336ffffff    15        Salto Grande       0.752  0.324  0.328  0.101
+
+N3 CH4 within 30 km (Nm3/d) and shares by residue group (%):
+-- equal_weights
+                 site           municipio  ch4_n3_nm3_d_30km  farm_%  cane_%  urban_%  other_%
+h3_index                                                                                      
+87a81bd86ffffff     1         Morro Agudo           838169.0     2.0    97.0      0.0      1.0
+87a81abb4ffffff     2      Ribeirão Preto           871483.0     1.0    97.0      2.0      1.0
+87a8184d9ffffff     3         Jaboticabal           936731.0     1.0    98.0      0.0      1.0
+87a81c02affffff     4            Macatuba           592513.0     2.0    96.0      1.0      1.0
+87a80eca9ffffff     5               Assis           516202.0     1.0    81.0      1.0     17.0
+87a80e0b4ffffff     6  Paraguaçu Paulista           465227.0     3.0    90.0      0.0      6.0
+87a8116c4ffffff     7        Iracemápolis           541783.0     3.0    88.0      7.0      2.0
+87a81aa99ffffff     8        Jardinópolis           691947.0     3.0    94.0      1.0      2.0
+87a811153ffffff     9           Cerquilho           396457.0    32.0    62.0      2.0      4.0
+87a818caeffffff    10          Araraquara           384994.0     3.0    83.0      2.0     12.0
+87a81b51effffff    11                Ipuã           753117.0     1.0    94.0      0.0      4.0
+87a81ec2bffffff    12              Araras           392078.0     5.0    82.0      5.0      8.0
+87a8191adffffff    13                Jaci           472520.0     9.0    87.0      1.0      2.0
+87a8186dbffffff    14           Bebedouro           587496.0     2.0    92.0      0.0      5.0
+87a80b401ffffff    15           Andradina           272754.0     3.0    95.0      1.0      2.0
+-- robust
+                 site           municipio  ch4_n3_nm3_d_30km  farm_%  cane_%  urban_%  other_%
+h3_index                                                                                      
+87a81bd86ffffff     1         Morro Agudo           838169.0     2.0    97.0      0.0      1.0
+87a81abb4ffffff     2      Ribeirão Preto           871483.0     1.0    97.0      2.0      1.0
+87a8184d9ffffff     3         Jaboticabal           936731.0     1.0    98.0      0.0      1.0
+87a80e198ffffff     4  Paraguaçu Paulista           442060.0     2.0    89.0      1.0      8.0
+87a80eca9ffffff     5               Assis           516202.0     1.0    81.0      1.0     17.0
+87a81c15effffff     6    Lençóis Paulista           562233.0     2.0    96.0      1.0      1.0
+87a8116adffffff     7             Limeira           444077.0     5.0    83.0      9.0      2.0
+87a818caeffffff     8          Araraquara           384994.0     3.0    83.0      2.0     12.0
+87a811153ffffff     9           Cerquilho           396457.0    32.0    62.0      2.0      4.0
+87a81ec66ffffff    10           Rio Claro           371691.0     6.0    84.0      5.0      5.0
+87a80b401ffffff    11           Andradina           272754.0     3.0    95.0      1.0      2.0
+87a813345ffffff    12          Mogi Mirim           259703.0     8.0    70.0      4.0     17.0
+87a803cd3ffffff    13              Piraju           202282.0     5.0    69.0      1.0     25.0
+87a8f4b68ffffff    14        Miguelópolis           203181.0     1.0    87.0      0.0     12.0
+87a803336ffffff    15        Salto Grande           265938.0     2.0    72.0      1.0     25.0

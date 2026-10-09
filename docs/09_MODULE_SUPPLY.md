@@ -91,4 +91,83 @@ Module: `engine.supply.residues`. It is the supply step of the walking skeleton 
 - **Vinasse is generated with the ethanol of the same month.** There is no vinasse storage or lag.
 - **No filter-cake storage.** Off-season months get zero residues; storage belongs to strategy S1 (docs/10 §3), which waits on φ_store (lab E1).
 
-**Not yet implemented:** Steps 1–3 and 6, the manure base-load (PPM herds), Monte Carlo over the coefficients, and the UNICA profile.
+**Manure base-load v0 (2026-10-07):** `engine.supply.manure.manure_potential` turns PPM herds (long table, unit `head`; PILAR-2b `municipality_timeseries`, source `ibge_ppm`) into manure (t FM/yr), VS (t/yr) and CH₄ (Nm³/yr):
+- head × rate per head per day × 365, where a rate in litres is converted with the slurry density;
+- VS = manure × TS × VS/TS; CH₄ theoretical = VS × BMP; CH₄ collectable = theoretical × `collect_frac`.
+
+The collectable share has no default. A species runs only when all its coefficients are in the registry; `missing_coefficients()` lists the gaps (docs/21 Q16). Today swine lacks a slurry density, poultry a per-bird rate, and cattle a herd-average rate. BMP is a laboratory maximum; plant conversion is applied later (docs/10).
+
+**Not yet implemented:** Steps 1–3 and 6, Monte Carlo over the coefficients, and the UNICA profile.
+## 6. Urban-residue ceiling (2026-10-08)
+- **Why.** The project lead framed urban residues (RSU, sewage sludge) as follows:
+  - they are the fast start: landfill gas capture is already being built in SP;
+  - they have a ceiling and weak long-term stability;
+  - plants rely mainly on agro-industrial residues (ADR-0017 notes).
+  - The question is how large that ceiling is and how few places hold it.
+- **Script.** `scripts/supply/urban_ceiling.py <grade_oferta_1km.gpkg> <grid folder> [--names …]`.
+  - Statewide N3 per residue and scenario for all 16 residues, with the share held by the urban group (RSU_ORGANICO, PODA_URBANA, LODO_ETE).
+  - Urban N3 per municipality, with rank and cumulative share.
+  - The number of municipalities that hold 50, 80 and 90 % of urban N3 med (`engine.supply.concentration`).
+  - Point facilities use their `ibge` field. 1 km cells get the IBGE code of the H3 grid cell of their centroid. Any unassigned urban N3 is reported.
+  - Farm-register residues appear only in the statewide totals (LGPD).
+- **Reading it.** N3 is the CP2b mobilisable CH₄ potential (flag D), in Nm³ CH₄/d.
+  - It is not landfill-gas recovery from existing landfills, which depends on waste age, decay and collection efficiency.
+  - It is not biomethane plant capacity either.
+  - Landfill projects in SP listed in `research_notes/R07_projects_costs_update_2026.md` are news-level (S) and quote biomethane capacity: Orizon Tremembé, Guatapará, Itapevi, the Estre "Piratininga" landfill, and Onebio Paulínia. Compare them with the ceiling as an order of magnitude only, after converting biomethane to CH₄ with a sourced CH₄ content.
+- **First run (2026-10-08, `docs/inbox/urban_ceiling_run.txt`; gpkg sha256 c4bfbc72…).** All values are N3 in Nm³ CH₄/d (flag D).
+
+  | | min | med | max |
+  |---|---:|---:|---:|
+  | Urban (RSU + sludge + prunings) | 123,235 | **652,196** | 2,412,750 |
+  | All residues | 7,731,272 | 19,183,201 | 43,872,898 |
+  | Urban share | 1.6 % | **3.4 %** | 5.5 % |
+
+  - Urban med by residue: RSU_ORGANICO 442,516, LODO_ETE 140,906, PODA_URBANA 68,774.
+  - Concentration (med):
+    - São Paulo alone holds 141,147, which is 21.7 % of the urban total;
+    - 21 municipalities hold 50 %, 104 hold 80 % and 193 hold 90 %, out of 645 with urban N3.
+    - 1,846 of the med total could not be assigned to a municipality.
+  - For comparison, cane residues give 15.5 M med: straw 8.25 M, filter cake 2.58 M, vinasse 2.42 M, bagasse 2.24 M. That is about 24 times the urban ceiling.
+- **Order-of-magnitude check against announced landfill projects in SP.**
+  - Biomethane capacities, all S (news), from `R07`:
+    - Onebio Paulínia: 180,000 initially, up to 300,000 (docs/21 lists the 180k/225k/300k conflict);
+    - Tremembé: 32,400;
+    - Itapevi: ≥ 25,000 (offtake minimum);
+    - "Piratininga": about 25,000;
+    - Guatapará: not split from a 170,000 total shared with a PR plant.
+  - Without Guatapará, these add to about 262,000–382,000 Nm³/d of biomethane. That is roughly 40–60 % of the urban N3 med, before converting biomethane to CH₄ (needs a sourced CH₄ content).
+  - The two numbers measure different things:
+    - a landfill draws on the waste stock of past decades and on a catchment of many municipalities;
+    - N3 is today's mobilisable flow.
+  - So the comparison supports the project lead's reading only as an order of magnitude: the urban ceiling is small (3.4 % of N3) and the announced landfill projects already cover a large part of it.
+
+## 7. Supply tiers against the mandate path (2026-10-08)
+
+**Question from the project lead.** The plants now starting take the fast, easy feedstocks: landfill gas, vinasse and filter cake. Those have a low ceiling. The mandate grows from 0.5 % (CNPE Res. 4/2026) towards the 10 % maximum of Lei 14.993/2024; the project lead dates the 10 % to 2035 (to verify in the law and its regulation, docs/21 Q21). Is the quick-win route enough, or does scale need lignocellulosic residues, cane straw above all?
+
+**Method.**
+- Supply: statewide N3, medium scenario, per residue (`docs/inbox/urban_ceiling_run.txt`), grouped into tiers by how easy the feedstock is to start with. N3 is the mobilisable CH₄ potential if every unit is collected and converted (flag D). It is a ceiling, not a forecast.
+- Mandate scale: CNPE Res. 4/2026 gives about 505,000 m³/d of biomethane for 0.5 % (docs/16 §1, S). That implies a national base of about 101 M m³/d of natural gas (D = 505,000 / 0.005). At a constant base, 10 % is about 10.1 M m³/d. The base will change with gas demand.
+- The two quantities are not on the same basis (Nm³ CH₄ against m³ of biomethane with unstated reference conditions). The comparison is an order of magnitude only.
+
+**Result.** SP N3 med by tier, cumulative, in M Nm³ CH₄/d and as % of the implied national base:
+
+| Tier (added in order) | Tier | Cumulative | Cumulative % of national base |
+|---|---|---|---|
+| Urban (RSU, sludge, prunings) | 0.65 | 0.65 | 0.6 |
+| Vinasse + filter cake | 5.00 | 5.65 | 5.6 |
+| Farm (poultry, cattle, swine) | 1.53 | 7.18 | 7.1 |
+| Citrus bagasse + coffee husk | 0.18 | 7.36 | 7.3 |
+| Cane bagasse (competes with cogeneration) | 2.24 | 9.60 | 9.5 |
+| Maize and soy straw | 1.33 | 10.94 | 10.8 |
+| Cane straw | 8.25 | 19.18 | 19.0 |
+
+**Reading.**
+- Even with every unit of the easy tiers captured (urban, vinasse, cake), SP reaches about 5.6 % of the national base. With farm residues, about 7 %. Reaching 10 % from SP alone needs bagasse and crop straws, and in practice cane straw, because full capture of the other tiers will not happen.
+- Cane straw is the largest single block (43 % of N3), and the one no SP plant is confirmed to digest yet (Narandiba: vinasse and filter cake only, docs/21 C36).
+- Actual SP biomethane production in Aug 2026 was 5.51 M m³ in the month, about 178,000 m³/d (ANP open data, V). That is about 0.9 % of N3 med, and about 0.18 % of the implied national base.
+- The mandate is national. SP's share of it is not fixed by any rule read so far, so the table says what SP could cover, not what it must.
+
+**Consequences for the model.**
+- Keep cane straw in the default supply and siting scope (ADR-0017), with straw logistics, pre-treatment and storage as explicit cost items (docs/10, docs/11). The no-straw run is the "quick-win ceiling" scenario.
+- The supply curve (docs/19 Phase 3) should show the tiers in the same order, so the mandate overlays (0.5 %, the 2027 target, 1 %, 10 %) show where each tier runs out.

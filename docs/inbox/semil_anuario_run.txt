@@ -1,0 +1,22 @@
+SEMIL Anuário de Energéticos por Município 2025 (ano base 2024): NOT RUN (2026-10-08)
+
+Why
+- The PDF is not on the connected local folders (C:\Users\Lucas\Documents\Project_Twin and
+  ...\Reposicionamento_Submissão_ESD). No file name containing "Anu..rio" exists under either.
+- It is in Google Drive (found by Drive search, not downloaded):
+    Anuario-de-Energeticos-por-Municipios-do-Estado-de-Sao-Paulo-2025-ano-base-2024-1.pdf
+    Drive id 1MlAcY35fDrwGtJvN5Zur5hL8DPIBBlci, 11,055,051 bytes, owner lucasnc@unicamp.br,
+    uploaded 2026-10-07 (a second copy with the same size: id 1mrNictPwRihxX-pMDdb7SN2HDDYfzfxD).
+  The Drive connector only returns file content inline as base64 (~15 MB), which cannot be
+  moved to the PC from this session.
+
+To run (user)
+1. Save the PDF to C:\Users\Lucas\Documents\Project_Twin\data\raw\semil_anuario_energeticos_2025\
+   (local_path of semil_anuario_energeticos_2025 in registry/sources.yaml).
+2. Names file: municipal_panel_v0.csv has columns ibge_code, municipality_name; read_names()
+   accepts name columns name / NM_MUN / nm_mun / nome / municipio / name_municipality only, so
+   that CSV is NOT accepted as is. Use a 2-column CSV (ibge_code,name) or an SP municipalities
+   shapefile with CD_MUN / NM_MUN.
+3. From C:\Users\Lucas\Documents\Project_Twin\Project_Twin:
+   uv run python scripts/ingest/semil_anuario_2024.py ..\data\raw\semil_anuario_energeticos_2025\<pdf> --names <names csv or shp> --out ..\data\interim\semil_anuario_2024
+4. Paste checks.json, and the row counts and first lines of unmatched_names.csv and skipped_lines.csv.

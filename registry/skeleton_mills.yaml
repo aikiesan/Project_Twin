@@ -7,6 +7,9 @@
 # - ad_shares are CALIBRATION START VALUES, not data: the share of each generated stream sent to
 #   the digester (docs/09 §5). They are what the comparison with ANP will tune.
 # - The nameplate comes from the ANP series in evidence/ (anp_plant_id), not from this file.
+# - anp_volume_basis: what the ANP plant field "Volume Processado de Biogás" is compared with,
+#   simulated biogas (the field's name, the default) or biomethane. At Narandiba it tracks
+#   biomethane (docs/21 C40, company reports); ANP has not confirmed either reading (Q9).
 # - x_ch4 (biogas CH4 fraction for vinasse + filter cake) is in conflict, docs/21 C13: 0.575
 #   (CP2B convention note) vs 0.65 (PILAR-2b feedstocks.yaml). Run both (--x-ch4).
 # - storage (strategy S1, engine.process.strategies): store_frac is a calibration start value;
@@ -20,6 +23,7 @@ mills:
   costa_pinto:
     name: Raízen Costa Pinto (Piracicaba, SP)
     anp_plant_id: sp_raizen_costa_pinto
+    anp_volume_basis: biogas
     strategy: S0
     cane_t:
       2024: {value: null, source: TODO, confidence: null}
@@ -33,6 +37,7 @@ mills:
   narandiba:
     name: Cocal Narandiba (Narandiba, SP)
     anp_plant_id: sp_cocal_narandiba
+    anp_volume_basis: biomethane
     strategy: S0
     cane_t:
       2025: {value: null, source: TODO, confidence: null}
@@ -48,3 +53,18 @@ mills:
       ANP reports about zero until Jul 2025, then 30-49 % including off-season months (docs/21
       C6). Expected to be S1-like (stored filter cake): run S0 first to show the gap, then
       --strategy S1 once the storage block is filled.
+      Company annual figures (primary text read 2026-10-08, R11 round 2; docs/21 C40) are the
+      calibration targets: biogas 23.4 / 30.5 / 27.66 M Nm3 and biomethane 4.3 / 7.9 / 8.1 M
+      Nm3 in safras 2022/23-2024/25 (Cocal RAS 2022/23 p.52, 2023/24 p.15 and p.24, 2024/25
+      p.22 and p.32); Geo RS 2022/23 p.30 gives biogas 22 / 29 and biomethane 3.7 / 7.5 M Nm3
+      for calendar 2022 / 2023. The 2025/26 figures (biogas 32.7, biomethane 10.6 M Nm3) are
+      Narandiba + Paraguaçu Paulista together (RAS 2025/26 p.23; C40, C41): not Narandiba
+      targets. Feed processed: filter cake 130 / 118 kt and vinasse 1.2 / 1.1 M m3 in
+      2023/24 / 2024/25 (RAS 2023/24 p.24, 2024/25 p.29); Geo gives 91 / 124 kt and 889 /
+      1,294 k m3 for calendar 2022 / 2023. Co-feeds 2024/25: cattle manure 5.1 kt, chicken
+      manure 1.88 kt, other waste 23.7 kt (4.1 kt in 2023/24). No straw in any operating
+      report (C36). Flare 2024/25: 2.2 M Nm3 biogas, 0.1 M Nm3 biomethane (RAS 2025/26 p.19,
+      S). With the registry central yields this feed explains only 64-78 % of the reported
+      biogas (docs/13 §9, docs/21 Q22), so expect S0 to come out low for that reason too.
+      All values with page and quote: registry/plant_reported_annual.csv. Cane: only
+      group totals (both mills, RAS 2025/26 p.79), so cane_t stays TODO.

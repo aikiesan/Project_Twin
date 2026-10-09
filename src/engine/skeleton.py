@@ -8,7 +8,8 @@ One run is one calibration mill and one crop year (April to March):
 3. digester sized for the worst month and the monthly mass balance
    (:mod:`engine.process.mass_balance`), with the ANP biomethane capacity as nameplate;
 4. annuity LCOB on the delivered biomethane (:mod:`engine.economics.lcob`);
-5. monthly comparison with the ANP biogas series in ``evidence/`` (docs/13 §3.2).
+5. monthly comparison with the ANP plant series in ``evidence/`` (docs/13 §3.2), on the basis set
+   per mill (``anp_volume_basis``: simulated biogas or biomethane, docs/13 §6).
 
 Every run gets a deterministic ``run_id`` built from the registry hash, the mill inputs and the
 ANP file, and writes ``monthly.csv``, ``comparison.csv`` and ``summary.json`` to
@@ -42,7 +43,12 @@ import pandas as pd
 import yaml
 
 from engine import DATA_DIR, EVIDENCE_DIR, REGISTRY_DIR, ROOT, __version__
-from engine.economics.lcob import compare_with_anchors, economics_from_registry, lcob_from_registry
+from engine.economics.lcob import (
+    LcobResult,
+    compare_with_anchors,
+    economics_from_registry,
+    lcob_from_registry,
+)
 from engine.process.mass_balance import (
     PlantDesign,
     limits_from_registry,
@@ -72,16 +78,22 @@ STORAGE_KEYS = ("store_frac", "store_months", "release_months", "loss_frac_per_m
 #: Off-season calendar months used for the off-season share (docs/09 Step 5).
 OFF_SEASON_MONTHS = (12, 1, 2, 3)
 
-#: ANP months below this utilization (% of biogas capacity) are flagged as possible reporting
-#: gaps or stops and left out of the metrics (docs/13 §3.2: zeros are missing unless confirmed).
-#: A v0 rule, stated here so it shows in every summary.
+#: ANP months below this utilization (% of the capacity on the comparison basis) are flagged as
+#: possible reporting gaps or stops and left out of the metrics (docs/13 §3.2: zeros are missing
+#: unless confirmed). A v0 rule, stated here so it shows in every summary.
 ANP_NEAR_ZERO_UTIL_PCT = 1.0
+
+#: What the ANP plant field "Volume Processado de Biogás" is compared with (docs/13 §6): its
+#: name says biogas, but at Narandiba it tracks biomethane (docs/21 C40, not confirmed by ANP, Q9).
+ANP_VOLUME_BASES = ("biogas", "biomethane")
 
 #: Caveats written into every summary.
 CAVEATS = (
     "v0 walking skeleton (ADR-0010): most parameters are S or K; diagnostics, not results",
     "ANP volumes and capacities are m3 with no stated reference conditions (docs/21 C11); "
     "compared as Nm3",
+    "the ANP field 'Volume Processado de Biogás' is compared with simulated biogas or "
+    "biomethane as set per mill (anp_volume_basis); what it holds is unconfirmed (docs/21 Q9, C40)",
     "S0: no storage, so off-season output is zero by construction. S1: one silo pool with a "
     "constant fresh-mass loss per month (v0); its cake-only off-season feed fails the TS check, "
     "because digestate recirculation is not modelled (engine.process.strategies)",
@@ -115,6 +127,7 @@ class MillConfig:
     ethanol_l: Mapping[int, Observation | None]
     ad_shares: Mapping[str, float]
     storage: Mapping[str, object] | None = None
+    anp_volume_basis: str = "biogas"
     notes: str = ""
 
 
@@ -192,6 +205,9 @@ def load_mill_configs(
         for key in ("name", "anp_plant_id", "strategy"):
             if not m.get(key):
                 raise ValueError(f"{where}: missing {key}")
+        basis = str(m.get("anp_volume_basis") or "biogas")
+        if basis not in ANP_VOLUME_BASES:
+            raise ValueError(f"{where}: anp_volume_basis must be one of {ANP_VOLUME_BASES}")
         mills[mill_id] = MillConfig(
             id=mill_id,
             name=str(m["name"]),
@@ -201,6 +217,7 @@ def load_mill_configs(
             ethanol_l=_by_year(m.get("ethanol_l"), f"{where}.ethanol_l"),
             ad_shares=shares,
             storage=_storage_block(m.get("storage"), f"{where}.storage"),
+            anp_volume_basis=basis,
             notes=str(m.get("notes") or ""),
         )
     return mills, float(x_ch4)
@@ -255,36 +272,46 @@ def nameplate_from_anp(anp: pd.DataFrame, crop_year: int) -> tuple[float, float]
 def compare_with_anp(
     sim: pd.DataFrame,
     anp: pd.DataFrame,
-    cap_biogas_m3_d: float,
+    cap_m3_d: float,
     *,
+    basis: str = "biogas",
     near_zero_util_pct: float = ANP_NEAR_ZERO_UTIL_PCT,
 ) -> tuple[pd.DataFrame, dict]:
-    """Monthly simulated vs observed biogas, on the ANP biogas-capacity basis.
+    """Monthly simulated vs observed output, on the basis of the ANP plant field.
 
-    Simulated biogas is capped at the ANP biogas capacity (a plant cannot report more), and
-    utilization is biogas / biogas capacity for both series. ANP months below
+    The ANP plant series is "Volume Processado de Biogás" (m³/d, ``vol_biogas_m3d``). ``basis``
+    says what it is compared with: simulated ``"biogas"`` (the field's name) or ``"biomethane"``
+    (where company reports show the field tracks biomethane, Narandiba, docs/21 C40).
+    ``cap_m3_d`` is the ANP capacity on the same basis. Simulated output is capped at it (a plant
+    cannot report more), and utilization is output / capacity for both series. ANP months below
     ``near_zero_util_pct`` are flagged ``obs_near_zero`` and left out of the metrics.
 
     Returns:
-        The monthly table and a metrics dict: ``n_months_observed``, ``n_months_compared``,
-        ``n_obs_near_zero``, ``mae_util_pp``, ``bias_util_pp`` (simulated − observed),
-        ``volume_ratio_sim_obs``, ``offseason_share_sim``, ``offseason_share_obs``.
+        The monthly table (``sim_nm3_d``, ``sim_capped_nm3_d``, ``sim_util_pct``,
+        ``obs_anp_m3_d``, ``obs_util_pct``, ``obs_near_zero``, ``basis``) and a metrics dict:
+        ``basis``, ``n_months_observed``, ``n_months_compared``, ``n_obs_near_zero``,
+        ``mae_util_pp``, ``bias_util_pp`` (simulated − observed), ``volume_ratio_sim_obs``,
+        ``offseason_share_sim``, ``offseason_share_obs``.
     """
-    if cap_biogas_m3_d <= 0:
-        raise ValueError("cap_biogas_m3_d must be > 0")
-    t = sim[["month", "days", "biogas_nm3"]].copy()
-    t["sim_biogas_nm3_d"] = t["biogas_nm3"] / t["days"]
-    t["sim_biogas_capped_nm3_d"] = t["sim_biogas_nm3_d"].clip(upper=cap_biogas_m3_d)
-    t["sim_util_pct"] = 100 * t["sim_biogas_capped_nm3_d"] / cap_biogas_m3_d
-    obs = anp[["month", "vol_biogas_m3d"]].rename(columns={"vol_biogas_m3d": "obs_biogas_m3_d"})
-    t = t.drop(columns="biogas_nm3").merge(obs, on="month", how="left")
-    t["obs_util_pct"] = 100 * t["obs_biogas_m3_d"] / cap_biogas_m3_d
+    if basis not in ANP_VOLUME_BASES:
+        raise ValueError(f"basis must be one of {ANP_VOLUME_BASES}")
+    if cap_m3_d <= 0:
+        raise ValueError("cap_m3_d must be > 0")
+    col = f"{basis}_nm3"
+    t = sim[["month", "days", col]].copy()
+    t["sim_nm3_d"] = t[col] / t["days"]
+    t["sim_capped_nm3_d"] = t["sim_nm3_d"].clip(upper=cap_m3_d)
+    t["sim_util_pct"] = 100 * t["sim_capped_nm3_d"] / cap_m3_d
+    obs = anp[["month", "vol_biogas_m3d"]].rename(columns={"vol_biogas_m3d": "obs_anp_m3_d"})
+    t = t.drop(columns=col).merge(obs, on="month", how="left")
+    t["obs_util_pct"] = 100 * t["obs_anp_m3_d"] / cap_m3_d
     # object dtype keeps three states: True / False / None (month not in the ANP series)
     t["obs_near_zero"] = pd.Series(
         [None if math.isnan(u) else bool(u < near_zero_util_pct) for u in t["obs_util_pct"]],
         dtype=object,
     )
-    observed = t[t["obs_biogas_m3_d"].notna()]
+    t["basis"] = basis
+    observed = t[t["obs_anp_m3_d"].notna()]
     used = observed[~observed["obs_near_zero"].astype(bool)]
 
     def share_off(vol_d: pd.Series, frame: pd.DataFrame) -> float | None:
@@ -296,6 +323,7 @@ def compare_with_anp(
         return float(vol[off].sum() / total)
 
     metrics: dict = {
+        "basis": basis,
         "n_months_observed": int(len(observed)),
         "n_months_compared": int(len(used)),
         "n_obs_near_zero": int(observed["obs_near_zero"].astype(bool).sum()),
@@ -308,14 +336,14 @@ def compare_with_anp(
     }
     if not used.empty:
         diff = used["sim_util_pct"] - used["obs_util_pct"]
-        obs_vol = (used["obs_biogas_m3_d"] * used["days"]).sum()
-        sim_vol = (used["sim_biogas_capped_nm3_d"] * used["days"]).sum()
+        obs_vol = (used["obs_anp_m3_d"] * used["days"]).sum()
+        sim_vol = (used["sim_capped_nm3_d"] * used["days"]).sum()
         metrics.update(
             mae_util_pp=float(diff.abs().mean()),
             bias_util_pp=float(diff.mean()),
             volume_ratio_sim_obs=float(sim_vol / obs_vol) if obs_vol > 0 else None,
-            offseason_share_sim=share_off(used["sim_biogas_capped_nm3_d"], used),
-            offseason_share_obs=share_off(used["obs_biogas_m3_d"], used),
+            offseason_share_sim=share_off(used["sim_capped_nm3_d"], used),
+            offseason_share_obs=share_off(used["obs_anp_m3_d"], used),
         )
     return t, metrics
 
@@ -337,6 +365,103 @@ def _git_commit() -> str | None:
 
 def _file_sha256(path: Path | str) -> str:
     return hashlib.sha256(Path(path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+
+
+@dataclass
+class ChainResult:
+    """Steps 1-4 of one skeleton run, before the ANP comparison and any file output.
+
+    Attributes:
+        residues: monthly residue table (after S1 storage when ``storage`` is given).
+        sim: monthly mass balance (:func:`engine.process.mass_balance.simulate`).
+        digester_volume_m3: digester sized for the worst month.
+        annual_biomethane_nm3: delivered biomethane over the crop year, Nm³.
+        capacity_factor_annual: delivered / (nameplate × days in the crop year).
+        lcob: annuity LCOB, ``None`` when nothing is delivered.
+        param_ids: every registry id the chain read, sorted.
+    """
+
+    residues: pd.DataFrame
+    sim: pd.DataFrame
+    digester_volume_m3: float
+    annual_biomethane_nm3: float
+    capacity_factor_annual: float
+    lcob: LcobResult | None
+    param_ids: tuple[str, ...]
+
+
+def run_chain(
+    params: Mapping[str, Param],
+    *,
+    cane_t: float,
+    crop_year: int,
+    ad_shares: Mapping[str, float],
+    x_ch4: float,
+    nameplate_biomethane_nm3_d: float,
+    storage: StorageS1 | None = None,
+    ethanol_l: float | None = None,
+) -> ChainResult:
+    """Cane → residues → feed → CSTR → LCOB for one crop year (no I/O).
+
+    This is the part of :func:`run_skeleton` that the sensitivity screen
+    (:mod:`engine.sensitivity`) re-runs with perturbed registry rows.
+
+    Args:
+        params: registry parameters (central values are used).
+        cane_t: cane crushed in the crop year, t.
+        crop_year: year in which the season starts (April).
+        ad_shares: share of each generated stream sent to AD (``vinasse``, ``filter_cake``,
+            ``straw``), fractions.
+        x_ch4: biogas CH₄ fraction (affects biogas, not biomethane).
+        nameplate_biomethane_nm3_d: upgrading nameplate, Nm³/d of biomethane.
+        storage: S1 settings; ``None`` runs S0.
+        ethanol_l: ethanol produced, L (default: cane × ``ethanol_yield``).
+    """
+    coeffs = coefficients_from_registry(params)
+    residues = monthly_residues(
+        cane_t,
+        crop_year,
+        coeffs,
+        vinasse_to_ad_frac=ad_shares["vinasse"],
+        filter_cake_to_ad_frac=ad_shares["filter_cake"],
+        straw_to_ad_frac=ad_shares["straw"],
+        ethanol_l=ethanol_l,
+    )
+    if storage is not None:
+        residues = apply_s1_storage(residues, storage)
+    subs = substrates_from_registry(params)
+    feed = to_feed(residues, vinasse_density_t_per_m3=subs["vinasse"].density_t_per_m3)
+
+    limits = limits_from_registry(params)
+    volume = size_digester(feed, subs, limits)
+    design = PlantDesign(
+        digester_volume_m3=volume,
+        upgrading_capacity_nm3_d=nameplate_biomethane_nm3_d,
+        x_ch4=x_ch4,
+        ch4_recovery_frac=params["upg_ch4_recovery"].require_central() / 100,
+    )
+    sim = simulate(feed, subs, design, limits)  # all 12 months, off-season feed is zero
+
+    annual_bm = float(sim["biomethane_nm3"].sum())
+    lcob = (
+        lcob_from_registry(nameplate_biomethane_nm3_d, annual_bm, params) if annual_bm > 0 else None
+    )
+    param_ids = sorted(
+        set(coeffs.param_ids)
+        | {pid for f in FEED_SUBSTRATES for pid in subs[f].param_ids}
+        | set(limits.param_ids)
+        | set(economics_from_registry(params).param_ids)
+        | {"upg_ch4_recovery"}
+    )
+    return ChainResult(
+        residues=residues,
+        sim=sim,
+        digester_volume_m3=volume,
+        annual_biomethane_nm3=annual_bm,
+        capacity_factor_annual=annual_bm / (nameplate_biomethane_nm3_d * float(sim["days"].sum())),
+        lcob=lcob,
+        param_ids=tuple(param_ids),
+    )
 
 
 @dataclass
@@ -395,58 +520,38 @@ def run_skeleton(
     ethanol = mill.ethanol_l.get(crop_year)
     assert cane is not None  # checked by missing_inputs
 
-    # 1-2. residues and feed
-    coeffs = coefficients_from_registry(p)
-    residues = monthly_residues(
-        cane.value,
-        crop_year,
-        coeffs,
-        vinasse_to_ad_frac=mill.ad_shares["vinasse"],
-        filter_cake_to_ad_frac=mill.ad_shares["filter_cake"],
-        straw_to_ad_frac=mill.ad_shares["straw"],
-        ethanol_l=ethanol.value if ethanol is not None else None,
-    )
     storage = None
     if strategy == "S1":
         assert mill.storage is not None  # checked by missing_inputs
         storage = storage_from_config(mill.storage)
-        residues = apply_s1_storage(residues, storage)
-    subs = substrates_from_registry(p)
-    feed = to_feed(residues, vinasse_density_t_per_m3=subs["vinasse"].density_t_per_m3)
-
-    # 3. digester and mass balance
     anp = load_anp_monthly(mill.anp_plant_id, anp_path)
     cap_biomethane, cap_biogas = nameplate_from_anp(anp, crop_year)
-    limits = limits_from_registry(p)
-    volume = size_digester(feed, subs, limits)
-    design = PlantDesign(
-        digester_volume_m3=volume,
-        upgrading_capacity_nm3_d=cap_biomethane,
-        x_ch4=x,
-        ch4_recovery_frac=p["upg_ch4_recovery"].require_central() / 100,
-    )
-    sim = simulate(feed, subs, design, limits)  # all 12 months, off-season feed is zero
-    monthly = residues.merge(sim, on="month", how="left")
 
-    # 4. LCOB
-    annual_bm = float(sim["biomethane_nm3"].sum())
-    lcob = lcob_from_registry(cap_biomethane, annual_bm, p) if annual_bm > 0 else None
+    # 1-4. residues, feed, digester and mass balance, LCOB
+    chain = run_chain(
+        p,
+        cane_t=cane.value,
+        crop_year=crop_year,
+        ad_shares=mill.ad_shares,
+        x_ch4=x,
+        nameplate_biomethane_nm3_d=cap_biomethane,
+        storage=storage,
+        ethanol_l=ethanol.value if ethanol is not None else None,
+    )
+    residues, sim, lcob = chain.residues, chain.sim, chain.lcob
+    monthly = residues.merge(sim, on="month", how="left")
     anchors = (
         compare_with_anchors(lcob.lcob_brl_per_nm3, brl_per_usd=brl_per_usd, params=p)
         if lcob is not None
         else None
     )
 
-    # 5. comparison with ANP
-    comparison, metrics = compare_with_anp(sim, anp, cap_biogas)
+    # 5. comparison with ANP, on the mill's basis
+    basis = mill.anp_volume_basis
+    cap = cap_biogas if basis == "biogas" else cap_biomethane
+    comparison, metrics = compare_with_anp(sim, anp, cap, basis=basis)
 
-    used_ids = sorted(
-        set(coeffs.param_ids)
-        | {pid for f in FEED_SUBSTRATES for pid in subs[f].param_ids}
-        | set(limits.param_ids)
-        | set(economics_from_registry(p).param_ids)
-        | {"upg_ch4_recovery"}
-    )
+    used_ids = chain.param_ids
     flags = {pid: p[pid].confidence for pid in used_ids}
     inputs = {
         "cane_t": asdict(cane),
@@ -460,6 +565,7 @@ def run_skeleton(
             else None
         ),
         "anp_plant_id": mill.anp_plant_id,
+        "anp_volume_basis": basis,
         "anp_file_sha256": _file_sha256(anp_path),
     }
     run_id = (
@@ -480,12 +586,12 @@ def run_skeleton(
             "cap_biogas_m3_d": cap_biogas,
             "source": "ANP monthly via PILAR-2b (evidence/); m3 basis not stated (docs/21 C11)",
         },
-        "digester_volume_m3": volume,
+        "digester_volume_m3": chain.digester_volume_m3,
         "registry_params": flags,
         "flag_counts": dict(Counter(flags.values())),
         "results": {
-            "annual_biomethane_nm3": annual_bm,
-            "capacity_factor_annual": annual_bm / (cap_biomethane * float(sim["days"].sum())),
+            "annual_biomethane_nm3": chain.annual_biomethane_nm3,
+            "capacity_factor_annual": chain.capacity_factor_annual,
             "months_infeasible": [
                 m for m, ok in zip(sim["month"], sim["feasible"], strict=True) if not ok
             ],
@@ -582,7 +688,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     print(f"  LCOB {_fmt(lcob)} R$/Nm3 (v0, S/K parameters; see caveats in summary.json)")
     print(
-        f"  vs ANP: {c['n_months_compared']} months, MAE {_fmt(c['mae_util_pp'])} pp, "
+        f"  vs ANP ({c['basis']} basis): {c['n_months_compared']} months, "
+        f"MAE {_fmt(c['mae_util_pp'])} pp, "
         f"bias {_fmt(c['bias_util_pp'])} pp, off-season share sim "
         f"{_fmt(c['offseason_share_sim'])} vs obs {_fmt(c['offseason_share_obs'])}"
     )
